@@ -1,0 +1,190 @@
+# Compose induk RASA.
+#
+# Berkas ini hanya berisi infrastruktur bersama (broker, basis data, cache,
+# penyimpanan objek, SMTP lokal) dan jaringan. Layanan setiap domain ditulis
+# di infra/compose/<domain>.yml lalu digabung lewat `include`, sehingga lima
+# anggota tidak mengedit berkas yang sama.
+#
+# Jalankan dari root repositori:  docker compose up -d
+# (COMPOSE_FILE di .env menggabungkan berkas ini dengan docker-compose.dev.yml).
+#
+# Prinsip jaringan:
+#   edge   : hanya api-gateway; satu-satunya yang memetakan port ke host (T0.4).
+#   app    : layanan API dan worker (internal).
+#   data   : basis data, Redis, RabbitMQ, relay (internal).
+#   obs    : observability (internal, T0.8).
+#   egress : akses keluar internet, mis. image-render-worker ke S3.
+
+name: puisiapp
+
+include:
+  - path: compose/identity.yml
+    project_directory: .
+    env_file: ../.env
+  - path: compose/poem.yml
+    project_directory: .
+    env_file: ../.env
+  - path: compose/analysis.yml
+    project_directory: .
+    env_file: ../.env
+  - path: compose/community.yml
+    project_directory: .
+    env_file: ../.env
+  - path: compose/moderation.yml
+    project_directory: .
+    env_file: ../.env
+  - path: compose/vote.yml
+    project_directory: .
+    env_file: ../.env
+
+services:
+  # ------------------------------------------------------------ message broker
+  rabbitmq:
+    build: ./rabbitmq
+    image: rasa/rabbitmq:4.1.8-dmx4.1.0
+    hostname: rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:?isi RABBITMQ_USER di .env}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:?isi RABBITMQ_PASS di .env}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST:-rasa}
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks: [app, data]
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q check_running && rabbitmq-diagnostics -q check_local_alarms"]
+      interval: 10s
+      timeout: 10s
+      retries: 6
+      start_period: 30s
+
+  # ------------------------------------------------------------ PostgreSQL
+  # Satu klaster, satu database + satu user per layanan (database-per-service).
+  # Skrip infra/postgres/init/NN-<layanan>.sql hanya dijalankan saat volume
+  # masih kosong; ulangi dengan `docker compose down -v`.
+  postgres:
+    image: postgres:16.15-alpine
+    restart: unless-stopped
+    # wal_level=logical dibutuhkan outbox-relay (Debezium, T0.3).
+    command:
+      - postgres
+      - -c
+      - wal_level=logical
+      - -c
+      - max_wal_senders=20
+      - -c
+      - max_replication_slots=20
+    # Skrip init membaca password user per layanan (<LAYANAN>_DB_PASS) dari .env.
+    env_file:
+      - path: ../.env
+        required: true
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?isi POSTGRES_USER di .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?isi POSTGRES_PASSWORD di .env}
+      POSTGRES_DB: postgres
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    networks: [data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  # ------------------------------------------------------------ MongoDB
+  mongodb:
+    image: mongo:7.0.45
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:?isi MONGO_ROOT_USER di .env}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASS:?isi MONGO_ROOT_PASS di .env}
+    volumes:
+      - mongo-data:/data/db
+    networks: [data]
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "quit(db.adminCommand('ping').ok ? 0 : 1)"]
+      interval: 10s
+      timeout: 10s
+      retries: 6
+      start_period: 20s
+
+  # ------------------------------------------------------------ Redis
+  redis:
+    image: redis:7.4.12-alpine
+    restart: unless-stopped
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --requirepass
+      - ${REDIS_PASSWORD:?isi REDIS_PASSWORD di .env}
+      - --maxmemory
+      - 512mb
+      - --maxmemory-policy
+      - volatile-lru
+    environment:
+      REDISCLI_AUTH: ${REDIS_PASSWORD}
+    volumes:
+      - redis-data:/data
+    networks: [data]
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep -q PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ------------------------------------------------------------ S3 lokal
+  # Pengganti Amazon S3 untuk lingkungan lokal (T2.5). Image MinIO resmi tidak
+  # lagi dipublikasikan, jadi dipakai build Bitnami yang dibekukan. Tidak
+  # dipakai di EC2 (di sana memakai S3 asli).
+  minio:
+    image: bitnamilegacy/minio:2025.7.23-debian-12-r5
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:?isi S3_ACCESS_KEY di .env}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:?isi S3_SECRET_KEY di .env (min. 8 karakter)}
+      # ":download" = baca anonim, sama dengan gambar publik di S3/CloudFront.
+      MINIO_DEFAULT_BUCKETS: ${S3_BUCKET:-rasa-images}:download
+    volumes:
+      - minio-data:/bitnami/minio/data
+    networks: [data]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9000/minio/health/live || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 15s
+
+  # ------------------------------------------------------------ SMTP lokal
+  # Pengganti SMTP untuk verifikasi email dan reset kata sandi (T1.6).
+  mailpit:
+    image: axllent/mailpit:v1.29.7
+    restart: unless-stopped
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: "1"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "1"
+    networks: [app]
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+networks:
+  edge: {}
+  egress: {}
+  app:
+    internal: true
+  data:
+    internal: true
+  obs:
+    internal: true
+
+volumes:
+  rabbitmq-data: {}
+  pg-data: {}
+  mongo-data: {}
+  redis-data: {}
+  minio-data: {}
