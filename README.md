@@ -1,59 +1,61 @@
-# k1-akun: Akun dan Identitas
+# k2-penulisan: Penulisan dan Siklus Puisi
 
-Branch: `k1-akun` | Penanggung jawab: Azka | Task: T1.1 sampai T1.7 | Frontend: halaman Daftar, Masuk, dan Profil
+Branch: `k2-penulisan` | Penanggung jawab: Wisam | Task: T2.1 sampai T2.8 | Frontend: Tulis Puisi, Notifikasi, Puisi Saya
 
 ## Cakupan
 
-Registrasi, autentikasi stateless (JWT), pengelolaan profil, pemulihan akun, serta peran pengguna. Layanan identitas menjadi dasar semua kelompok lain karena gateway memverifikasi sesi melalui `token-service`.
+Sisi tulis puisi, mesin status publikasi, read model puisi, pratinjau dan gambar kutipan, pelacakan status pemrosesan, serta notifikasi. Kelompok ini memiliki jalur kritis pengunggahan sampai terbit.
 
 ## Layanan dan Komponen
 
 | Layanan | Tipe | Data | Task |
 | --- | --- | --- | --- |
-| register-service | API | account-db (PostgreSQL) + outbox | T1.1 |
-| login-service | API | credential-db (PostgreSQL), salinan kredensial dari event | T1.2 |
-| token-service | API | token-store (Redis): refresh token dan daftar cabut | T1.2, T1.4 |
-| profile-service | API | profile-db (PostgreSQL) + outbox | T1.5 |
-| account-recovery-service, email-worker | API, worker | recovery-db | T1.6 |
-| peran dan hapus akun | API | account-db | T1.7 |
+| poem-create-service | API | submission-db + outbox | T2.1 |
+| publication-service | worker | publication-db + outbox | T2.2 |
+| poem-query-service | API + consumer proyeksi | poem-read-db (replika baca) + cache Redis | T2.3 |
+| poem-edit-service, poem-delete-service | API | revision-db, deletion-db + outbox, salinan kepemilikan | T2.4 |
+| image-preview-service, image-render-worker | API, worker | S3 (objek berversi) | T2.5 |
+| processing-tracker, status-stream-service | worker, API | progress-store (Redis hash) | T2.7 |
+| notification-service | API | notif-db | T2.8 |
 
 ## Endpoint
 
-| Metode | Path | Keterangan |
+| Metode | Path | Respons |
 | --- | --- | --- |
-| POST | `/api/auth/register` | 201; username unik dan validasi email |
-| POST | `/api/auth/login` | 200; set cookie access dan refresh |
-| POST | `/api/auth/refresh` | rotasi refresh token; token lama langsung dicabut |
-| POST | `/api/auth/logout` | 204; refresh token dicabut, `jti` access token masuk daftar cabut |
-| GET | `/internal/auth/verify` | hanya untuk `auth_request` gateway; membalas 200 dengan `X-User-Id` dan `X-User-Role`, atau 401 |
-| GET, PUT | `/api/profiles/{id\|me}` | nama tampil dan bio |
-| PUT | `/api/admin/users/{id}/role` | ubah peran (admin) |
-| DELETE | `/api/me` | hapus akun sendiri |
+| POST | `/api/poems` | 202 `{poem_id, versi: 1, status: PROCESSING}` |
+| PUT | `/api/poems/{id}` | 202; revisi menjadi versi baru |
+| DELETE | `/api/poems/{id}` | 202; soft delete |
+| GET | `/api/poems/{id}`, `/api/poems?author=` | 200 dari Redis atau replika |
+| GET | `/api/poems/{id}/status/stream` | SSE |
+| GET | `/api/images/preview` | 200 `image/jpeg`, stateless, di-cache CDN |
+| GET | `/api/me/poems`, `/api/notifications` | 200 |
 
 ## Event
 
-| Event | Peran | Catatan |
-| --- | --- | --- |
-| `user.registered` | publish (register) | konsumen: login, profile, poem-query |
-| `user.profile.updated` | publish (profile) | konsumen: poem-query |
-| `user.role.changed`, `user.deleted` | publish | event baru; daftarkan skema di `/contracts/events` |
-| `user.registered` | consume (login, profile) | idempoten; salinan lokal kredensial dan profil |
+| Event | Peran |
+| --- | --- |
+| `poem.submitted`, `poem.revised`, `poem.deleted` | publish (create, edit, delete) lewat outbox |
+| `poem.published`, `poem.held`, `poem.hidden` | publish (publication) |
+| `poem.image.rendered` | publish (image-render) |
+| `poem.processing.updated`, `poem.processing.completed` | publish (processing-tracker) |
+| `poem.similarity.scored`, `case.decided` | consume (publication) |
+| 14 jenis event puisi dan analisis | consume (poem-query) |
 
 ## Catatan Teknis
 
-- Kata sandi di-hash dengan Argon2id. `login-service` bersifat CPU-bound sehingga diberi jatah CPU lebih besar dan minimal 2 replika.
-- Access token JWT RS256 berumur 15 menit (klaim `sub`, `role`, `jti`, `exp`). Refresh token acak berumur 7 hari. Keduanya dikirim sebagai cookie `HttpOnly`, `Secure`, dan `SameSite=Strict`.
-- Hasil `auth_request` di-cache gateway 30 detik per token, sehingga pencabutan token berlaku paling lambat 30 detik setelah logout.
-- Kunci privat JWT dimuat dari Docker secret, tidak dari repositori.
-- Rate limit `login` dan `register` ditegakkan di gateway (10 permintaan per menit per IP).
-- `token-service` menggantikan stub token buatan T0.4 dan menjadi prioritas pemantauan karena berada di jalur sinkron semua permintaan terautentikasi.
-- T1.6: tautan verifikasi dan reset berbatas waktu; email dikirim asinkron oleh `email-worker` (Mailpit pada lingkungan pengembangan). Dikerjakan Sabila, direview Azka.
-- T1.7: nasib puisi milik akun yang dihapus harus diputuskan lebih dulu (pertimbangkan dampaknya ke `poem.deleted` dan Jejak Keaslian).
+- `POST /api/poems` hanya menulis `submission` dan `outbox` dalam satu transaksi lokal lalu membalas 202. Penulis diambil dari `X-User-Id`, bukan dari body.
+- Idempotensi pengajuan dijaga `UNIQUE(author_id, idempotency_key)` dari header `Idempotency-Key`.
+- `publication-service` memiliki satu invarian: mesin status PROCESSING, PUBLISHED, REPROCESSING, HELD, HIDDEN, DELETED. Dua event dapat tiba bersamaan, sehingga dipakai optimistic locking pada `publication.row_version`; transaksi yang kalah diulang dari pesan yang sama. Hanya hasil plagiarisme yang menjadi gerbang publikasi (jalur kritis).
+- `poem-query-service`: cache-aside `poem:{id}` (TTL 10 menit, jitter acak ±10%), lock `SET lock:poem:{id} NX PX 2000` untuk mencegah stampede, dan penolakan event dengan `aggregate_version` lebih lama.
+- `poem-edit-service` memakai tabel `poem_ownership` hasil salinan `poem.submitted`. Jika salinan belum terbentuk, balas 409 dan klien mencoba lagi.
+- Gambar akhir dirender per versi ke `/img/puisi/{poem_id}/v{versi}.jpg` (immutable, tanpa invalidasi CDN). Kegagalan sementara memakai retry backoff dengan jitter, lalu DLQ.
+- `status-stream-service` mendistribusikan pesan antar-replika lewat Redis pub/sub karena koneksi SSE berumur panjang.
+- Frontend (T2.6) menyimpan draf di `localStorage` dan menampilkan puisi secara optimistik setelah 202.
 
 ## Dependensi
 
-T0.2 (pustaka event), T0.4 (gateway), T0.5 (kerangka frontend), T0.6 (kontrak event).
+T0.2, T0.3 (outbox relay), T0.6, T0.10 (penerbit contoh event untuk pengujian kelompok lain).
 
 ## Alur Git
 
-Kerjakan langsung di `k1-akun`, awali commit dengan kode task (`T1.1: validasi username`). Gabungkan `main` ke branch ini setiap hari kerja dan buat PR ke `main` minimal tiap Jumat.
+Kerjakan langsung di `k2-penulisan`, awali commit dengan kode task (`T2.1: validasi judul`). Gabungkan `main` ke branch ini setiap hari kerja dan buat PR ke `main` minimal tiap Jumat.
