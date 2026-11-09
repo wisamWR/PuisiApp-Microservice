@@ -1,62 +1,50 @@
-# k8-laporan: Laporan, Sengketa, dan Moderasi
+# k9-suara: Upvote, Downvote, dan Peringkat
 
-Branch: `k8-laporan` | Penanggung jawab: Zoya | Task: T8.1 sampai T8.4 | Frontend: layar moderator, form sanggahan dan banding, halaman kebijakan
+Branch: `k9-vote` | Penanggung jawab: Raffa | Task: T9.1 sampai T9.3 | Frontend: tombol upvote dan downvote
 
 ## Cakupan
 
-Pelaporan dugaan plagiarisme, bukti pembanding otomatis, antrean kasus moderator, keputusan, banding, dan log audit.
+Pemberian suara yang bergelombang (write burst), penyimpanan permanen secara write-behind, dan perhitungan skor peringkat.
 
 ## Layanan dan Komponen
 
 | Layanan | Tipe | Data | Task |
 | --- | --- | --- | --- |
-| report-service | API | report-db + outbox | T8.1 |
-| evidence-worker | worker | evidence-db: snapshot teks dan bukti | T8.1 |
-| case-queue-service | API | case-db + outbox | T8.2 |
-| case-decision-service | API | decision-db + outbox | T8.3 |
-| appeal-service | API | appeal-db + outbox | T8.3 |
-| audit-worker | worker | audit-db (append-only) | T8.3 |
-| layar Moderasi dan halaman kebijakan | frontend | tidak ada | T8.4 |
+| vote-service | API | vote-live (Redis hash), salinan kepemilikan dan status publikasi | T9.1 |
+| vote-persist-worker | worker | vote-db (PostgreSQL) | T9.2 |
+| ranking-worker | worker | ranking-store (Redis hash) | T9.3 |
+| tombol vote di UI | frontend | tampilan optimistik | T9.3 |
 
 ## Endpoint
 
-| Metode | Path | Respons |
+| Metode | Path | Keterangan |
 | --- | --- | --- |
-| POST | `/api/reports` | 202; `poem_id`, `poem_pembanding_id`, `alasan` |
-| GET | `/api/moderation/cases` | daftar kasus (moderator) |
-| POST | `/api/moderation/cases/{id}/claim` | klaim kasus |
-| POST | `/api/moderation/cases/{id}/statement` | sanggahan penulis |
-| POST | `/api/moderation/cases/{id}/decision` | 202; ditolak, diberi label, atau dikabulkan |
-| POST | `/api/appeals` | 202; dalam 7 hari setelah keputusan |
+| PUT | `/api/poems/{id}/vote` | body `nilai` = 1, −1, atau 0 (tarik suara); 200 berisi skor tampil, dilayani dari Redis |
 
 ## Event
 
 | Event | Peran |
 | --- | --- |
-| `report.created` | publish (report), consume (evidence, case-queue, audit, notification) |
-| `report.evidence.ready` | publish (evidence), consume (case-queue) |
-| `case.opened`, `case.claimed` | publish (case-queue) |
-| `case.decided` | publish (case-decision), consume (publication, case-queue, appeal, audit, notification) |
-| `appeal.filed` | publish (appeal), consume (case-queue, audit, notification) |
-| `poem.similarity.scored` | consume (case-queue; membuka kasus otomatis) |
+| `vote.cast` | publish (vote-service; `nilai_lama`, `nilai_baru`), consume (vote-persist, ranking) |
+| `poem.score.updated` | publish (ranking-worker), consume (poem-query, mood-feed, theme-feed) |
+| `poem.submitted`, `poem.published`, `poem.hidden`, `poem.deleted` | consume (vote-service; salinan pemilik dan status) |
 
 ## Catatan Teknis
 
-- Kasus dibuka dari dua sumber: laporan pengguna dan level otomatis (MIRIP prioritas rendah, DUGAAN_JIPLAKAN prioritas tinggi).
-- `evidence-worker` membekukan snapshot teks kedua puisi dan catatan Jejak Keaslian saat laporan dibuat, sehingga bukti tidak berubah walaupun puisi direvisi atau dihapus.
-- Status kasus dijaga `case-queue-service`: OPEN, EVIDENCE_READY, UNDER_REVIEW, RESOLVED, APPEALED. Satu kasus hanya dapat diklaim satu moderator; klaim kedaluwarsa setelah 24 jam.
-- Aturan otorisasi: endpoint moderasi memerlukan `X-User-Role: moderator`; `case-decision-service` menolak keputusan dari moderator yang bukan pengklaim; kasus banding tidak ditugaskan kepada moderator yang memutuskan kasus asal.
-- Keputusan dikabulkan mengubah status puisi menjadi HIDDEN melalui `publication-service` (saga koreografi); kompensasi berupa transisi status, bukan pembatalan data.
-- Banding membuka kasus baru. Jendela banding 7 hari.
-- `audit-worker` mencatat semua peristiwa moderasi ke tabel append-only (`REVOKE UPDATE, DELETE`).
-- Rate limit `POST /api/reports` ditegakkan di gateway (sekitar 5 per menit per pengguna).
-- Publik hanya melihat label level; skor dan puisi pembanding hanya terlihat oleh penulis dan moderator.
-- Koordinasikan dengan k4 mengenai laporan komentar (`comment.reported`).
+- Satu suara per pengguna per puisi adalah satu invarian, sehingga `vote-service` tetap satu layanan. Operasi inti adalah satu skrip Lua atomik di Redis: `HSET vote:{poem_id} user nilai` sambil mengembalikan nilai lama.
+- Aturan penolakan: pemilik puisi tidak dapat memberi suara pada puisinya (dari salinan `poem.submitted`), dan suara hanya diterima pada puisi yang sudah terbit.
+- Rate limit 30 suara per menit per pengguna: zona `limit_req` di gateway berbasis cookie token, ditegakkan ulang di layanan memakai Redis. Akun berumur kurang dari 24 jam diberi bobot rendah dalam peringkat untuk mengurangi brigading.
+- Jumlah downvote tidak memicu moderasi otomatis.
+- `vote-persist-worker` mengambil batch 200 pesan atau 1 detik, melakukan UPSERT ke `vote-db`, dan hanya melakukan ack setelah commit. Konsumen bersifat idempoten.
+- Satu-satunya data yang untuk sementara hanya ada di Redis adalah suara yang belum dipersist, dan data ini juga tercatat di queue `q.vote-persist`.
+- Peringkat memakai batas bawah interval kepercayaan Wilson dengan z = 1,96: `W = (p̂ + z²/2n − z·√(p̂(1−p̂)/n + z²/4n²)) / (1 + z²/n)`. Contoh: 2 upvote tanpa downvote menghasilkan 0,342; 10 upvote dan 1 downvote menghasilkan 0,623; 90 upvote dan 10 downvote menghasilkan 0,826.
+- Antarmuka menampilkan hasil optimistik lalu menyesuaikan setelah respons. Tampilan publik hanya memuat skor gabungan; rincian upvote dan downvote hanya terlihat oleh penulis.
+- Target pengujian beban: sekitar 200 suara per detik (uji lokal dahulu; pengukuran resmi di T10.2).
 
 ## Dependensi
 
-T0.6, T0.5 (frontend), T2.1 (`poem.submitted`), T7.2 (`poem.similarity.scored`), T2.2 (publication untuk dampak keputusan).
+T0.2, T0.6, T2.1 dan T2.2 (salinan kepemilikan dan status; uji awal memakai contoh event dari T0.10).
 
 ## Alur Git
 
-Kerjakan langsung di `k8-laporan`, awali commit dengan kode task (`T8.1: snapshot bukti`). Gabungkan `main` ke branch ini setiap hari kerja dan buat PR ke `main` minimal tiap Jumat.
+Kerjakan langsung di `k9-suara`, awali commit dengan kode task (`T9.1: skrip lua vote`). Gabungkan `main` ke branch ini setiap hari kerja dan buat PR ke `main` minimal tiap Jumat.
