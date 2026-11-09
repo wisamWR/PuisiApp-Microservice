@@ -1,101 +1,59 @@
-# Puisi App
+# k1-akun: Akun dan Identitas
 
-Platform komunitas puisi tempat penulis menerbitkan karya dan pembaca menemukan puisi yang sesuai dengan suasana hatinya. Dua ciri utamanya adalah pemilihan puisi menurut suasana hati (Mood) dan jaminan keaslian karya (Keaslian serta Laporan dan sengketa).
+Branch: `k1-akun` | Penanggung jawab: Azka | Task: T1.1 sampai T1.7 | Frontend: halaman Daftar, Masuk, dan Profil
 
-Proyek ini dibuat untuk tugas Hands-On mata kuliah Pengembangan Perangkat Lunak Scalable (PACS262521), Kelompok D, dengan arsitektur microservice dan event-driven. Nama aplikasi masih bersifat sementara.
+## Cakupan
 
-## Arsitektur Singkat
+Registrasi, autentikasi stateless (JWT), pengelolaan profil, pemulihan akun, serta peran pengguna. Layanan identitas menjadi dasar semua kelompok lain karena gateway memverifikasi sesi melalui `token-service`.
 
-- Komunikasi sinkron hanya dari klien ke API Gateway (Nginx), lalu ke satu layanan.
-- Komunikasi antarlayanan berjalan secara asinkron melalui RabbitMQ.
-- Setiap layanan memiliki basis datanya sendiri; layanan lain memakai salinan lewat event.
-- Layanan yang menulis data menerbitkan event dengan pola Transactional Outbox.
-- Sesi bersifat stateless: JWT di cookie httpOnly, diverifikasi gateway.
+## Layanan dan Komponen
 
-Rancangan lengkap dan spesifikasi per kelompok fitur ada di halaman Notion "All Specifications".
+| Layanan | Tipe | Data | Task |
+| --- | --- | --- | --- |
+| register-service | API | account-db (PostgreSQL) + outbox | T1.1 |
+| login-service | API | credential-db (PostgreSQL), salinan kredensial dari event | T1.2 |
+| token-service | API | token-store (Redis): refresh token dan daftar cabut | T1.2, T1.4 |
+| profile-service | API | profile-db (PostgreSQL) + outbox | T1.5 |
+| account-recovery-service, email-worker | API, worker | recovery-db | T1.6 |
+| peran dan hapus akun | API | account-db | T1.7 |
 
-## Teknologi
+## Endpoint
 
-| Kebutuhan | Teknologi |
-| --- | --- |
-| Layanan API | Node.js |
-| Worker analisis teks | Python |
-| Basis data | PostgreSQL 16, MongoDB 7, Redis 7 |
-| Message broker | RabbitMQ 4 (quorum queue) |
-| Outbox relay | Debezium Server |
-| Gerbang | Nginx |
-| Penyimpanan gambar | Amazon S3 |
-| Frontend | Belum ditetapkan |
-| Kontainer | Docker, Docker Compose |
-
-## Struktur Repositori
-
-```
-services/<nama-layanan>   satu folder per layanan
-libs/node, libs/python    pustaka bersama (event, outbox, konsumen idempoten)
-contracts/events          skema JSON setiap event
-frontend                  aplikasi web
-infra                     docker-compose, nginx, rabbitmq, observability
-docs                      catatan desain dan runbook
-```
-
-## Menjalankan Secara Lokal
-
-Prasyarat: Docker dan Docker Compose.
-
-```
-git clone <url-repositori>
-cd <nama-repositori>
-cp .env.example .env
-docker compose -f infra/docker-compose.yml up -d
-```
-
-Setelah semua kontainer berstatus healthy, antarmuka manajemen RabbitMQ dapat dibuka di `http://localhost:15672`.
-
-Berkas `.env` berisi kredensial dan tidak boleh di-commit.
-
-## Alur Kerja Git
-
-Branch yang digunakan:
-
-| Branch | Fungsi |
-| --- | --- |
-| `main` | Snapshot yang siap deploy. Diberi tag, misalnya `demo-v1`. Hanya menerima merge dari `develop`. |
-| `develop` | Cabang integrasi. Semua pekerjaan masuk ke sini lewat pull request. |
-| `grp<nomor>-<nama>` | Satu branch per kelompok fitur, dimiliki penanggung jawabnya. |
-
-Branch kelompok fitur:
-
-| Branch | Kelompok fitur | Penanggung jawab |
+| Metode | Path | Keterangan |
 | --- | --- | --- |
-| `grp1-akun` | Akun dan identitas | Azka |
-| `grp2-penulisan` | Penulisan puisi | Wisam |
-| `grp3-jelajah` | Jelajah dan baca | Azka |
-| `grp4-komunitas` | Komunitas | Zoya |
-| `grp5-mood` | Mood | Sabila |
-| `grp6-tema` | Tema | Sabila |
-| `grp7-keaslian` | Keaslian | Raffa |
-| `grp8-moderasi` | Laporan dan sengketa | Zoya |
-| `grp9-suara` | Suara dan peringkat | Raffa |
+| POST | `/api/auth/register` | 201; username unik dan validasi email |
+| POST | `/api/auth/login` | 200; set cookie access dan refresh |
+| POST | `/api/auth/refresh` | rotasi refresh token; token lama langsung dicabut |
+| POST | `/api/auth/logout` | 204; refresh token dicabut, `jti` access token masuk daftar cabut |
+| GET | `/internal/auth/verify` | hanya untuk `auth_request` gateway; membalas 200 dengan `X-User-Id` dan `X-User-Role`, atau 401 |
+| GET, PUT | `/api/profiles/{id\|me}` | nama tampil dan bio |
+| PUT | `/api/admin/users/{id}/role` | ubah peran (admin) |
+| DELETE | `/api/me` | hapus akun sendiri |
 
-Aturan:
+## Event
 
-1. Gabungkan `develop` ke branch kelompok setiap hari agar tidak tertinggal.
-2. Buat pull request ke `develop` setiap satu task selesai, tanpa menunggu seluruh kelompok selesai.
-3. Pull request wajib lolos CI dan di-review minimal satu orang.
-4. Gunakan merge commit, bukan squash, agar riwayat branch kelompok tetap selaras dengan `develop`.
-5. Cantumkan kode task di judul pull request dan pesan commit, misalnya `[T2.1] poem-create: validasi input`.
-6. Perubahan pada `contracts/` memerlukan persetujuan pemilik kelompok yang menggunakan kontrak tersebut. Perubahan tidak kompatibel menaikkan versi skema.
+| Event | Peran | Catatan |
+| --- | --- | --- |
+| `user.registered` | publish (register) | konsumen: login, profile, poem-query |
+| `user.profile.updated` | publish (profile) | konsumen: poem-query |
+| `user.role.changed`, `user.deleted` | publish | event baru; daftarkan skema di `/contracts/events` |
+| `user.registered` | consume (login, profile) | idempoten; salinan lokal kredensial dan profil |
 
-## Definisi Selesai untuk Setiap Layanan
+## Catatan Teknis
 
-- Kode lolos lint dan pengujian unit.
-- Pengujian integrasi dengan RabbitMQ dan basis data berjalan lewat Docker Compose.
-- Konsumen diuji terhadap event duplikat dan event basi.
-- Tersedia endpoint `/health` dan `/metrics`, serta log JSON.
-- Endpoint terdokumentasi dengan OpenAPI dan skema event terdaftar di `contracts/`.
-- Layanan berjalan dengan `docker compose up` tanpa langkah manual.
+- Kata sandi di-hash dengan Argon2id. `login-service` bersifat CPU-bound sehingga diberi jatah CPU lebih besar dan minimal 2 replika.
+- Access token JWT RS256 berumur 15 menit (klaim `sub`, `role`, `jti`, `exp`). Refresh token acak berumur 7 hari. Keduanya dikirim sebagai cookie `HttpOnly`, `Secure`, dan `SameSite=Strict`.
+- Hasil `auth_request` di-cache gateway 30 detik per token, sehingga pencabutan token berlaku paling lambat 30 detik setelah logout.
+- Kunci privat JWT dimuat dari Docker secret, tidak dari repositori.
+- Rate limit `login` dan `register` ditegakkan di gateway (10 permintaan per menit per IP).
+- `token-service` menggantikan stub token buatan T0.4 dan menjadi prioritas pemantauan karena berada di jalur sinkron semua permintaan terautentikasi.
+- T1.6: tautan verifikasi dan reset berbatas waktu; email dikirim asinkron oleh `email-worker` (Mailpit pada lingkungan pengembangan). Dikerjakan Sabila, direview Azka.
+- T1.7: nasib puisi milik akun yang dihapus harus diputuskan lebih dulu (pertimbangkan dampaknya ke `poem.deleted` dan Jejak Keaslian).
 
-## Tim
+## Dependensi
 
-Kelompok D: Wisam, Azka, Sabila, Raffa, dan Zoya.
+T0.2 (pustaka event), T0.4 (gateway), T0.5 (kerangka frontend), T0.6 (kontrak event).
+
+## Alur Git
+
+Kerjakan langsung di `k1-akun`, awali commit dengan kode task (`T1.1: validasi username`). Gabungkan `main` ke branch ini setiap hari kerja dan buat PR ke `main` minimal tiap Jumat.
