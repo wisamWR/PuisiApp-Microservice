@@ -53,6 +53,29 @@ const hasil = eventTurunan(eventMasuk, 'poem.emotion.analyzed', { baris, skor })
 await publisher.terbitkan(hasil);
 ```
 
+## Menerbitkan event dari layanan yang menulis data (Transactional Outbox)
+
+Data bisnis dan event ditulis dalam satu transaksi; outbox-relay (Debezium) yang menerbitkannya ke RabbitMQ.
+
+```js
+import { jalankanMigrasi, simpanDenganOutbox, buatEvent } from '@puisiapp/events';
+
+await jalankanMigrasi(pool, { folder: './migrations', outbox: true });
+
+const { poemId } = await simpanDenganOutbox(pool, async (tx) => {
+  await tx.query('INSERT INTO submission (poem_id, ...) VALUES ($1, ...)', [poemId, ...]);
+  return {
+    hasil: { poemId },
+    event: buatEvent('poem.submitted', poemId, 1, { ... }, { correlationId: req.headers['x-request-id'] }),
+  };
+});
+// balas 202 Accepted
+```
+
+- Event divalidasi dan dicek di `routing.json` sebelum commit; bila gagal, data bisnis ikut di-rollback.
+- Database perlu tabel outbox, publication, dan slot dari skrip init (`infra/postgres/init/_outbox.psql`) serta container relay. Lihat [docs/adr/outbox-relay.md](../../docs/adr/outbox-relay.md).
+- Mode Debezium tidak menghapus baris outbox. Jalankan `bersihkanOutbox(pool)` secara berkala.
+
 ## Mengonsumsi event
 
 ```js
@@ -106,7 +129,10 @@ Layanan yang state-nya di Redis atau MongoDB boleh memberikan `store` sendiri de
 | `buatPublisher(koneksi)` | `{ terbitkan(event), tutup() }` dengan publisher confirm |
 | `buatKonsumen(opsi)` | Mulai konsumsi; mengembalikan `{ berhenti() }` untuk graceful shutdown |
 | `buatStorePg(pool)`, `buatStoreTanpaDb()` | Store idempotensi |
-| `jalankanMigrasi(pool, { folder })` | Migrasi SQL berurutan dengan advisory lock |
+| `jalankanMigrasi(pool, { folder, outbox? })` | Migrasi SQL berurutan dengan advisory lock; `outbox: true` menambah tabel outbox standar |
+| `simpanDenganOutbox(pool, fn)`, `tulisOutbox(tx, event)` | Transactional Outbox |
+| `jalankanRelayPolling({ pool, koneksi })`, `bersihkanOutbox(pool)` | Relay cadangan dan pembersihan outbox |
+| `pasangTopologiBersama(ch)` | Exchange domain, `outbox.relay`, binding dari `routing.json` (dipakai `bin/pasang-topologi.js`) |
 | `buatLogger(service?, konteks?)` | Logger JSON (`ts`, `level`, `service`, `msg`, `correlation_id`, `event_id`, `trace_id`) |
 | `GalatPermanen` | Galat yang langsung dikirim ke DLQ |
 

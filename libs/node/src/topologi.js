@@ -8,9 +8,19 @@
  *   q.<layanan>       quorum queue milik satu layanan konsumen
  *   q.<layanan>.dlq   quorum queue penampung pesan gagal permanen
  */
-import { exchangeUntuk } from './kontrak.js';
+import { exchangeUntuk, ambilPetaRouting } from './kontrak.js';
 
 export const EXCHANGE_DLX = 'dlx';
+/**
+ * Exchange tujuan outbox-relay (Debezium). Debezium Server hanya bisa
+ * menerbitkan ke satu exchange, jadi relay menerbitkan ke sini dengan
+ * routing key = event_type, lalu exchange-to-exchange binding (dari
+ * routing.json) meneruskannya ke exchange domain.
+ */
+export const EXCHANGE_RELAY = 'outbox.relay';
+/** Menampung event dari relay yang tidak terdaftar di routing.json. */
+export const EXCHANGE_TAK_TERUTE = 'outbox.unrouted';
+export const ANTREAN_TAK_TERUTE = 'q.outbox.unrouted';
 export const EXCHANGE_RETRY = 'retry.delayed';
 /** Jaring pengaman: pesan yang membuat worker crash berulang tetap berakhir di DLQ. */
 export const BATAS_PENGIRIMAN = 5;
@@ -55,4 +65,37 @@ export async function pastikanAntrean(ch, antrean, ikatan) {
     await ch.bindQueue(antrean, exchange, eventType);
   }
   return { antrean, dlq };
+}
+
+/**
+ * Topologi bersama yang dibangkitkan dari contracts/routing.json:
+ *   - semua exchange domain
+ *   - outbox.relay (topic, alternate-exchange outbox.unrouted)
+ *   - binding outbox.relay --event_type--> exchange domain
+ *   - outbox.unrouted (fanout) -> q.outbox.unrouted
+ *
+ * Idempoten. Dijalankan container rabbitmq-topologi saat `docker compose up`
+ * dan wajib dijalankan ulang setiap routing.json berubah.
+ *
+ * @param {import('amqplib').Channel} ch
+ * @returns {Promise<{ exchanges: string[], bindings: number }>}
+ */
+export async function pasangTopologiBersama(ch) {
+  const peta = ambilPetaRouting();
+  const exchanges = [...new Set(peta.values())];
+
+  await ch.assertExchange(EXCHANGE_TAK_TERUTE, 'fanout', { durable: true });
+  await ch.assertQueue(ANTREAN_TAK_TERUTE, { durable: true, arguments: { 'x-queue-type': 'quorum' } });
+  await ch.bindQueue(ANTREAN_TAK_TERUTE, EXCHANGE_TAK_TERUTE, '');
+
+  await ch.assertExchange(EXCHANGE_RELAY, 'topic', {
+    durable: true,
+    alternateExchange: EXCHANGE_TAK_TERUTE,
+  });
+
+  for (const exchange of exchanges) await pastikanExchangeDomain(ch, exchange);
+  for (const [eventType, exchange] of peta) {
+    await ch.bindExchange(exchange, EXCHANGE_RELAY, eventType);
+  }
+  return { exchanges, bindings: peta.size };
 }

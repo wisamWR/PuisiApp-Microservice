@@ -10,7 +10,8 @@
   },
   "files": [
     "src",
-    "sql"
+    "sql",
+    "bin"
   ],
   "engines": {
     "node": ">=22"
@@ -21,6 +22,7 @@
   "dependencies": {
     "ajv": "8.20.0",
     "ajv-formats": "3.0.1",
-    "amqplib": "2.3.1"
+    "amqplib": "2.3.1",
+    "pg": "8.23.1"
   }
 }

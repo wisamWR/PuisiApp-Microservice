@@ -10,6 +10,8 @@ Infrastruktur lokal dan konfigurasi bersama RASA.
 | `compose/contoh.yml` | `example-consumer` (T0.2), hanya jalan dengan `--profile contoh` | Wisam |
 | `postgres/init/NN-<layanan>.sql` | Database + user per layanan | PJ layanan |
 | `rabbitmq/` | Image RabbitMQ + plugin delayed message dan Prometheus | Wisam |
+| `debezium/` | Templat outbox-relay (Debezium Server): `application.properties` dan `relay.yml` untuk `extends` | Wisam |
+| `postgres/init/_outbox.psql` | Tabel outbox + publication + slot, di-include skrip DB ber-outbox | Wisam |
 | `nginx/conf.d/<domain>.conf` | Rute gateway per domain (T0.4) | Azka |
 | `observability/` | Prometheus, Loki, Grafana (T0.8) | Raffa |
 
@@ -27,6 +29,14 @@ Infrastruktur lokal dan konfigurasi bersama RASA.
 Image MinIO resmi tidak lagi dipublikasikan di Docker Hub maupun Quay, sehingga dipakai build Bitnami yang dibekukan. Image ini hanya untuk laptop; EC2 memakai Amazon S3 asli.
 
 Semua port hanya terbuka di `127.0.0.1` dan hanya lewat `docker-compose.dev.yml`. Di EC2 berkas itu tidak dipakai, sehingga hanya gateway yang memetakan port.
+
+Selain itu ada `rabbitmq-topologi`, container sekali jalan yang memasang exchange domain dan binding `outbox.relay` dari `contracts/routing.json`. Jalankan ulang setiap `routing.json` berubah:
+
+```bash
+docker compose run --rm rabbitmq-topologi
+```
+
+Outbox relay (Debezium) dijelaskan di [docs/adr/outbox-relay.md](../docs/adr/outbox-relay.md), termasuk cara menambah relay untuk database baru.
 
 ## Jaringan
 

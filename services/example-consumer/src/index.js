@@ -28,7 +28,8 @@ const folderIni = path.dirname(fileURLToPath(import.meta.url));
 if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL belum diisi');
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 10 });
 
-await jalankanMigrasi(pool, { folder: path.join(folderIni, '../migrations'), log });
+// outbox: true -> tabel outbox standar + publication outbox_pub (T0.3)
+await jalankanMigrasi(pool, { folder: path.join(folderIni, '../migrations'), outbox: true, log });
 const koneksi = await hubungkan({ log });
 
 const konsumen = await buatKonsumen({

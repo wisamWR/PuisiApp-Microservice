@@ -27,13 +27,16 @@ function daftarSql(folder, awalan) {
  * @param {import('pg').Pool} pool
  * @param {object} [opsi]
  * @param {string} [opsi.folder]   folder migrasi milik layanan
- * @param {boolean} [opsi.standar] jalankan migrasi standar pustaka, default true
+ * @param {boolean} [opsi.standar] jalankan migrasi standar pustaka (processed_event), default true
+ * @param {boolean} [opsi.outbox]  buat tabel outbox standar + publication, default false
+ *                                 (wajib untuk layanan yang menerbitkan event)
  * @param {{ info: Function }} [opsi.log]
  * @returns {Promise<string[]>} nama migrasi yang baru dijalankan
  */
 export async function jalankanMigrasi(pool, opsi = {}) {
   const semua = [
     ...(opsi.standar === false ? [] : daftarSql(FOLDER_STANDAR, 'standar/')),
+    ...(opsi.outbox ? daftarSql(path.join(FOLDER_STANDAR, 'outbox'), 'standar/outbox/') : []),
     ...daftarSql(opsi.folder, ''),
   ];
   const klien = await pool.connect();

@@ -61,6 +61,27 @@ services:
       retries: 6
       start_period: 30s
 
+  # Topologi bersama dari contracts/routing.json: exchange domain, outbox.relay,
+  # dan binding exchange-to-exchange (T0.3). Sekali jalan lalu selesai.
+  # Jalankan ulang setiap routing.json berubah:
+  #   docker compose run --rm rabbitmq-topologi
+  rabbitmq-topologi:
+    build:
+      context: ..
+      dockerfile: libs/node/Dockerfile
+    image: puisiapp/node-tools:dev
+    restart: "no"
+    environment:
+      SERVICE_NAME: rabbitmq-topologi
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+      RABBITMQ_VHOST: ${RABBITMQ_VHOST}
+    networks: [data]
+    depends_on:
+      rabbitmq: { condition: service_healthy }
+
   # ------------------------------------------------------------ PostgreSQL
   # Satu klaster, satu database + satu user per layanan (database-per-service).
   # Skrip infra/postgres/init/NN-<layanan>.sql hanya dijalankan saat volume
@@ -77,6 +98,9 @@ services:
       - max_wal_senders=20
       - -c
       - max_replication_slots=20
+      # Batas WAL yang ditahan slot relay yang mati lama, agar disk tidak penuh.
+      - -c
+      - max_slot_wal_keep_size=1024MB
     # Skrip init membaca password user per layanan (<LAYANAN>_DB_PASS) dari .env.
     env_file:
       - path: ../.env

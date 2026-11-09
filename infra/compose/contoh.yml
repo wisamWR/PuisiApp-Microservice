@@ -1,4 +1,4 @@
-# Layanan contoh (T0.2). Hanya berjalan bila profil "contoh" diaktifkan:
+# Layanan contoh (T0.2 dan T0.3). Hanya berjalan bila profil "contoh" diaktifkan:
 #   docker compose --profile contoh up -d --build
 # Tidak ikut di EC2.
 
@@ -30,3 +30,22 @@ services:
       timeout: 3s
       retries: 3
       start_period: 15s
+
+  # Relay outbox example_db (T0.3). Pola yang sama dipakai untuk
+  # account_db, submission_db, revision_db, deletion_db, publication_db.
+  outbox-relay-example:
+    profiles: [contoh]
+    extends:
+      file: debezium/relay.yml
+      service: outbox-relay
+    environment:
+      RELAY_DB: example_db
+      RELAY_SLOT: outbox_example
+    volumes:
+      - relay-example-data:/debezium/data
+    depends_on:
+      rabbitmq-topologi: { condition: service_completed_successfully }
+      example-consumer: { condition: service_healthy }
+
+volumes:
+  relay-example-data: {}

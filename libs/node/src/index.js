@@ -6,5 +6,15 @@ export { hubungkan, urlAmqpDariEnv } from './koneksi.js';
 export { buatPublisher, opsiPesan } from './publisher.js';
 export { buatKonsumen, tanganiPesan, HEADER_PERCOBAAN, BAWAAN } from './konsumen.js';
 export { buatStorePg, buatStoreTanpaDb } from './store.js';
-export { pastikanAntrean, EXCHANGE_DLX, EXCHANGE_RETRY } from './topologi.js';
+export {
+  pastikanAntrean,
+  pasangTopologiBersama,
+  EXCHANGE_DLX,
+  EXCHANGE_RETRY,
+  EXCHANGE_RELAY,
+  EXCHANGE_TAK_TERUTE,
+  ANTREAN_TAK_TERUTE,
+} from './topologi.js';
 export { jalankanMigrasi } from './migrasi.js';
+export { tulisOutbox, simpanDenganOutbox } from './outbox.js';
+export { jalankanRelayPolling, relaySatuPutaran, bersihkanOutbox } from './relay-polling.js';
