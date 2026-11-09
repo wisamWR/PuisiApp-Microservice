@@ -1,51 +1,52 @@
-# k3-jelajah: Jelajah dan Baca
+# k4-komunitas: Komentar
 
-Branch: `k3-jelajah` | Penanggung jawab: Azka | Task: T3.1 sampai T3.4 | Frontend: Beranda, Detail Puisi, Pencarian, Profil Penulis, Simpanan
+Branch: `k4-komunitas` | Penanggung jawab: Zoya | Task: T4.1 | Frontend: bagian komentar di halaman Detail Puisi
 
 ## Cakupan
 
-Antarmuka baca puisi: beranda, halaman detail yang menjadi wadah komponen kelompok lain, pencarian, profil penulis, serta bookmark dan bagikan tautan.
+Diskusi pembaca pada puisi dengan pengaman terhadap spam dan komentar kasar.
 
 ## Layanan dan Komponen
 
-| Komponen | Data | Task |
+| Layanan | Tipe | Data |
 | --- | --- | --- |
-| Feed terbaru dan teratas, halaman Beranda dan Detail Puisi | memakai read model `poem-query` | T3.1 |
-| search-service | indeks PostgreSQL full-text, dibangun dari event | T3.2 |
-| endpoint dan halaman profil penulis | read model | T3.3 |
-| bookmark-service | bookmark-db (PostgreSQL) | T3.4 |
+| comment-service (`services/comment-service`, Node.js) | API + consumer | comment-db (PostgreSQL) + outbox, salinan status publikasi |
 
 ## Endpoint
 
 | Metode | Path | Keterangan |
 | --- | --- | --- |
-| GET | `/api/feed/latest`, `/api/feed/top` | feed publik; micro-cache Nginx |
-| GET | `/api/search?q=&type=` | pencarian judul, penulis, kata kunci |
-| GET | `/api/authors/{username}` | nama tampil, bio, jumlah puisi, daftar puisi terbit |
-| bookmark | endpoint simpan dan hapus simpanan | tombol simpan dan bagikan |
-
-Nama path feed dan bookmark ditetapkan saat implementasi dan didaftarkan di OpenAPI.
+| GET | `/api/poems/{id}/comments?page=` | daftar komentar berhalaman |
+| POST | `/api/poems/{id}/comments` | maksimal 1.000 karakter, HTML dibuang |
+| DELETE | `/api/comments/{id}` | hanya penulis komentar atau moderator |
+| POST | `/api/comments/{id}/report` | membuka kasus di antrean moderator |
 
 ## Event
 
 | Event | Peran |
 | --- | --- |
-| `poem.published`, `poem.hidden`, `poem.deleted` | consume (indeks pencarian dan feed) |
-| `poem.keywords.extracted` | consume (indeks pencarian berdasarkan kata kunci) |
-| `user.profile.updated` | consume (nama tampil penulis) |
+| `comment.created`, `comment.deleted` | publish lewat outbox |
+| `comment.reported` | publish; dikoordinasikan dengan T8.2 (boleh berupa pembukaan kasus lewat event) |
+| `poem.published`, `poem.hidden`, `poem.deleted` | consume; menyimpan salinan status publikasi |
 
 ## Catatan Teknis
 
-- Halaman Detail Puisi menyediakan slot komponen untuk kelompok lain: vote (k9), komentar (k4), laporan (k8), Jejak Keaslian (k7), alur emosi (k5). Susun kontrak props komponen sejak awal agar kelompok lain dapat mendaftarkannya tanpa mengubah halaman.
-- Feed publik tidak bergantung pada identitas pengguna, sehingga aman di-cache Nginx selama 3 detik dengan `proxy_cache_lock` dan `proxy_cache_use_stale updating`.
-- Tampilan hanya memuat puisi berstatus PUBLISHED. Indeks pencarian harus menghapus entri saat menerima `poem.hidden` atau `poem.deleted`.
-- Karena T3.1 dimulai sebelum `poem-query-service` selesai, kembangkan terhadap OpenAPI dan mock server dari T0.6, lalu uji dengan layanan asli sebagai syarat integrasi.
-- T3.4: halaman bagikan perlu HTML sisi server dengan meta Open Graph karena crawler media sosial tidak menjalankan JavaScript. Dikerjakan Raffa, direview Azka.
+- Komentar hanya boleh dibuat pada puisi berstatus PUBLISHED. Komentar disembunyikan saat puisi HIDDEN atau DELETED, tanpa memanggil layanan lain secara sinkron.
+- Sanitasi input di layanan penerima (buang HTML, batas 1.000 karakter) dan batas ukuran body di gateway.
+- Rate limit komentar di gateway, misalnya 10 per menit per pengguna; melebihi batas dibalas 429. Tambahkan zona `limit_req` pada `infra/nginx/conf.d/comment.conf`.
+- Otorisasi hapus diperiksa di layanan: pengguna lain tidak dapat menghapus komentar orang lain. Peran moderator dibaca dari header `X-User-Role` yang diisi gateway.
+- Daftarkan skema event dan layanan baru di `/contracts/events` dan katalog layanan.
+
+## Kriteria Selesai
+
+- Komentar pada puisi yang disembunyikan tidak tampil.
+- Pengguna lain tidak bisa menghapus komentar orang lain.
+- Melewati rate limit dibalas 429.
 
 ## Dependensi
 
-T0.5, T0.6, T1.4 (profil), T2.2, T2.3, T6.1 (kata kunci untuk pencarian).
+T0.6 (kontrak event), T2.2 (event publikasi), T8.2 (antrean kasus untuk laporan komentar).
 
 ## Alur Git
 
-Kerjakan langsung di `k3-jelajah`, awali commit dengan kode task (`T3.1: halaman detail`). Gabungkan `main` ke branch ini setiap hari kerja dan buat PR ke `main` minimal tiap Jumat.
+Kerjakan langsung di `k4-komunitas`, awali commit dengan kode task (`T4.1: endpoint komentar`). Gabungkan `main` ke branch ini setiap hari kerja dan buat PR ke `main` minimal tiap Jumat.
