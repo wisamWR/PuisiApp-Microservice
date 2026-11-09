@@ -1,4 +1,4 @@
-# Puisi App (RASA)
+# Puisi App
 
 Platform komunitas puisi tempat penulis menerbitkan karya dan pembaca menemukan puisi yang sesuai dengan suasana hatinya. Dua ciri utamanya adalah pemilihan puisi menurut suasana hati (Mood) dan jaminan keaslian karya (Keaslian serta Laporan dan sengketa).
 

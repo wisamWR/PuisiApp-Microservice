@@ -36,6 +36,9 @@ include:
   - path: compose/vote.yml
     project_directory: .
     env_file: ../.env
+  - path: compose/contoh.yml
+    project_directory: .
+    env_file: ../.env
 
 services:
   # ------------------------------------------------------------ message broker

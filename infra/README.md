@@ -7,6 +7,7 @@ Infrastruktur lokal dan konfigurasi bersama RASA.
 | `docker-compose.yml` | Compose induk: RabbitMQ, PostgreSQL, MongoDB, Redis, MinIO, Mailpit, jaringan, volume | Wisam |
 | `docker-compose.dev.yml` | Override laptop: membuka port ke `127.0.0.1` | Wisam |
 | `compose/<domain>.yml` | Layanan per domain, digabung lewat `include` | PJ domain (lihat CODEOWNERS) |
+| `compose/contoh.yml` | `example-consumer` (T0.2), hanya jalan dengan `--profile contoh` | Wisam |
 | `postgres/init/NN-<layanan>.sql` | Database + user per layanan | PJ layanan |
 | `rabbitmq/` | Image RabbitMQ + plugin delayed message dan Prometheus | Wisam |
 | `nginx/conf.d/<domain>.conf` | Rute gateway per domain (T0.4) | Azka |
