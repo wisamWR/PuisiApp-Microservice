@@ -35,7 +35,16 @@ Upstream dengan nama host di-resolve saat nginx start. Layanan yang belum ada ak
 | DELETE | /api/me | wajib login |
 
 ## Keamanan header
-Gateway selalu menimpa `X-User-Id` dan `X-User-Role`. Pada rute publik nilainya dikosongkan. Pada rute yang butuh login diisi dari hasil verifikasi token. Klien tidak bisa memalsukannya.
+Gateway selalu menimpa `X-User-Id` dan `X-User-Role` lewat `common/proxy-headers.conf`, termasuk di rute frontend. Nilai default `$user_id` dan `$user_role` kosong (di-set di `conf.d/gateway.conf`), sehingga header tidak dikirim di rute publik. Pada rute yang butuh login, nilainya diisi `auth_request_set` dari hasil verifikasi token. Klien tidak bisa memalsukannya.
+
+Rute baru cukup `include /etc/nginx/common/proxy-headers.conf;`. Untuk rute yang butuh login, tambahkan:
+```
+auth_request /_auth;
+auth_request_set $user_id   $upstream_http_x_user_id;
+auth_request_set $user_role $upstream_http_x_user_role;
+error_page 401 = @unauthorized;
+```
+Jangan menulis `proxy_set_header X-User-Id` sendiri di lokasi, karena header akan terkirim dua kali.
 
 ## Variabel lingkungan
 Lihat blok "API gateway (T0.4)" di `.env.example`. Nama variabel adalah `FRONTEND_HOST`, `REGISTER_HOST`, `LOGIN_HOST`, `PROFILE_HOST`, `RECOVERY_HOST`, dan `AUTH_HOST`. Sebelum token-service ada, `AUTH_HOST=127.0.0.1:8099` menunjuk ke stub di dalam gateway sendiri.
@@ -46,7 +55,7 @@ Dari root repositori (butuh `nginx` dan `envsubst`):
 bash infra/nginx/tests/run-gateway-tests.sh
 bash infra/nginx/tests/run-tests.sh
 ```
-Hasil yang diharapkan: `RINGKASAN: lulus=18 gagal=0`.
+Hasil yang diharapkan: `RINGKASAN: lulus=19 gagal=0`.
 
 ## Belum diuji
 - Rute feed dan vote milik kelompok lain. Zonanya sudah disiapkan dan diuji dengan rute sementara.

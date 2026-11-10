@@ -19,6 +19,8 @@ chk "register: X-User-Id palsu tidak sampai" "$(last register x_user_id)" "None"
 chk "register: X-User-Role palsu tidak sampai" "$(last register x_user_role)" "None"
 curl -s -o /dev/null -X POST -H 'X-User-Id: hacker' -b 'access_token=abc' $G/api/auth/logout
 chk "logout: X-User-Id palsu ditimpa gateway" "$(last login x_user_id)" "stub-user"
+curl -s -o /dev/null -H 'X-User-Id: hacker' -H 'X-User-Role: admin' $G/beranda
+chk "frontend: X-User-Id palsu tidak sampai" "$(last frontend x_user_id)" "None"
 
 codes=""; for i in $(seq 1 12); do codes="$codes $(curl -s -o /dev/null -w '%{http_code}' -X POST $G/api/auth/login)"; done
 ok=$(echo $codes | tr ' ' '\n' | grep -c '^200$' || true); lim=$(echo $codes | tr ' ' '\n' | grep -c '^429$' || true)
