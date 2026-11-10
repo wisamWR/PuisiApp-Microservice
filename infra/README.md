@@ -69,7 +69,7 @@ services:
       postgres: { condition: service_healthy }
       rabbitmq: { condition: service_healthy }
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
       interval: 10s
       timeout: 3s
       retries: 3
@@ -87,17 +87,21 @@ Aturan:
 1. Salin `postgres/init/01-example.sql` menjadi `postgres/init/NN-<layanan>.sql`.
 2. Ganti nama role dan database. Satu layanan, satu database, satu user.
 3. Tambahkan `<LAYANAN>_DB_PASS` ke `.env.example` dan `.env`.
-4. Skrip init hanya berjalan ketika volume PostgreSQL masih kosong. Untuk menjalankannya ulang:
+4. Skrip init hanya berjalan otomatis ketika volume PostgreSQL masih kosong. Untuk volume yang sudah ada, jalankan skrip barunya saja tanpa menghapus data. Container postgres dibuat ulang dulu supaya membaca password baru dari `.env`:
 
 ```bash
-docker compose down -v
+docker compose up -d postgres
 ```
 
 ```bash
-docker compose up -d
+MSYS_NO_PATHCONV=1 docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U postgres -f /docker-entrypoint-initdb.d/20-poem-create.sql
 ```
 
-`down -v` menghapus semua data lokal (PostgreSQL, MongoDB, Redis, RabbitMQ, MinIO).
+(`MSYS_NO_PATHCONV=1` hanya perlu di Git Bash Windows; ganti nama berkas dengan skrip milikmu.)
+
+Bila ingin mulai dari nol, `docker compose down -v` lalu `docker compose up -d`. Perintah ini menghapus semua data lokal (PostgreSQL, MongoDB, Redis, RabbitMQ, MinIO).
+
+Untuk database ber-outbox, ikuti juga bagian "Cara menambah relay" di [docs/adr/outbox-relay.md](../docs/adr/outbox-relay.md).
 
 Nomor `NN` mengikuti nomor kelompok supaya urutan dan pemilik jelas:
 

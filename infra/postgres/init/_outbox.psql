@@ -27,8 +27,18 @@ CREATE INDEX IF NOT EXISTS outbox_created_at_idx ON outbox (created_at);
 ALTER TABLE outbox OWNER TO :"pemilik";
 GRANT SELECT ON outbox TO debezium;
 
--- Hanya INSERT yang diterbitkan; DELETE pembersihan tidak menjadi event.
-CREATE PUBLICATION outbox_pub FOR TABLE outbox WITH (publish = 'insert');
+-- Heartbeat relay: di-update user debezium setiap 10 detik
+-- (heartbeat.action.query) agar slot database yang sepi tetap maju.
+CREATE TABLE IF NOT EXISTS debezium_heartbeat (
+  id SMALLINT    PRIMARY KEY,
+  ts TIMESTAMPTZ NOT NULL
+);
+ALTER TABLE debezium_heartbeat OWNER TO :"pemilik";
+GRANT SELECT, INSERT, UPDATE ON debezium_heartbeat TO debezium;
+
+-- INSERT outbox dan UPDATE heartbeat diterbitkan. Baris outbox tidak pernah
+-- di-UPDATE; DELETE (pembersihan) tidak diterbitkan sehingga tidak menjadi event.
+CREATE PUBLICATION outbox_pub FOR TABLE outbox, debezium_heartbeat WITH (publish = 'insert, update');
 
 -- Slot dibuat sekarang supaya event yang ditulis sebelum relay pertama kali
 -- menyala tetap ikut diterbitkan.
