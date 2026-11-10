@@ -12,7 +12,7 @@ Infrastruktur lokal dan konfigurasi bersama RASA.
 | `rabbitmq/` | Image RabbitMQ + plugin delayed message dan Prometheus | Wisam |
 | `debezium/` | Templat outbox-relay (Debezium Server): `application.properties` dan `relay.yml` untuk `extends` | Wisam |
 | `postgres/init/_outbox.psql` | Tabel outbox + publication + slot, di-include skrip DB ber-outbox | Wisam |
-| `nginx/conf.d/<domain>.conf` | Rute gateway per domain (T0.4) | Azka |
+| `nginx/routes/<domain>.conf` | Rute gateway per domain (T0.4). `nginx/conf.d/` hanya berisi blok server | Azka |
 | `observability/` | Prometheus, Loki, Grafana (T0.8) | Raffa |
 
 ## Layanan infrastruktur
