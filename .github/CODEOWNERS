@@ -1,4 +1,6 @@
-# Pemilik kode wajib me-review PR yang menyentuh foldernya.
+# Pemilik folder otomatis diberi tahu (diminta sebagai reviewer) saat PR
+# menyentuh foldernya. Approval mereka tidak wajib: review dan merge ke main
+# dilakukan PM (lihat README, bagian Alur kerja Git).
 # Aturan yang paling bawah menang, jadi aturan umum ditulis di atas.
 
 # ---------------------------------------------------------------- default
@@ -22,6 +24,12 @@
 /infra/compose/community.yml        @MdAzka @calvinn4s
 /infra/compose/moderation.yml       @calvinn4s
 /infra/compose/vote.yml             @raffameizahra
+
+# ---------------------------------------------------------------- rute gateway per domain
+/infra/nginx/routes/poem.conf       @wisamWR @MdAzka
+/infra/nginx/conf.d/poem.conf       @wisamWR @MdAzka
+/contracts/events/poem.*            @wisamWR @calvinn4s
+/contracts/openapi/poem-*           @wisamWR @calvinn4s
 
 # ---------------------------------------------------------------- skrip init DB (NN = nomor kelompok)
 /infra/postgres/init/1*.sql         @MdAzka

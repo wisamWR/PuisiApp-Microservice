@@ -99,7 +99,7 @@ Ada 10 branch tetap: `main` dan 9 branch kelompok fitur.
 
 | Branch | Kelompok fitur | Penanggung jawab |
 | --- | --- | --- |
-| `main` | Integrasi dan rilis, diberi tag per milestone | semua |
+| `main` | Integrasi dan rilis, diberi tag per milestone | PM (review dan merge) |
 | `k1-akun` | 1. Akun dan identitas | Azka |
 | `k2-penulisan` | 2. Penulisan puisi | Wisam |
 | `k3-search` | 3. Jelajah dan baca | Azka |
@@ -114,11 +114,32 @@ Ada 10 branch tetap: `main` dan 9 branch kelompok fitur.
 
 ### Aturan
 
-1. Kerjakan task kelompok langsung di branch kelompoknya. Awali setiap commit dengan kode task, misalnya `T2.1: validasi judul dan isi`. Jalankan `git pull --rebase` sebelum push.
+1. Kerjakan task kelompok langsung di branch kelompoknya; tidak perlu membuat branch baru. Awali setiap commit dengan kode task, misalnya `T2.1: validasi judul dan isi`. Jalankan `git pull --rebase` sebelum push.
 2. Setiap hari kerja dan sebelum membuat PR, gabungkan `main` ke branch kelompok supaya perubahan kontrak, pustaka, dan infrastruktur cepat masuk. Konflik diselesaikan pemilik kelompok.
-3. Branch kelompok masuk ke `main` lewat pull request minimal setiap Jumat, dan setiap kali kelompok lain membutuhkan hasilnya. Syarat merge: CI hijau, uji integrasi kelompok lolos, dan 1 reviewer dari kelompok lain.
-4. Task lintas kelompok dikerjakan di branch kelompok pemilik fitur dan di-review pemiliknya: T1.6 (Sabila) di `k1-akun`, T3.4 (Raffa) di `k3-search`.
-5. Task di luar kelompok (semua T0.x, T10.x, dan perubahan bersama pada `contracts/`, `libs/`, `infra/`) memakai branch pendek `T<kode>-<deskripsi>` (contoh `T0.3-outbox-relay`), masuk ke `main` lewat PR, lalu branch dihapus. Perubahan `contracts/` di-review Zoya.
-6. Ubah berkas bersama hanya di bagian domain sendiri: `infra/compose/<domain>.yml`, `infra/nginx/conf.d/<domain>.conf`, `infra/postgres/init/NN-<layanan>.sql`.
-7. `main` terlindungi: tidak bisa di-push langsung, hanya lewat PR. Pemilik folder di `.github/CODEOWNERS` otomatis diminta me-review.
-8. `main` diberi tag di setiap milestone (PA3 dan seterusnya).
+3. Hanya PM yang me-review dan me-merge ke `main`. Anggota membuat pull request lalu menunggu PM; tidak perlu approval dari anggota lain.
+4. Branch kelompok diajukan ke `main` lewat PR **secara berkala**, minimal setiap Jumat, dan setiap kali kelompok lain membutuhkan hasilnya (event, endpoint, kontrak). Jangan menunggu sampai fitur lengkap di akhir: merge kecil yang sering mencegah konflik menumpuk di berkas bersama. Syarat merge: CI hijau dan uji integrasi kelompok lolos.
+5. Task lintas kelompok dikerjakan di branch kelompok pemilik fitur: T1.6 (Sabila) di `k1-akun`, T3.4 (Raffa) di `k3-search`.
+6. Task di luar kelompok (semua T0.x, T10.x, dan perubahan bersama pada `contracts/`, `libs/`, `infra/`) memakai branch pendek `T<kode>-<deskripsi>` (contoh `T0.3-outbox-relay`), diajukan ke `main` lewat PR, lalu branch dihapus setelah di-merge. Beri tahu Zoya bila mengubah `contracts/`.
+7. Ubah berkas bersama hanya di bagian domain sendiri: `infra/compose/<domain>.yml`, `infra/nginx/conf.d/<domain>.conf`, `infra/nginx/routes/<domain>.conf`, `infra/postgres/init/NN-<layanan>.sql`.
+8. PM memberi tag di `main` pada setiap milestone (PA3 dan seterusnya).
+
+### Proteksi branch
+
+| Branch | Aturan di GitHub |
+| --- | --- |
+| `main` | Wajib lewat pull request (tanpa minimal approval), hanya PM yang dapat merge, force push diblokir. Push langsung ditolak dengan pesan `GH013: Repository rule violations` |
+| `k1` sampai `k9` | Tanpa aturan; setiap branch dikelola pemilik kelompoknya |
+
+Bila push ke `main` ditolak, pindahkan commit ke branch baru lalu ajukan PR:
+
+```bash
+git switch -c T<kode>-<deskripsi>
+```
+
+```bash
+git push -u origin T<kode>-<deskripsi>
+```
+
+```bash
+git branch -f main origin/main
+```
