@@ -19,6 +19,8 @@ Spike dilakukan dengan `quay.io/debezium/server:3.7.1.Final`, PostgreSQL 16 (`wa
 | Properti vhost adalah `connection.virtual.host` (diteruskan ke `ConnectionFactoryConfigurator`), bukan `virtualHost`. | Dengan nama yang salah, relay jatuh ke vhost `/` dan gagal `NOT_ALLOWED`. |
 | Replication slot yang dibuat **sebelum** publication membuat `pgoutput` macet permanen: `publication "outbox_pub" does not exist`. | Publication harus dibuat lebih dulu daripada slot. |
 | Image MinIO dan sebagian image lain berpindah registry; Debezium Server 3.x hanya ada di Quay. | Image dipin ke `quay.io`. |
+| (Ditemukan di T2.1, 10 Nov) Satu klaster Postgres berisi banyak database. Slot milik database yang sepi tidak pernah maju walaupun WAL klaster terus bertambah: slot `outbox_example` tertahan 6 MB dan terus naik. `lsn.flush.mode=connector_and_driver` tidak membantu. | Tanpa perbaikan, WAL menumpuk sampai `max_slot_wal_keep_size` lalu slot dibatalkan dan relay rusak. |
+| Debezium Server hanya menyimpan posisi untuk record yang **sampai ke sink**. Record heartbeat yang dibuang dengan SMT `Filter` tidak memajukan slot. | Heartbeat harus dikirim ke sink, lalu dibuang di sisi RabbitMQ. |
 
 ## Keputusan
 
@@ -32,9 +34,15 @@ Spike dilakukan dengan `quay.io/debezium/server:3.7.1.Final`, PostgreSQL 16 (`wa
 4. **Tabel outbox, publication, dan slot dibuat saat init database** (`infra/postgres/init/_outbox.psql`) dengan urutan publication lalu slot. Akibatnya:
    - tidak ada event yang terlewat walaupun layanan menulis sebelum relay pertama kali menyala;
    - `snapshot.mode=no_data`: kehilangan berkas offset tidak menerbitkan ulang seluruh outbox lama;
-   - publication hanya `insert`, sehingga pembersihan outbox tidak menjadi event.
-5. **User `debezium`** hanya punya `LOGIN REPLICATION`, `CONNECT` per database ber-outbox, dan `SELECT` pada tabel outbox.
+   - publication menerbitkan `insert` (outbox) dan `update` (heartbeat). Baris outbox tidak pernah di-UPDATE, dan DELETE pembersihan tidak menjadi event.
+5. **User `debezium`** hanya punya `LOGIN REPLICATION`, `CONNECT` per database ber-outbox, `SELECT` pada tabel outbox, dan `SELECT, INSERT, UPDATE` pada `debezium_heartbeat`.
 6. `max_slot_wal_keep_size=1024MB` membatasi WAL yang ditahan slot milik relay yang mati lama.
+7. **Heartbeat setiap 10 detik** supaya slot database yang sepi tetap maju:
+   - `heartbeat.action.query` meng-update tabel `debezium_heartbeat` (ikut publication) di database relay itu sendiri;
+   - kunci record heartbeat diubah menjadi nama database (SMT `ExtractField$Key`), sehingga routing key-nya satu kata tanpa titik;
+   - `outbox.relay` diikat ke exchange `outbox.heartbeat` (tanpa queue) dengan pola `*`, sehingga heartbeat sampai ke sink (posisi tersimpan) lalu dibuang RabbitMQ. `event_type` selalu mengandung titik, jadi tidak pernah cocok dengan `*`.
+   - Hasil: ketinggalan slot turun dari 6 MB (dan terus naik) menjadi di bawah 1 KB; `q.outbox.unrouted` tidak bertambah.
+   - Volume yang dibuat sebelum 10 November perlu `infra/postgres/migrasi/2026-11-10-heartbeat-outbox.sql`.
 
 ## Hasil uji (lokal, Docker Desktop)
 

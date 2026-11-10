@@ -21,6 +21,12 @@ export const EXCHANGE_RELAY = 'outbox.relay';
 /** Menampung event dari relay yang tidak terdaftar di routing.json. */
 export const EXCHANGE_TAK_TERUTE = 'outbox.unrouted';
 export const ANTREAN_TAK_TERUTE = 'q.outbox.unrouted';
+/**
+ * Tujuan record heartbeat Debezium (kunci = nama database, satu kata).
+ * Tidak punya queue sehingga pesan dibuang; hanya memastikan heartbeat
+ * "terkirim" agar Debezium memajukan replication slot.
+ */
+export const EXCHANGE_HEARTBEAT = 'outbox.heartbeat';
 export const EXCHANGE_RETRY = 'retry.delayed';
 /** Jaring pengaman: pesan yang membuat worker crash berulang tetap berakhir di DLQ. */
 export const BATAS_PENGIRIMAN = 5;
@@ -97,5 +103,10 @@ export async function pasangTopologiBersama(ch) {
   for (const [eventType, exchange] of peta) {
     await ch.bindExchange(exchange, EXCHANGE_RELAY, eventType);
   }
+
+  // Heartbeat relay: kunci satu kata ("submission_db") cocok dengan "*";
+  // event_type selalu punya titik sehingga tidak pernah cocok.
+  await ch.assertExchange(EXCHANGE_HEARTBEAT, 'fanout', { durable: true });
+  await ch.bindExchange(EXCHANGE_HEARTBEAT, EXCHANGE_RELAY, '*');
   return { exchanges, bindings: peta.size };
 }
