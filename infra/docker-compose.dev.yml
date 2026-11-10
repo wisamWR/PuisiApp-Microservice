@@ -1,0 +1,44 @@
+# Override khusus laptop pengembang. JANGAN dipakai di EC2.
+#
+# Di lingkungan produksi hanya api-gateway yang memetakan port ke host.
+# Untuk pengembangan lokal, infrastruktur dibuka ke 127.0.0.1 saja supaya
+# layanan bisa dijalankan langsung dari IDE (npm run dev / python -m ...) dan
+# UI manajemen bisa dibuka di browser. Port host bisa diganti lewat .env bila
+# bentrok dengan instalasi lokal.
+#
+# Jaringan internal tidak dapat mem-publish port, jadi di sini app dan data
+# dibuat non-internal.
+
+services:
+  rabbitmq:
+    ports:
+      - "127.0.0.1:${RABBITMQ_HOST_PORT:-5672}:5672"
+      - "127.0.0.1:${RABBITMQ_UI_HOST_PORT:-15672}:15672"
+
+  postgres:
+    ports:
+      - "127.0.0.1:${POSTGRES_HOST_PORT:-5432}:5432"
+
+  mongodb:
+    ports:
+      - "127.0.0.1:${MONGO_HOST_PORT:-27017}:27017"
+
+  redis:
+    ports:
+      - "127.0.0.1:${REDIS_HOST_PORT:-6379}:6379"
+
+  minio:
+    ports:
+      - "127.0.0.1:${MINIO_HOST_PORT:-9000}:9000"
+      - "127.0.0.1:${MINIO_CONSOLE_HOST_PORT:-9001}:9001"
+
+  mailpit:
+    ports:
+      - "127.0.0.1:${MAILPIT_SMTP_HOST_PORT:-1025}:1025"
+      - "127.0.0.1:${MAILPIT_UI_HOST_PORT:-8025}:8025"
+
+networks:
+  app:
+    internal: false
+  data:
+    internal: false
