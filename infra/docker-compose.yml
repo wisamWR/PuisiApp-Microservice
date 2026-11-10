@@ -199,6 +199,33 @@ services:
       timeout: 5s
       retries: 6
 
+  # ------------------------------------------------------------ API gateway (T0.4)
+  # Satu-satunya layanan yang memetakan port ke host. Alamat layanan lain di-resolve
+  # saat request, jadi gateway tetap bisa start walau layanan tujuan belum ada.
+  # Di EC2 isi GATEWAY_BIND=0.0.0.0 pada .env.production.
+  api-gateway:
+    image: nginx:1.28-alpine
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "/docker-entrypoint.sh"]
+    env_file:
+      - path: ../.env
+        required: true
+    ports:
+      - "${GATEWAY_BIND:-127.0.0.1}:${GATEWAY_HOST_PORT:-8080}:80"
+    volumes:
+      - ./nginx/docker-entrypoint.sh:/docker-entrypoint.sh:ro
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/routes:/etc/nginx/routes:ro
+      - ./nginx/common:/etc/nginx/common:ro
+      - ./nginx/templates:/etc/nginx/templates:ro
+    networks: [edge, app]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
 networks:
   edge: {}
   egress: {}
