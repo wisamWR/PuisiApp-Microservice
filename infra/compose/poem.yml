@@ -2,8 +2,52 @@
 # Kelompok: 2 Penulisan puisi (Wisam)
 # Layanan: poem-create, poem-edit, poem-delete, publication, poem-query, processing-tracker, status-stream, notification, image-preview, image-render-worker, outbox-relay per database
 #
-# Tulis layanan domain ini di sini. Path relatif dihitung dari folder infra/
-# (project_directory pada include), jadi build context ditulis ../services/<nama>.
-# Pola lengkap ada di infra/README.md. Alamat dependensi diambil dari .env.
+# Path relatif dihitung dari folder infra/ (project_directory pada include),
+# jadi build context ditulis ../services/<nama>. Pola lengkap ada di
+# infra/README.md. Alamat dependensi diambil dari .env.
 
-services: {}
+services:
+  # ---------------------------------------------------------------- T2.1
+  # Menerima POST /api/poems, menulis submission + outbox dalam satu transaksi,
+  # membalas 202. Tidak terhubung ke RabbitMQ: penerbitan event dikerjakan
+  # outbox-relay-submission, jadi pengajuan tetap diterima saat broker mati.
+  poem-create-service:
+    build:
+      context: ..
+      dockerfile: services/poem-create-service/Dockerfile
+    restart: unless-stopped
+    environment:
+      SERVICE_NAME: poem-create-service
+      PORT: "8080"
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      DATABASE_URL: postgres://poem_create:${POEM_CREATE_DB_PASS}@${POSTGRES_HOST}:${POSTGRES_PORT}/submission_db
+      TEMPLATE_SAH: ${TEMPLATE_SAH:-latar1,latar2,latar3}
+    networks: [app, data]
+    depends_on:
+      postgres: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          memory: 192M
+
+  outbox-relay-submission:
+    extends:
+      file: debezium/relay.yml
+      service: outbox-relay
+    environment:
+      RELAY_DB: submission_db
+      RELAY_SLOT: outbox_submission
+    volumes:
+      - relay-submission-data:/debezium/data
+    depends_on:
+      rabbitmq-topologi: { condition: service_completed_successfully }
+      poem-create-service: { condition: service_healthy }
+
+volumes:
+  relay-submission-data: {}

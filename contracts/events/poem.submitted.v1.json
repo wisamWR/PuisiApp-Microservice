@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://puisiapp.example/schema/events/poem.submitted.v1.json",
+  "title": "Payload poem.submitted v1",
+  "description": "Puisi versi 1 diajukan. Produsen: poem-create-service (T2.1). Exchange: poem.events. aggregate_id = poem_id, aggregate_version = 1. Konsumen: poem-edit, poem-delete, publication, poem-query, processing-tracker, keyword, theme, emotion, fingerprint, authorship, image-render, vote, evidence.",
+  "type": "object",
+  "required": [
+    "poem_id",
+    "version",
+    "author_id",
+    "title",
+    "body",
+    "quote_stanza",
+    "quote_text",
+    "template_id",
+    "submitted_at"
+  ],
+  "properties": {
+    "poem_id": { "type": "string", "format": "uuid" },
+    "version": { "type": "integer", "const": 1 },
+    "author_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "description": "Dari header X-User-Id gateway, bukan dari body permintaan"
+    },
+    "title": { "type": "string", "minLength": 1, "maxLength": 150 },
+    "body": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 8000,
+      "description": "Teks bersih (tanpa HTML). Baris dipisah \\n, bait dipisah satu baris kosong."
+    },
+    "quote_stanza": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Indeks bait kutipan, berbasis 0, dihitung dari body yang dipecah per baris kosong"
+    },
+    "quote_text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 280,
+      "description": "Isi bait kutipan (salinan dari body) untuk gambar kutipan"
+    },
+    "template_id": { "type": "string", "minLength": 1, "maxLength": 20 },
+    "category": { "type": ["string", "null"], "maxLength": 60, "description": "Kategori manual dari penulis (Tugas 1)" },
+    "keywords": {
+      "type": "array",
+      "maxItems": 10,
+      "items": { "type": "string", "minLength": 1, "maxLength": 40 },
+      "description": "Kata kunci manual dari penulis (Tugas 1); terpisah dari auto-tagging"
+    },
+    "submitted_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "poem_id": "0b7d6f0e-4a8b-4a52-9d0b-3f4f0e9b2a10",
+      "version": 1,
+      "author_id": "u-0042",
+      "title": "Jendela yang Basah",
+      "body": "sore turun tanpa permisi\nhujan mengetuk kaca\n\nseperti nama yang tak jadi kupanggil\nkusimpan hangatmu di saku jaket",
+      "quote_stanza": 0,
+      "quote_text": "sore turun tanpa permisi\nhujan mengetuk kaca",
+      "template_id": "latar2",
+      "category": "lirik",
+      "keywords": ["hujan", "rindu"],
+      "submitted_at": "2026-11-17T03:00:00.120Z"
+    }
+  ]
+}
