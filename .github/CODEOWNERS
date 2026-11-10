@@ -1,8 +1,5 @@
 # Pemilik kode wajib me-review PR yang menyentuh foldernya.
 # Aturan yang paling bawah menang, jadi aturan umum ditulis di atas.
-#
-# GANTI username placeholder sebelum push:
-#   @SABILA_GITHUB -> username GitHub Sabila
 
 # ---------------------------------------------------------------- default
 *                                   @wisamWR
@@ -14,14 +11,14 @@
 /infra/nginx/                       @MdAzka
 /infra/observability/               @raffameizahra
 /libs/node/                         @wisamWR
-/libs/python/                       @SABILA_GITHUB
+/libs/python/                       @Lil-SabS
 /contracts/                         @calvinn4s
 /docs/                              @wisamWR @calvinn4s
 
 # ---------------------------------------------------------------- compose per domain
 /infra/compose/identity.yml         @MdAzka
 /infra/compose/poem.yml             @wisamWR
-/infra/compose/analysis.yml         @SABILA_GITHUB @raffameizahra
+/infra/compose/analysis.yml         @Lil-SabS @raffameizahra
 /infra/compose/community.yml        @MdAzka @calvinn4s
 /infra/compose/moderation.yml       @calvinn4s
 /infra/compose/vote.yml             @raffameizahra
@@ -31,8 +28,8 @@
 /infra/postgres/init/2*.sql         @wisamWR
 /infra/postgres/init/3*.sql         @MdAzka
 /infra/postgres/init/4*.sql         @calvinn4s
-/infra/postgres/init/5*.sql         @SABILA_GITHUB
-/infra/postgres/init/6*.sql         @SABILA_GITHUB
+/infra/postgres/init/5*.sql         @Lil-SabS
+/infra/postgres/init/6*.sql         @Lil-SabS
 /infra/postgres/init/7*.sql         @raffameizahra
 /infra/postgres/init/8*.sql         @calvinn4s
 /infra/postgres/init/9*.sql         @raffameizahra
@@ -68,11 +65,11 @@
 /services/comment-service/          @calvinn4s
 
 # 5. Mood dan 6. Tema
-/services/emotion-worker/           @SABILA_GITHUB
-/services/mood-feed-service/        @SABILA_GITHUB
-/services/keyword-worker/           @SABILA_GITHUB
-/services/theme-worker/             @SABILA_GITHUB
-/services/theme-feed-service/       @SABILA_GITHUB
+/services/emotion-worker/           @Lil-SabS
+/services/mood-feed-service/        @Lil-SabS
+/services/keyword-worker/           @Lil-SabS
+/services/theme-worker/             @Lil-SabS
+/services/theme-feed-service/       @Lil-SabS
 
 # 7. Keaslian
 /services/fingerprint-worker/       @raffameizahra
