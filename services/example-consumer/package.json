@@ -1,0 +1,18 @@
+{
+  "name": "example-consumer",
+  "version": "0.1.0",
+  "description": "Contoh layanan konsumen memakai @puisiapp/events (T0.2). Templat untuk layanan Node.js lain.",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "kirim-contoh": "node scripts/kirim-contoh.js"
+  },
+  "dependencies": {
+    "@puisiapp/events": "file:../../libs/node",
+    "pg": "8.23.1"
+  }
+}

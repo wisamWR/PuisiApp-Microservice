@@ -1,0 +1,17 @@
+{
+  "name": "register-service",
+  "version": "0.1.0",
+  "description": "T1.1: registrasi akun (POST /api/auth/register) dan event user.registered lewat outbox.",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "@node-rs/argon2": "2.2.2",
+    "@puisiapp/events": "file:../../libs/node",
+    "pg": "8.23.1"
+  }
+}

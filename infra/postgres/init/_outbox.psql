@@ -1,0 +1,45 @@
+-- Bagian bersama untuk database ber-outbox. TIDAK dijalankan langsung
+-- (ekstensi .psql diabaikan entrypoint Postgres); di-include dari skrip
+-- NN-<layanan>.sql setelah \connect ke database layanan:
+--
+--   \connect submission_db
+--   \set pemilik poem_create
+--   \set slot outbox_submission
+--   \ir _outbox.psql
+--
+-- URUTAN PENTING: publication harus ada SEBELUM replication slot dibuat.
+-- pgoutput membaca katalog pada posisi WAL yang sedang didekode; bila slot
+-- lebih tua dari publication, relay macet dengan galat
+-- 'publication "outbox_pub" does not exist'.
+--
+-- Skema tabel sama dengan libs/node/sql/outbox/001_outbox.sql (migrasi
+-- layanan memakai IF NOT EXISTS, jadi tidak bentrok).
+
+CREATE TABLE IF NOT EXISTS outbox (
+  event_id       UUID         PRIMARY KEY,
+  aggregate_type VARCHAR(40)  NOT NULL,
+  aggregate_id   VARCHAR(64)  NOT NULL,
+  event_type     VARCHAR(80)  NOT NULL,
+  payload        JSONB        NOT NULL,
+  created_at     TIMESTAMPTZ  NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS outbox_created_at_idx ON outbox (created_at);
+ALTER TABLE outbox OWNER TO :"pemilik";
+GRANT SELECT ON outbox TO debezium;
+
+-- Heartbeat relay: di-update user debezium setiap 10 detik
+-- (heartbeat.action.query) agar slot database yang sepi tetap maju.
+CREATE TABLE IF NOT EXISTS debezium_heartbeat (
+  id SMALLINT    PRIMARY KEY,
+  ts TIMESTAMPTZ NOT NULL
+);
+ALTER TABLE debezium_heartbeat OWNER TO :"pemilik";
+GRANT SELECT, INSERT, UPDATE ON debezium_heartbeat TO debezium;
+
+-- INSERT outbox dan UPDATE heartbeat diterbitkan. Baris outbox tidak pernah
+-- di-UPDATE; DELETE (pembersihan) tidak diterbitkan sehingga tidak menjadi event.
+CREATE PUBLICATION outbox_pub FOR TABLE outbox, debezium_heartbeat WITH (publish = 'insert, update');
+
+-- Slot dibuat sekarang supaya event yang ditulis sebelum relay pertama kali
+-- menyala tetap ikut diterbitkan.
+SELECT pg_create_logical_replication_slot(:'slot', 'pgoutput');

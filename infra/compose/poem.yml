@@ -1,0 +1,9 @@
+# Domain poem
+# Kelompok: 2 Penulisan puisi (Wisam)
+# Layanan: poem-create, poem-edit, poem-delete, publication, poem-query, processing-tracker, status-stream, notification, image-preview, image-render-worker, outbox-relay per database
+#
+# Tulis layanan domain ini di sini. Path relatif dihitung dari folder infra/
+# (project_directory pada include), jadi build context ditulis ../services/<nama>.
+# Pola lengkap ada di infra/README.md. Alamat dependensi diambil dari .env.
+
+services: {}

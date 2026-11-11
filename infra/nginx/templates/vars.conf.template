@@ -1,0 +1,9 @@
+# Dirender envsubst saat container start menjadi /etc/nginx/vars.conf.
+# Alamat hanya dari variabel lingkungan. Dibaca saat request (bukan saat start),
+# sehingga gateway tetap bisa jalan walau layanan tujuan belum ada.
+set $up_frontend  "${FRONTEND_HOST}";
+set $up_register  "${REGISTER_HOST}";
+set $up_login     "${LOGIN_HOST}";
+set $up_profile   "${PROFILE_HOST}";
+set $up_recovery  "${RECOVERY_HOST}";
+set $up_auth      "${AUTH_HOST}";

@@ -1,0 +1,99 @@
+# Pemilik folder otomatis diberi tahu (diminta sebagai reviewer) saat PR
+# menyentuh foldernya. Approval mereka tidak wajib: review dan merge ke main
+# dilakukan PM (lihat README, bagian Alur kerja Git).
+# Aturan yang paling bawah menang, jadi aturan umum ditulis di atas.
+
+# ---------------------------------------------------------------- default
+*                                   @wisamWR
+
+# ---------------------------------------------------------------- bersama
+/.github/                           @wisamWR @raffameizahra
+/.github/workflows/                 @raffameizahra
+/infra/                             @wisamWR
+/infra/nginx/                       @MdAzka
+/infra/observability/               @raffameizahra
+/libs/node/                         @wisamWR
+/libs/python/                       @Lil-SabS
+/contracts/                         @calvinn4s
+/docs/                              @wisamWR @calvinn4s
+
+# ---------------------------------------------------------------- compose per domain
+/infra/compose/identity.yml         @MdAzka
+/infra/compose/poem.yml             @wisamWR
+/infra/compose/analysis.yml         @Lil-SabS @raffameizahra
+/infra/compose/community.yml        @MdAzka @calvinn4s
+/infra/compose/moderation.yml       @calvinn4s
+/infra/compose/vote.yml             @raffameizahra
+
+# ---------------------------------------------------------------- rute gateway per domain
+/infra/nginx/routes/poem.conf       @wisamWR @MdAzka
+/infra/nginx/conf.d/poem.conf       @wisamWR @MdAzka
+/contracts/events/poem.*            @wisamWR @calvinn4s
+/contracts/openapi/poem-*           @wisamWR @calvinn4s
+
+# ---------------------------------------------------------------- skrip init DB (NN = nomor kelompok)
+/infra/postgres/init/1*.sql         @MdAzka
+/infra/postgres/init/2*.sql         @wisamWR
+/infra/postgres/init/3*.sql         @MdAzka
+/infra/postgres/init/4*.sql         @calvinn4s
+/infra/postgres/init/5*.sql         @Lil-SabS
+/infra/postgres/init/6*.sql         @Lil-SabS
+/infra/postgres/init/7*.sql         @raffameizahra
+/infra/postgres/init/8*.sql         @calvinn4s
+/infra/postgres/init/9*.sql         @raffameizahra
+
+# ---------------------------------------------------------------- layanan
+# 1. Akun dan identitas
+/services/register-service/         @MdAzka
+/services/login-service/            @MdAzka
+/services/token-service/            @MdAzka
+/services/profile-service/          @MdAzka
+/services/account-recovery-service/ @MdAzka
+/services/email-worker/             @MdAzka
+
+# 2. Penulisan puisi
+/services/poem-create-service/      @wisamWR
+/services/poem-edit-service/        @wisamWR
+/services/poem-delete-service/      @wisamWR
+/services/publication-service/      @wisamWR
+/services/poem-query-service/       @wisamWR
+/services/processing-tracker/       @wisamWR
+/services/status-stream-service/    @wisamWR
+/services/notification-service/     @wisamWR
+/services/image-preview-service/    @wisamWR
+/services/image-render-worker/      @wisamWR
+/services/outbox-relay/             @wisamWR
+/services/example-consumer/         @wisamWR
+
+# 3. Jelajah dan baca
+/services/search-service/           @MdAzka
+/services/bookmark-service/         @MdAzka
+
+# 4. Komunitas
+/services/comment-service/          @calvinn4s
+
+# 5. Mood dan 6. Tema
+/services/emotion-worker/           @Lil-SabS
+/services/mood-feed-service/        @Lil-SabS
+/services/keyword-worker/           @Lil-SabS
+/services/theme-worker/             @Lil-SabS
+/services/theme-feed-service/       @Lil-SabS
+
+# 7. Keaslian
+/services/fingerprint-worker/       @raffameizahra
+/services/similarity-worker/        @raffameizahra
+/services/authorship-worker/        @raffameizahra
+/services/authorship-query-service/ @raffameizahra
+
+# 8. Laporan dan sengketa
+/services/report-service/           @calvinn4s
+/services/evidence-worker/          @calvinn4s
+/services/case-queue-service/       @calvinn4s
+/services/case-decision-service/    @calvinn4s
+/services/appeal-service/           @calvinn4s
+/services/audit-worker/             @calvinn4s
+
+# 9. Suara dan peringkat
+/services/vote-service/             @raffameizahra
+/services/vote-persist-worker/      @raffameizahra
+/services/ranking-worker/           @raffameizahra
