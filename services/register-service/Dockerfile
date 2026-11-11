@@ -3,7 +3,7 @@ FROM node:24.22.2-alpine
 
 ENV NODE_ENV=production \
     SERVICE_NAME=register-service \
-    PORT=3000
+    PORT=8080
 WORKDIR /app
 
 COPY contracts /app/contracts
@@ -19,5 +19,5 @@ COPY services/register-service /app/services/register-service
 
 WORKDIR /app/services/register-service
 USER node
-EXPOSE 3000
+EXPOSE 8080
 CMD ["node", "src/index.js"]

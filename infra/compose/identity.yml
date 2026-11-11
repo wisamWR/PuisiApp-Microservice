@@ -15,7 +15,7 @@ services:
     restart: unless-stopped
     environment:
       SERVICE_NAME: register-service
-      PORT: "3000"
+      PORT: "8080"
       LOG_LEVEL: ${LOG_LEVEL:-info}
       DATABASE_URL: postgres://register:${REGISTER_DB_PASS}@${POSTGRES_HOST}:${POSTGRES_PORT}/account_db
       RABBITMQ_HOST: ${RABBITMQ_HOST}
@@ -28,7 +28,7 @@ services:
       postgres: { condition: service_healthy }
       rabbitmq: { condition: service_healthy }
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/health"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
       interval: 10s
       timeout: 3s
       retries: 3
