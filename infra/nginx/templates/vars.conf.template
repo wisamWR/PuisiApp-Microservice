@@ -9,3 +9,4 @@ set $up_recovery  "${RECOVERY_HOST}";
 set $up_auth      "${AUTH_HOST}";
 set $up_poem_create "${POEM_CREATE_HOST}";
 set $up_poem_query  "${POEM_QUERY_HOST}";
+set $up_image_preview "${IMAGE_PREVIEW_HOST}";

@@ -49,5 +49,70 @@ services:
       rabbitmq-topologi: { condition: service_completed_successfully }
       poem-create-service: { condition: service_healthy }
 
+  # ---------------------------------------------------------------- T2.5
+  # Satu image (services/image-service), dua entrypoint.
+  # Pratinjau: sinkron, stateless, tanpa basis data; template di memori.
+  image-preview-service:
+    build:
+      context: ..
+      dockerfile: services/image-service/Dockerfile
+    image: puisiapp/image-service:dev
+    command: ["node", "src/preview.js"]
+    restart: unless-stopped
+    environment:
+      SERVICE_NAME: image-preview-service
+      PORT: "8080"
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    networks: [app]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  # Gambar final per versi ke S3 (MinIO di lokal), lalu poem.image.rendered.
+  # egress: akses keluar ke Amazon S3 di EC2.
+  image-render-worker:
+    image: puisiapp/image-service:dev
+    command: ["node", "src/render-worker.js"]
+    restart: unless-stopped
+    environment:
+      SERVICE_NAME: image-render-worker
+      PORT: "8080"
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      PREFETCH: "2"
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+      RABBITMQ_VHOST: ${RABBITMQ_VHOST}
+      S3_ENDPOINT: ${S3_ENDPOINT}
+      S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE}
+      S3_REGION: ${S3_REGION}
+      S3_BUCKET: ${S3_BUCKET}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY}
+      S3_SECRET_KEY: ${S3_SECRET_KEY}
+      S3_PUBLIC_BASE_URL: ${S3_PUBLIC_BASE_URL}
+    networks: [app, data, egress]
+    depends_on:
+      rabbitmq: { condition: service_healthy }
+      minio: { condition: service_healthy }
+      image-preview-service: { condition: service_started } # membangun image bersama lebih dulu
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+
 volumes:
   relay-submission-data: {}
