@@ -1,0 +1,34 @@
+# Kredensial: tidak pernah di-commit
+.env
+.env.*
+!.env.example
+secrets/
+*.pem
+*.key
+
+# Node.js
+node_modules/
+dist/
+coverage/
+.npm/
+*.tsbuildinfo
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Editor dan OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Log dan artefak lokal
+*.log
+tmp/

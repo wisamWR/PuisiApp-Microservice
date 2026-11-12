@@ -1,0 +1,16 @@
+# Build context layanan adalah root repositori; jangan kirim berkas berat atau rahasia.
+.git
+.github
+.code-review-graph
+**/node_modules
+**/__pycache__
+**/.venv
+**/.pytest_cache
+**/coverage
+.env
+.env.*
+!.env.example
+secrets
+*.pem
+*.key
+docs
