@@ -14,10 +14,9 @@
   },
   "dependencies": {
     "@puisiapp/events": "file:../../libs/node",
+    "@puisiapp/poem-common": "file:../poem-common",
     "fastify": "5.12.8",
-    "pg": "8.23.1",
-    "prom-client": "15.1.3",
-    "sanitize-html": "2.18.1"
+    "pg": "8.23.1"
   },
   "devDependencies": {
     "ajv": "8.20.0",

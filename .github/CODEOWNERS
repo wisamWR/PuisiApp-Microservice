@@ -52,6 +52,7 @@
 /services/email-worker/             @MdAzka
 
 # 2. Penulisan puisi
+/services/poem-common/             @wisamWR
 /services/poem-create-service/      @wisamWR
 /services/poem-edit-service/        @wisamWR
 /services/poem-delete-service/      @wisamWR
@@ -62,6 +63,7 @@
 /services/notification-service/     @wisamWR
 /services/image-preview-service/    @wisamWR
 /services/image-render-worker/      @wisamWR
+/services/image-service/            @wisamWR
 /services/outbox-relay/             @wisamWR
 /services/example-consumer/         @wisamWR
 

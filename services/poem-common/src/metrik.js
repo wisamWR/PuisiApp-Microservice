@@ -1,10 +1,15 @@
 /**
  * Metrik Prometheus (metode RED, laporan 12.1): laju, galat, dan histogram
- * durasi per rute. p95 POST /api/poems dihitung dari histogram ini.
+ * durasi per rute, ditambah satu penghitung hasil operasi per layanan.
  */
 import client from 'prom-client';
 
-export function buatMetrik(namaLayanan) {
+/**
+ * @param {string} namaLayanan
+ * @param {{ nama?: string, bantuan?: string }} [penghitung]
+ *   bawaan: rasa_poem_submissions_total (poem-create-service)
+ */
+export function buatMetrik(namaLayanan, penghitung = {}) {
   const registry = new client.Registry();
   registry.setDefaultLabels({ service: namaLayanan });
   client.collectDefaultMetrics({ register: registry });
@@ -18,8 +23,8 @@ export function buatMetrik(namaLayanan) {
   });
 
   const pengajuan = new client.Counter({
-    name: 'rasa_poem_submissions_total',
-    help: 'Pengajuan puisi menurut hasil (baru, ulang, konflik, tidak_valid)',
+    name: penghitung.nama ?? 'rasa_poem_submissions_total',
+    help: penghitung.bantuan ?? 'Pengajuan puisi menurut hasil (baru, ulang, konflik, tidak_valid)',
     labelNames: ['hasil'],
     registers: [registry],
   });

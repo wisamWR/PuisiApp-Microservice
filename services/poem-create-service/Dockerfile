@@ -11,6 +11,10 @@ RUN cd /app/libs/node && npm ci --omit=dev --no-audit --no-fund
 COPY libs/node/src /app/libs/node/src
 COPY libs/node/sql /app/libs/node/sql
 
+COPY services/poem-common/package.json services/poem-common/package-lock.json /app/services/poem-common/
+RUN cd /app/services/poem-common && npm ci --omit=dev --no-audit --no-fund
+COPY services/poem-common/src /app/services/poem-common/src
+
 COPY services/poem-create-service/package.json services/poem-create-service/package-lock.json /app/services/poem-create-service/
 RUN cd /app/services/poem-create-service && npm ci --omit=dev --no-audit --no-fund
 COPY services/poem-create-service/src /app/services/poem-create-service/src

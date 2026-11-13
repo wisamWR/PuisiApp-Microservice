@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import pg from 'pg';
 import { buatLogger, jalankanMigrasi } from '@puisiapp/events';
 import { buatApp } from './app.js';
-import { buatMetrik } from './metrik.js';
+import { buatMetrik } from '@puisiapp/poem-common';
 import { simpanPengajuan } from './repo.js';
 
 const namaLayanan = process.env.SERVICE_NAME ?? 'poem-create-service';

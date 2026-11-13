@@ -49,6 +49,89 @@ services:
       rabbitmq-topologi: { condition: service_completed_successfully }
       poem-create-service: { condition: service_healthy }
 
+  # ---------------------------------------------------------------- T2.4
+  # Revisi dan hapus puisi. Tahap "Lengkap" (Sprint 2), bukan cakupan demo PA3,
+  # jadi hanya jalan dengan profil: docker compose --profile lengkap up -d
+  poem-edit-service:
+    profiles: [lengkap]
+    build:
+      context: ..
+      dockerfile: services/poem-edit-service/Dockerfile
+    restart: unless-stopped
+    environment: &env-tulis
+      SERVICE_NAME: poem-edit-service
+      PORT: "8080"
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      DATABASE_URL: postgres://poem_edit:${POEM_EDIT_DB_PASS}@${POSTGRES_HOST}:${POSTGRES_PORT}/revision_db
+      TEMPLATE_SAH: ${TEMPLATE_SAH:-latar1,latar2,latar3}
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+      RABBITMQ_VHOST: ${RABBITMQ_VHOST}
+    networks: [app, data]
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+    healthcheck: &cek-siap
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          memory: 192M
+
+  poem-delete-service:
+    profiles: [lengkap]
+    build:
+      context: ..
+      dockerfile: services/poem-delete-service/Dockerfile
+    restart: unless-stopped
+    environment:
+      <<: *env-tulis
+      SERVICE_NAME: poem-delete-service
+      DATABASE_URL: postgres://poem_delete:${POEM_DELETE_DB_PASS}@${POSTGRES_HOST}:${POSTGRES_PORT}/deletion_db
+    networks: [app, data]
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+    healthcheck: *cek-siap
+    deploy:
+      resources:
+        limits:
+          memory: 192M
+
+  outbox-relay-revision:
+    profiles: [lengkap]
+    extends:
+      file: debezium/relay.yml
+      service: outbox-relay
+    environment:
+      RELAY_DB: revision_db
+      RELAY_SLOT: outbox_revision
+    volumes:
+      - relay-revision-data:/debezium/data
+    depends_on:
+      rabbitmq-topologi: { condition: service_completed_successfully }
+      poem-edit-service: { condition: service_healthy }
+
+  outbox-relay-deletion:
+    profiles: [lengkap]
+    extends:
+      file: debezium/relay.yml
+      service: outbox-relay
+    environment:
+      RELAY_DB: deletion_db
+      RELAY_SLOT: outbox_deletion
+    volumes:
+      - relay-deletion-data:/debezium/data
+    depends_on:
+      rabbitmq-topologi: { condition: service_completed_successfully }
+      poem-delete-service: { condition: service_healthy }
+
   # ---------------------------------------------------------------- T2.5
   # Satu image (services/image-service), dua entrypoint.
   # Pratinjau: sinkron, stateless, tanpa basis data; template di memori.
@@ -116,3 +199,5 @@ services:
 
 volumes:
   relay-submission-data: {}
+  relay-revision-data: {}
+  relay-deletion-data: {}

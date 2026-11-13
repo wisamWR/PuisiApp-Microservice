@@ -1,0 +1,23 @@
+{
+  "name": "poem-edit-service",
+  "version": "0.1.0",
+  "description": "T2.4: revisi puisi oleh pemiliknya sebagai versi baru (append-only), outbox poem.revised, 202",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test \"test/**/*.test.js\""
+  },
+  "dependencies": {
+    "@puisiapp/events": "file:../../libs/node",
+    "@puisiapp/poem-common": "file:../poem-common",
+    "pg": "8.23.1"
+  },
+  "devDependencies": {
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1"
+  }
+}

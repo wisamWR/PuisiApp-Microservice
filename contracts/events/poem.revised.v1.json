@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://puisiapp.example/schema/events/poem.revised.v1.json",
+  "title": "Payload poem.revised v1",
+  "description": "Versi baru puisi diajukan pemiliknya (append-only; versi lama tidak diubah). Produsen: poem-edit-service (T2.4). Exchange: poem.events. aggregate_id = poem_id, aggregate_version = version (>= 2). Bentuk payload sama dengan poem.submitted kecuali version dan revised_at, sehingga worker analisis memproses revisi tanpa perubahan kode. Konsumen: poem-query, processing-tracker, keyword, theme, emotion, fingerprint, authorship, image-render, evidence, publication, poem-delete.",
+  "type": "object",
+  "required": [
+    "poem_id",
+    "version",
+    "author_id",
+    "title",
+    "body",
+    "quote_stanza",
+    "quote_text",
+    "template_id",
+    "revised_at"
+  ],
+  "properties": {
+    "poem_id": { "type": "string", "format": "uuid" },
+    "version": { "type": "integer", "minimum": 2 },
+    "author_id": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "title": { "type": "string", "minLength": 1, "maxLength": 150 },
+    "body": { "type": "string", "minLength": 1, "maxLength": 8000 },
+    "quote_stanza": { "type": "integer", "minimum": 0 },
+    "quote_text": { "type": "string", "minLength": 1, "maxLength": 280 },
+    "template_id": { "type": "string", "minLength": 1, "maxLength": 20 },
+    "category": { "type": ["string", "null"], "maxLength": 60 },
+    "keywords": {
+      "type": "array",
+      "maxItems": 10,
+      "items": { "type": "string", "minLength": 1, "maxLength": 40 }
+    },
+    "revised_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "poem_id": "0b7d6f0e-4a8b-4a52-9d0b-3f4f0e9b2a10",
+      "version": 2,
+      "author_id": "u-0042",
+      "title": "Jendela yang Basah",
+      "body": "sore turun tanpa permisi\nhujan mengetuk kaca pelan\n\nseperti nama yang tak jadi kupanggil",
+      "quote_stanza": 1,
+      "quote_text": "seperti nama yang tak jadi kupanggil",
+      "template_id": "latar1",
+      "category": "lirik",
+      "keywords": ["hujan"],
+      "revised_at": "2026-12-03T08:15:00.000Z"
+    }
+  ]
+}

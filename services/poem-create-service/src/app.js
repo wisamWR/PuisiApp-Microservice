@@ -5,7 +5,7 @@
 import { randomUUID } from 'node:crypto';
 import Fastify from 'fastify';
 import { traceIdDari } from '@puisiapp/events';
-import { validasiPengajuan, hashPengajuan, POLA_IDEMPOTENCY_KEY } from './validasi.js';
+import { validasiPengajuan, hashPengajuan, POLA_IDEMPOTENCY_KEY } from '@puisiapp/poem-common';
 
 /**
  * @param {object} d
@@ -13,7 +13,7 @@ import { validasiPengajuan, hashPengajuan, POLA_IDEMPOTENCY_KEY } from './valida
  * @param {() => Promise<void>} d.cekDb             lempar galat bila basis data tidak siap
  * @param {string[]} d.templateSah
  * @param {ReturnType<import('@puisiapp/events').buatLogger>} d.log
- * @param {ReturnType<import('./metrik.js').buatMetrik>} [d.metrik]
+ * @param {ReturnType<import('@puisiapp/poem-common').buatMetrik>} [d.metrik]
  */
 export function buatApp(d) {
   const app = Fastify({

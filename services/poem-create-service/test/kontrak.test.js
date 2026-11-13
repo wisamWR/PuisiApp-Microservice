@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
 import { buatEvent, folderKontrak, validasiEvent } from '@puisiapp/events';
-import { validasiPengajuan } from '../src/validasi.js';
+import { validasiPengajuan } from '@puisiapp/poem-common';
 import { keRepresentasi, kePayloadEvent } from '../src/repo.js';
 
 process.env.SERVICE_NAME = 'poem-create-service';
