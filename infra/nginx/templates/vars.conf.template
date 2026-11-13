@@ -7,3 +7,4 @@ set $up_login     "${LOGIN_HOST}";
 set $up_profile   "${PROFILE_HOST}";
 set $up_recovery  "${RECOVERY_HOST}";
 set $up_auth      "${AUTH_HOST}";
+set $up_token     "${TOKEN_HOST}";

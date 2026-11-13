@@ -11,7 +11,7 @@ import pg from 'pg';
 import { buatLogger, buatKonsumen, buatStorePg, hubungkan, jalankanMigrasi } from '@puisiapp/events';
 import { loginDenganKredensial } from './login.js';
 import { simpanKredensial } from './kredensial.js';
-import { cookieAkses } from './cookie.js';
+import { cookieAkses, cookieRefresh } from './cookie.js';
 
 const log = buatLogger();
 const folderIni = path.dirname(fileURLToPath(import.meta.url));
@@ -48,7 +48,8 @@ async function mintaToken(akun) {
     signal: AbortSignal.timeout(3000),
   });
   if (!res.ok) throw new Error(`token-service membalas ${res.status}`);
-  return (await res.json()).access_token;
+  const { access_token, refresh_token } = await res.json();
+  return { access_token, refresh_token };
 }
 
 function kirimJson(res, status, body, header = {}) {
@@ -109,10 +110,10 @@ const server = http.createServer(async (req, res) => {
     if (hasil.status === 401) {
       return kirimJson(res, 401, { error: 'username atau password salah' });
     }
-    const token = await mintaToken(hasil.akun);
+    const { access_token, refresh_token } = await mintaToken(hasil.akun);
     log.info('login berhasil', { akun_id: hasil.akun.id });
     return kirimJson(res, 200, { username: hasil.akun.username, role: hasil.akun.role }, {
-      'Set-Cookie': cookieAkses(token),
+      'Set-Cookie': [cookieAkses(access_token), cookieRefresh(refresh_token)],
     });
   } catch (err) {
     log.error('login gagal diproses', { galat: err.name, pesan: err.message });

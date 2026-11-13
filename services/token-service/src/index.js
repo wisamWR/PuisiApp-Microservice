@@ -6,9 +6,30 @@
  */
 import http from 'node:http';
 import { buatLogger } from '@puisiapp/events';
+import { createClient } from 'redis';
 import { buatPenerbitToken, MASA_BERLAKU_BAWAAN } from './token.js';
+import { buatPenyimpanRefresh, MASA_REFRESH_DETIK } from './refresh.js';
 
 const log = buatLogger();
+
+if (!process.env.REDIS_URL) throw new Error('REDIS_URL belum diisi');
+const redis = createClient({ url: process.env.REDIS_URL });
+redis.on('error', (err) => log.error('redis galat', { pesan: err.message }));
+await redis.connect();
+const penyimpan = buatPenyimpanRefresh(redis);
+
+function cookieRefresh(token) {
+  return `refresh_token=${encodeURIComponent(token)}; Path=/api/auth; HttpOnly; Secure; SameSite=Lax; Max-Age=${MASA_REFRESH_DETIK}`;
+}
+function cookieAkses(token) {
+  return `access_token=${encodeURIComponent(token)}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=900`;
+}
+function cookieHapus() {
+  return [
+    'access_token=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0',
+    'refresh_token=; Path=/api/auth; HttpOnly; Secure; SameSite=Lax; Max-Age=0',
+  ];
+}
 const PORT = Number(process.env.PORT) || 8080;
 const MAKS_BODY = 4 * 1024;
 
@@ -95,10 +116,23 @@ const server = http.createServer(async (req, res) => {
     }
     try {
       const accessToken = await penerbit.sign({ sub: body.sub, username: body.username, role: body.role });
-      return kirimJson(res, 200, { access_token: accessToken, token_type: 'Bearer' });
+      const refreshToken = await penyimpan.terbitkan({ sub: body.sub, username: body.username, role: body.role });
+      return kirimJson(res, 200, { access_token: accessToken, refresh_token: refreshToken, token_type: 'Bearer' });
     } catch (err) {
       return kirimJson(res, 400, { error: err.message });
     }
+  }
+
+  // Refresh (T1.2 butir 5): token lama dirotasi, token yang sudah dipakai ditolak.
+  if (req.method === 'POST' && url.pathname === '/api/auth/refresh') {
+    const refresh = ambilCookie(req.headers.cookie, 'refresh_token');
+    const klaim = await penyimpan.putar(refresh);
+    if (!klaim) return kirimJson(res, 401, { error: 'refresh token tidak valid' }, { 'Set-Cookie': cookieHapus() });
+    const accessToken = await penerbit.sign(klaim);
+    const refreshBaru = await penyimpan.terbitkan(klaim);
+    return kirimJson(res, 200, { username: klaim.username, role: klaim.role }, {
+      'Set-Cookie': [cookieAkses(accessToken), cookieRefresh(refreshBaru)],
+    });
   }
 
   return kirimJson(res, 404, { error: 'tidak ditemukan' });
@@ -106,8 +140,10 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, () => log.info('token-service siap', { port: PORT }));
 
-function berhenti() {
-  server.close(() => process.exit(0));
+async function berhenti() {
+  server.close();
+  await redis.quit().catch(() => {});
+  process.exit(0);
 }
 process.on('SIGTERM', berhenti);
 process.on('SIGINT', berhenti);

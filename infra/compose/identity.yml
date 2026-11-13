@@ -34,6 +34,60 @@ services:
       retries: 3
       start_period: 15s
 
+  # login-service (T1.2): konsumsi user.registered, POST /api/auth/login.
+  login-service:
+    build:
+      context: ..
+      dockerfile: services/login-service/Dockerfile
+    restart: unless-stopped
+    environment:
+      SERVICE_NAME: login-service
+      PORT: "8080"
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      DATABASE_URL: postgres://login_svc:${LOGIN_DB_PASS}@${POSTGRES_HOST}:${POSTGRES_PORT}/credential_db
+      TOKEN_SERVICE_URL: http://token-service:8080
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+      RABBITMQ_VHOST: ${RABBITMQ_VHOST}
+    networks: [app, data]
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+      rabbitmq-topologi: { condition: service_completed_successfully }
+      token-service: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
+
+  # token-service (T1.2): JWT RS256 dan rotasi refresh token di Redis.
+  # Dijalankan minimal 2 replika: docker compose up -d --scale token-service=2
+  token-service:
+    build:
+      context: ..
+      dockerfile: services/token-service/Dockerfile
+    restart: unless-stopped
+    environment:
+      SERVICE_NAME: token-service
+      PORT: "8080"
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      JWT_PRIVATE_KEY_PEM: ${JWT_PRIVATE_KEY_PEM}
+      JWT_PUBLIC_KEY_PEM: ${JWT_PUBLIC_KEY_PEM}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+    networks: [app, data]
+    depends_on:
+      redis: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
+
   # Relay outbox account_db (T0.3). Dibuat dari templat yang sama dengan relay lain.
   outbox-relay-account:
     extends:
