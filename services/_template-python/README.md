@@ -27,4 +27,14 @@ _template-python/
 │   └── test_health.py
 ├── Dockerfile
 └── pyproject.toml
+
+
+## 3. Shared Python Library
+
+Saat ini template menggunakan implementasi mandiri untuk kebutuhan service dan database.
+
+TODO:
+- Integrasikan template dengan shared library `libs/python` setelah library tersebut tersedia dan memiliki implementasi yang siap digunakan.
+- Hindari membuat implementasi fungsi bersama yang duplikat setelah shared library tersedia.
+
 ```

@@ -1,23 +1,25 @@
-﻿
-FROM node:24-alpine
+﻿FROM node:24.22.2-alpine
 
-ENV NODE_ENV=production \
-    PORT=8080
+ENV NODE_ENV=production
 
 WORKDIR /app
 
-COPY services/_template-node/package*.json ./
+COPY contracts /app/contracts
 
-RUN npm ci --omit=dev \
-    && npm cache clean --force
+COPY libs/node/package.json libs/node/package-lock.json /app/libs/node/
+RUN cd /app/libs/node && npm ci --omit=dev --no-audit --no-fund
 
-COPY services/_template-node/src ./src
+COPY libs/node/src /app/libs/node/src
+COPY libs/node/sql /app/libs/node/sql
 
-RUN addgroup -S appgroup \
-    && adduser -S appuser -G appgroup \
-    && chown -R appuser:appgroup /app
+COPY services/_template-node/package.json services/_template-node/package-lock.json /app/services/_template-node/
+RUN cd /app/services/_template-node && npm ci --omit=dev --no-audit --no-fund
 
-USER appuser
+COPY services/_template-node /app/services/_template-node
+
+WORKDIR /app/services/_template-node
+
+USER node
 
 EXPOSE 8080
 

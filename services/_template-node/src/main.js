@@ -1,15 +1,19 @@
 ﻿import { createServer } from "node:http";
+import pg from "pg";
+import { buatLogger, jalankanMigrasi } from "@puisiapp/events";
+import { loadConfig } from "./config.js";
 
-const SERVICE_NAME = process.env.SERVICE_NAME || "node-service";
-const PORT = Number(process.env.PORT || 8080);
-const HOST = process.env.HOST || "0.0.0.0";
+const { Pool } = pg;
+
+const config = loadConfig();
+const log = buatLogger(config.serviceName);
 
 export function createApp() {
   return createServer((req, res) => {
     if (req.method === "GET" && req.url === "/health") {
       const response = {
         status: "ok",
-        service: SERVICE_NAME,
+        service: config.serviceName,
       };
 
       res.writeHead(200, {
@@ -28,10 +32,33 @@ export function createApp() {
   });
 }
 
-if (process.env.NODE_ENV !== "test") {
+async function main() {
+  if (config.databaseUrl) {
+    const pool = new Pool({
+      connectionString: config.databaseUrl,
+    });
+
+    try {
+      await jalankanMigrasi(pool, { log });
+      log.info("migrasi database selesai");
+    } finally {
+      await pool.end();
+    }
+  }
+
   const server = createApp();
 
-  server.listen(PORT, HOST, () => {
-    console.log(`${SERVICE_NAME} berjalan pada ${HOST}:${PORT}`);
+  server.listen(config.port, config.host, () => {
+    log.info("service berjalan", {
+      host: config.host,
+      port: config.port,
+    });
+  });
+}
+
+if (process.env.NODE_ENV !== "test") {
+  main().catch((error) => {
+    log.error("service gagal dijalankan", { err: error });
+    process.exitCode = 1;
   });
 }

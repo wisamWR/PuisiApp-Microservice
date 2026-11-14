@@ -1,243 +1,188 @@
-\# PuisiApp Node.js Service Template
+# PuisiApp Node.js Service Template
 
 Template dasar untuk membangun layanan microservice berbasis Node.js pada proyek PuisiApp.
 
-\## 1. Requirements
+## 1. Requirements
 
 Perangkat dan teknologi yang dibutuhkan:
 
-\- Node.js versi 24 atau lebih baru
+- Node.js versi 24 atau lebih baru
+- npm
+- Docker (opsional, untuk menjalankan service dalam container)
+- PostgreSQL (opsional, untuk menggunakan fitur database dan migrasi)
 
-\- npm
-
-\- Docker (opsional, untuk menjalankan service dalam container)
-
-\- PostgreSQL (opsional, untuk menggunakan fitur database dan migrasi)
-
-\## 2. Struktur Direktori
+## 2. Struktur Direktori
 
 ```text
-
-\_template-node/
-
-├── migrations/
-
-│   ├── 001\_processed\_event.sql
-
-│   └── 002\_outbox.sql
-
+_template-node/
 ├── src/
-
 │   ├── config.js
-
-│   ├── database.js
-
 │   └── main.js
-
 ├── tests/
-
 │   └── health.test.js
-
 ├── Dockerfile
-
 ├── eslint.config.js
-
 ├── package.json
-
+├── package-lock.json
 └── README.md
-
 ```
 
-\## 3. Installation
+Service menggunakan shared library `@puisiapp/events` yang tersedia di `libs/node` untuk memanfaatkan fungsi bersama seperti logging dan migrasi database.
+
+## 3. Installation
 
 Masuk ke direktori template:
 
 ```bash
-
-cd services/\_template-node
-
+cd services/_template-node
 ```
 
 Install seluruh dependencies:
 
 ```bash
-
 npm ci
-
 ```
 
-\## 4. Environment Configuration
+Dependency `@puisiapp/events` menggunakan local package dari `../../libs/node`.
+
+Ketika template disalin menjadi service baru di dalam direktori `services/`, pastikan struktur repository tetap dipertahankan agar referensi dependency tersebut tetap valid.
+
+## 4. Environment Configuration
 
 Service menggunakan environment variables untuk mengatur konfigurasi dan koneksi ke dependency.
 
-| Variable | Keterangan | Default |
+| Variable     | Keterangan                         | Default      |
+| ------------ | ---------------------------------- | ------------ |
+| SERVICE_NAME | Nama service                       | node-service |
+| HOST         | Host server                        | 0.0.0.0      |
+| PORT         | Port server                        | 8080         |
+| DATABASE_URL | URL koneksi PostgreSQL             | Tidak ada    |
+| AMQP_URL     | URL koneksi RabbitMQ               | Tidak ada    |
+| REDIS_URL    | URL koneksi Redis                  | Tidak ada    |
+| S3_ENDPOINT  | Endpoint penyimpanan S3-compatible | Tidak ada    |
+| SMTP_HOST    | Alamat SMTP server                 | Tidak ada    |
 
-|---|---|---|
+Konfigurasikan environment variables sesuai kebutuhan service. Jangan menyimpan credential atau connection string sensitif secara langsung di dalam source code.
 
-| SERVICE\_NAME | Nama service | node-service |
-
-| HOST | Host server | 0.0.0.0 |
-
-| PORT | Port server | 8080 |
-
-| DATABASE\_URL | URL koneksi PostgreSQL | Tidak ada |
-
-| AMQP\_URL | URL koneksi RabbitMQ | Tidak ada |
-
-| REDIS\_URL | URL koneksi Redis | Tidak ada |
-
-| S3\_ENDPOINT | Endpoint penyimpanan S3-compatible | Tidak ada |
-
-| SMTP\_HOST | Alamat SMTP server | Tidak ada |
-
-Konfigurasikan environment variables sesuai lingkungan deployment. Jangan menyimpan credential atau connection string sensitif secara langsung di dalam source code.
-
-\## 5. Running the Service
+## 5. Running the Service
 
 Jalankan service menggunakan perintah:
 
 ```bash
-
 npm start
-
 ```
 
 Secara default, service berjalan pada port `8080`.
 
-\### Health Check Endpoint
+### Health Check Endpoint
 
 Service menyediakan endpoint:
 
 ```http
-
 GET /health
-
 ```
 
 Contoh response:
 
 ```json
-
 {
-
-&#x20; "status": "ok",
-
-&#x20; "service": "node-service"
-
+  "status": "ok",
+  "service": "node-service"
 }
-
 ```
 
 Endpoint `/health` mengembalikan HTTP 200 apabila service berjalan dengan baik. Endpoint yang tidak tersedia akan mengembalikan HTTP 404.
 
-\## 6. Database Migrations
+## 6. Shared Library and Database Migration
 
-Template menyediakan dua file migration:
+Template menggunakan shared library `@puisiapp/events` dari direktori `libs/node`.
 
-\- `001\_processed\_event.sql`: membuat tabel `processed\_event` untuk mencatat event yang telah diproses.
+Fungsi yang digunakan:
 
-\- `002\_outbox.sql`: membuat tabel `outbox` untuk menyimpan event yang akan dipublikasikan.
+- `buatLogger()` untuk membuat logger service.
+- `jalankanMigrasi()` untuk menjalankan migrasi database menggunakan shared library.
 
-Sebelum menjalankan migration, pastikan environment variable `DATABASE\_URL` sudah dikonfigurasi dan database PostgreSQL dapat diakses.
+Apabila `DATABASE_URL` dikonfigurasi, service akan membuat koneksi PostgreSQL dan menjalankan `jalankanMigrasi()` ketika service dimulai.
 
-Jalankan seluruh migration menggunakan perintah:
+Apabila `DATABASE_URL` tidak dikonfigurasi, proses migrasi database dilewati.
 
-```bash
+Contoh penggunaan:
 
-node --input-type=module -e "import { runMigrations } from './src/database.js'; console.log(await runMigrations());"
+```javascript
+import pg from "pg";
+import { buatLogger, jalankanMigrasi } from "@puisiapp/events";
 
+const { Pool } = pg;
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
+const log = buatLogger("node-service");
+
+await jalankanMigrasi(pool, { log });
 ```
 
-Untuk membuat PostgreSQL publication `outbox\_pub` setelah migration:
+Pengelolaan migrasi dilakukan melalui shared library sehingga service tidak perlu menyediakan implementasi migrasi database sendiri.
 
-```bash
-
-node --input-type=module -e "import { runMigrations } from './src/database.js'; console.log(await runMigrations({ createPublication: true }));"
-
-```
-
-Migration yang telah berhasil dijalankan akan dicatat dalam tabel `schema\_migrasi`, sehingga tidak dijalankan ulang pada eksekusi berikutnya.
-
-Pembuatan publication membutuhkan konfigurasi PostgreSQL dan hak akses yang sesuai.
-
-\## 7. Testing and Code Quality
+## 7. Testing and Code Quality
 
 Jalankan unit test:
 
 ```bash
-
 npm test
-
 ```
 
 Jalankan pemeriksaan kode menggunakan ESLint:
 
 ```bash
-
 npm run lint
-
 ```
 
 Periksa konsistensi format kode menggunakan Prettier:
 
 ```bash
-
 npm run format:check
-
 ```
 
 Pastikan seluruh pemeriksaan berhasil sebelum melakukan Pull Request.
 
-\## 8. Docker
+## 8. Docker
 
 Build Docker image dari direktori root repository:
 
 ```bash
-
-docker build -f services/\_template-node/Dockerfile -t puisiapp-node-service .
-
+docker build -f services/_template-node/Dockerfile -t puisiapp-node-service .
 ```
 
 Jalankan container:
 
 ```bash
-
 docker run -d --name puisiapp-node-service -p 8080:8080 puisiapp-node-service
-
 ```
 
 Periksa endpoint health:
 
 ```bash
-
 curl http://localhost:8080/health
-
 ```
 
 Periksa status Docker healthcheck:
 
 ```bash
-
 docker inspect --format='{{.State.Health.Status}}' puisiapp-node-service
-
 ```
 
-Container akan menggunakan healthcheck untuk memantau kondisi service secara berkala.
+Container menggunakan healthcheck untuk memantau kondisi service secara berkala.
 
-\## 9. Development Guidelines
+## 9. Development Guidelines
 
 Beberapa ketentuan yang perlu diperhatikan ketika mengembangkan service:
 
-\- Gunakan environment variables untuk konfigurasi service dan dependency.
-
-\- Hindari hardcode alamat container atau host dependency.
-
-\- Pertahankan endpoint `/health` untuk kebutuhan healthcheck.
-
-\- Tambahkan file migration baru dengan penamaan berurutan.
-
-\- Tambahkan unit test untuk setiap fitur baru.
-
-\- Jalankan ESLint, Prettier, dan unit test sebelum membuat Pull Request.
-
-\- Jangan menyimpan credential atau informasi sensitif di dalam repository.
+- Gunakan environment variables untuk konfigurasi service dan dependency.
+- Gunakan shared library `@puisiapp/events` untuk fungsi bersama yang sudah tersedia.
+- Hindari membuat implementasi logging dan migrasi database yang duplikat.
+- Hindari hardcode alamat container atau host dependency.
+- Pertahankan endpoint `/health` untuk kebutuhan healthcheck.
+- Tambahkan unit test untuk setiap fitur baru.
+- Jalankan ESLint, Prettier, dan unit test sebelum membuat Pull Request.
+- Jangan menyimpan credential atau informasi sensitif di dalam repository.
