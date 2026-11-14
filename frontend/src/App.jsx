@@ -1,4 +1,4 @@
-﻿import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import AppLayout from './layouts/AppLayout'
 import { PlaceholderPage } from './pages/PlaceholderPage'
 import { ToastProvider } from './components/ToastContext'
@@ -24,7 +24,7 @@ function App() {
             <Route path="login" element={<PlaceholderPage pageKey="login" />} />
             <Route path="register" element={<PlaceholderPage pageKey="register" />} />
             <Route path="moderation" element={<PlaceholderPage pageKey="moderation" />} />
-            <Route path="*" element={<PlaceholderPage pageKey="home" />} />
+            <Route path="*" element={<PlaceholderPage pageKey="notFound" />} />
           </Route>
         </Routes>
       </BrowserRouter>

@@ -1,4 +1,4 @@
-﻿#root { min-height: 100vh; }
+#root { min-height: 100vh; }
 
 .app-shell { min-height: 100vh; }
 .topbar {
@@ -72,9 +72,11 @@
   font-size: 9px; font-weight: 600;
 }
 .emotion-label { color: #6b6258; background: #f2eee8; }
-.originality-badge { color: #56745d; background: #edf4ed; }
-.originality-sedang { color: #8a7045; background: #f7f0e2; }
-.originality-rendah { color: #98645b; background: #f8ece9; }
+.originality-badge { color: #6b6258; background: #f2eee8; }
+.originality-orisinal { color: #56745d; background: #edf4ed; }
+.originality-terinspirasi { color: #4f6f86; background: #e9f0f5; }
+.originality-mirip { color: #8a7045; background: #f7f0e2; }
+.originality-dugaan-jiplakan { color: #98645b; background: #f8ece9; }
 .poem-card h3 { margin: 17px 0 5px; font-family: 'Playfair Display', serif; font-size: 19px; }
 .poem-author { margin: 0; color: #928a83; font-size: 11px; }
 .poem-card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 19px; padding-top: 13px; border-top: 1px solid #f0ede9; }

@@ -1,4 +1,4 @@
-﻿const API_BASE_URL = '/api'
+const API_BASE_URL = '/api'
 
 export class ApiError extends Error {
   constructor(message, status, data = null) {
@@ -13,13 +13,36 @@ async function parseResponse(response) {
   if (response.status === 204) return null
 
   const contentType = response.headers.get('content-type') || ''
+  const text = await response.text()
+
+  if (!text) return null
 
   if (contentType.includes('application/json')) {
-    return response.json()
+    try {
+      return JSON.parse(text)
+    } catch {
+      return null
+    }
   }
 
-  const text = await response.text()
-  return text || null
+  return text
+}
+
+function isRawBody(body) {
+  return (
+    body instanceof FormData ||
+    body instanceof Blob ||
+    body instanceof ArrayBuffer ||
+    ArrayBuffer.isView(body) ||
+    body instanceof URLSearchParams ||
+    body instanceof ReadableStream
+  )
+}
+
+// Fastify: { message }, gateway: { error: "unauthorized" }, atau { error: { message } }.
+function errorMessage(data, fallback) {
+  if (typeof data === 'string' && data) return data
+  return data?.message || data?.error?.message || (typeof data?.error === 'string' ? data.error : null) || fallback
 }
 
 function notifyProcessing(data) {
@@ -48,9 +71,7 @@ export async function apiRequest(path, options = {}) {
     body !== undefined &&
     body !== null &&
     typeof body === 'object' &&
-    !(body instanceof FormData) &&
-    !(body instanceof Blob) &&
-    !(body instanceof ArrayBuffer)
+    !isRawBody(body)
   ) {
     body = JSON.stringify(body)
 
@@ -77,11 +98,13 @@ export async function apiRequest(path, options = {}) {
     const publicPages = ['/login', '/register']
 
     if (!publicPages.includes(currentPath)) {
-      window.location.assign('/login')
+      // Simpan tujuan awal agar halaman Masuk bisa kembali ke sini setelah login.
+      const next = encodeURIComponent(currentPath + window.location.search)
+      window.location.assign(`/login?next=${next}`)
     }
 
     throw new ApiError(
-      data?.message || 'Sesi berakhir. Silakan masuk kembali.',
+      errorMessage(data, 'Sesi berakhir. Silakan masuk kembali.'),
       401,
       data,
     )
@@ -89,7 +112,7 @@ export async function apiRequest(path, options = {}) {
 
   if (!response.ok) {
     throw new ApiError(
-      data?.message || data?.error || `Request gagal (${response.status}).`,
+      errorMessage(data, `Request gagal (${response.status}).`),
       response.status,
       data,
     )

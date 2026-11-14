@@ -1,4 +1,4 @@
-﻿import { Link } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { PoemCard } from '../components/UI'
 
 const pageInfo = {
@@ -13,10 +13,6 @@ const pageInfo = {
   moodFeed: {
     title: 'Mood Feed',
     description: 'Jelajahi suasana hati dan cerita dari komunitas PuisiApp.',
-  },
-  poemDetail: {
-    title: 'Detail Puisi',
-    description: 'Halaman detail untuk membaca puisi dan informasi terkait karya.',
   },
   writePoem: {
     title: 'Tulis Puisi',
@@ -54,6 +50,10 @@ const pageInfo = {
     title: 'Moderasi',
     description: 'Ruang kerja moderator untuk meninjau konten komunitas.',
   },
+  notFound: {
+    title: 'Halaman tidak ditemukan',
+    description: 'Alamat yang kamu buka tidak tersedia. Kembali ke Beranda lewat navigasi.',
+  },
 }
 
 export function PlaceholderPage({ pageKey }) {
@@ -90,16 +90,16 @@ export function PlaceholderPage({ pageKey }) {
             <PoemCard
               title="Senja di Ujung Hari"
               author="Penulis PuisiApp"
-              emotion="Tenang"
-              originality="Tinggi"
+              emotion="Sedih"
+              originality="Orisinal"
               score="92"
               to="/poems/demo-1"
             />
             <PoemCard
               title="Ruang untuk Pulang"
               author="Komunitas Puisi"
-              emotion="Rindu"
-              originality="Sedang"
+              emotion="Cinta"
+              originality="Terinspirasi"
               score="85"
               to="/poems/demo-2"
             />

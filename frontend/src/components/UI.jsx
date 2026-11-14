@@ -1,4 +1,6 @@
-﻿export function Toast({ message, type = 'info' }) {
+import { Link } from 'react-router-dom'
+
+export function Toast({ message, type = 'info' }) {
   return (
     <div className={`toast toast-${type}`} role="status">
       <span className="toast-indicator" />
@@ -35,12 +37,13 @@ export function Input({ label, ...props }) {
   )
 }
 
-export function EmotionLabel({ emotion = 'Netral' }) {
+export function EmotionLabel({ emotion = 'Belum dianalisis' }) {
   return <span className="emotion-label">{emotion}</span>
 }
 
+// Empat level originalitas (All Specifications): Orisinal, Terinspirasi, Mirip, Dugaan jiplakan.
 export function OriginalityBadge({ level = 'Belum dinilai' }) {
-  const normalized = level.toLowerCase().replaceAll(' ', '-')
+  const normalized = String(level).toLowerCase().replaceAll(' ', '-')
   return (
     <span className={`originality-badge originality-${normalized}`}>
       Orisinalitas: {level}
@@ -60,10 +63,10 @@ export function Loader({ label = 'Memuat...' }) {
 export function PoemCard({
   title = 'Judul puisi',
   author = 'Nama penulis',
-  emotion = 'Netral',
+  emotion = 'Belum dianalisis',
   originality = 'Belum dinilai',
   score = '-',
-  to = '#',
+  to = '/',
 }) {
   return (
     <article className="poem-card">
@@ -75,7 +78,7 @@ export function PoemCard({
       <p className="poem-author">Ditulis oleh {author}</p>
       <div className="poem-card-footer">
         <span className="poem-score">Skor: {score}</span>
-        <a href={to} className="text-link">Lihat detail →</a>
+        <Link to={to} className="text-link">Lihat detail →</Link>
       </div>
     </article>
   )

@@ -1,11 +1,13 @@
-﻿services:
+services:
   frontend:
     build:
       context: ../frontend
       dockerfile: Dockerfile
     restart: unless-stopped
+    # Hanya diakses lewat api-gateway (rute "/"), jadi cukup jaringan internal app.
+    # Jaringan edge khusus api-gateway (lihat infra/docker-compose.yml).
     networks:
-      - edge
+      - app
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/health || exit 1"]
       interval: 30s

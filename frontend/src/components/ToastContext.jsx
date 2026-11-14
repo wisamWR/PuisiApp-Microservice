@@ -1,34 +1,36 @@
-﻿import { createContext, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { ToastContext } from './toast'
+import { Toast } from './UI'
 
-const ToastContext = createContext(null)
+const DURASI_TOAST_MS = 3500
 
 export function ToastProvider({ children }) {
   const [toast, setToast] = useState(null)
+  const timerRef = useRef(null)
 
-  useEffect(() => {
-    const handleToast = (event) => {
-      setToast(event.detail)
-      window.setTimeout(() => setToast(null), 3500)
-    }
-
-    window.addEventListener('app:toast', handleToast)
-    return () => window.removeEventListener('app:toast', handleToast)
+  const showToast = useCallback((message, type = 'info') => {
+    window.clearTimeout(timerRef.current)
+    setToast({ message, type })
+    timerRef.current = window.setTimeout(() => setToast(null), DURASI_TOAST_MS)
   }, [])
 
-  const showToast = (message, type = 'info') => {
-    setToast({ message, type })
-    window.setTimeout(() => setToast(null), 3500)
-  }
+  // Toast dari luar React, mis. lib/api.js saat menerima 202.
+  useEffect(() => {
+    const handleToast = (event) => showToast(event.detail.message, event.detail.type)
+
+    window.addEventListener('app:toast', handleToast)
+    return () => {
+      window.removeEventListener('app:toast', handleToast)
+      window.clearTimeout(timerRef.current)
+    }
+  }, [showToast])
+
+  const value = useMemo(() => ({ showToast }), [showToast])
 
   return (
-    <ToastContext.Provider value={{ showToast }}>
+    <ToastContext.Provider value={value}>
       {children}
-      {toast && (
-        <div className={`toast toast-${toast.type}`} role="status">
-          <span className="toast-indicator" />
-          {toast.message}
-        </div>
-      )}
+      {toast && <Toast message={toast.message} type={toast.type} />}
     </ToastContext.Provider>
   )
 }

@@ -21,16 +21,18 @@ npm run dev
 
 Buka alamat yang ditampilkan Vite, biasanya http://localhost:5173.
 
+Request `/api/*` diteruskan (proxy Vite) ke API gateway di `http://localhost:8080`, jadi nyalakan gateway dulu (`docker compose up -d api-gateway` dari root repositori). Alamat lain bisa diatur lewat `VITE_API_PROXY`, misalnya `VITE_API_PROXY=http://localhost:4010 npm run dev` untuk mock server Prism.
+
 ## 3. Menjalankan melalui Docker
 
-Dari direktori frontend:
+Dari root repositori (memakai `COMPOSE_FILE` di `.env`):
 
 ```bash
-docker compose --env-file ../.env -f ../infra/docker-compose.yml build frontend
-docker compose --env-file ../.env -f ../infra/docker-compose.yml up -d frontend
+docker compose build frontend
+docker compose up -d api-gateway frontend
 ```
 
-Aplikasi dapat diakses melalui API Gateway:
+Container frontend tidak memetakan port ke host. Aplikasi diakses melalui API Gateway (rute `/` diteruskan ke `FRONTEND_HOST`):
 
 http://localhost:8080/
 
@@ -40,13 +42,15 @@ http://localhost:8080/
 src/
 ├── components/
 │   ├── UI.jsx
-│   └── ToastContext.jsx
+│   ├── ToastContext.jsx   (ToastProvider)
+│   └── toast.js           (useToast)
 ├── layouts/
 │   └── AppLayout.jsx
 ├── lib/
 │   └── api.js
 ├── pages/
-│   └── PlaceholderPage.jsx
+│   ├── PlaceholderPage.jsx
+│   └── PoemDetailPage.jsx
 ├── App.jsx
 ├── App.css
 ├── index.css
@@ -127,7 +131,7 @@ API client menyediakan:
 
 - Base URL `/api`.
 - `credentials: include` untuk pengiriman cookie.
-- Penanganan HTTP 401 dengan pengalihan ke halaman login.
+- Penanganan HTTP 401 dengan pengalihan ke `/login?next=<halaman asal>`.
 - Penanganan HTTP 202 dengan notifikasi permintaan sedang diproses.
 - Helper GET, POST, PUT, PATCH, dan DELETE.
 - ApiError untuk penanganan kesalahan HTTP.
@@ -146,7 +150,16 @@ Komponen reusable tersedia di `src/components/UI.jsx`:
 - Toast
 - Loader
 
-ToastProvider tersedia di `src/components/ToastContext.jsx`.
+`OriginalityBadge` menerima empat level dari spesifikasi: `Orisinal`, `Terinspirasi`, `Mirip`, `Dugaan jiplakan`.
+
+Toast: `ToastProvider` (`src/components/ToastContext.jsx`) sudah membungkus aplikasi. Dari komponen:
+
+```jsx
+import { useToast } from '../components/toast'
+
+const { showToast } = useToast()
+showToast('Puisi tersimpan.', 'success') // info | success | error
+```
 
 ## 9. Pemeriksaan kualitas
 
