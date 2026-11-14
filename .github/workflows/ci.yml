@@ -1,0 +1,329 @@
+name: CI - PuisiApp Microservice
+
+on:
+  push:
+    branches:
+      - main
+      - "k1-*"
+      - "k2-*"
+      - "k3-*"
+      - "k4-*"
+      - "k5-*"
+      - "k6-*"
+      - "k7-*"
+      - "k8-*"
+      - "k9-*"
+
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  detect:
+    name: Detect Changed Services
+    runs-on: ubuntu-latest
+
+    outputs:
+      matrix: ${{ steps.detect.outputs.matrix }}
+      has_services: ${{ steps.detect.outputs.has_services }}
+      node_library_changed: ${{ steps.detect.outputs.node_library_changed }}
+      contract_validation_changed: ${{ steps.detect.outputs.contract_validation_changed }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed services
+        id: detect
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha || '' }}
+          BEFORE_SHA: ${{ github.event.before || '' }}
+          HEAD_SHA: ${{ github.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ -n "$PR_BASE_SHA" ]]; then
+            BASE_SHA="$PR_BASE_SHA"
+            DIFF_COMMAND=(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
+          elif [[ -n "$BEFORE_SHA" && "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ]]; then
+            BASE_SHA="$BEFORE_SHA"
+            DIFF_COMMAND=(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
+          else
+            DIFF_COMMAND=(git diff-tree --no-commit-id --name-only -r "$HEAD_SHA")
+          fi
+
+          mapfile -t CHANGED_FILES < <("${DIFF_COMMAND[@]}")
+
+          declare -A SELECTED=()
+
+          NODE_LIBRARY_CHANGED=false
+          CONTRACT_VALIDATION_CHANGED=false
+          WORKFLOW_CHANGED=false
+          CONTRACTS_CHANGED=false
+
+          add_service() {
+            local name="$1"
+            SELECTED["$name"]=1
+          }
+
+          for file in "${CHANGED_FILES[@]}"; do
+            case "$file" in
+              libs/node/src/kontrak.js|libs/node/src/amplop.js|libs/node/test/kontrak.test.js|libs/node/test/amplop.test.js)
+                NODE_LIBRARY_CHANGED=true
+                CONTRACT_VALIDATION_CHANGED=true
+                ;;
+              libs/node/*)
+                NODE_LIBRARY_CHANGED=true
+                ;;
+              contracts/*)
+                CONTRACTS_CHANGED=true
+                CONTRACT_VALIDATION_CHANGED=true
+                ;;
+              .github/workflows/*)
+                WORKFLOW_CHANGED=true
+                CONTRACT_VALIDATION_CHANGED=true
+                ;;
+            esac
+
+            if [[ "$file" =~ ^services/([^/]+)/ ]]; then
+              add_service "${BASH_REMATCH[1]}"
+            fi
+          done
+
+          # Workflow changes trigger validation for all services.
+          if [[ "$WORKFLOW_CHANGED" == true ]]; then
+            for service_dir in services/*/; do
+              [[ -d "$service_dir" ]] || continue
+              add_service "$(basename "$service_dir")"
+            done
+
+          # Shared Node.js library or contract changes trigger
+          # all Node.js services only.
+          elif [[ "$NODE_LIBRARY_CHANGED" == true ||
+                  "$CONTRACTS_CHANGED" == true ]]; then
+            for service_dir in services/*/; do
+              [[ -d "$service_dir" ]] || continue
+
+              if [[ -f "${service_dir}package.json" ]]; then
+                add_service "$(basename "$service_dir")"
+              fi
+            done
+          fi
+
+          MATRIX='{"include":[]}'
+
+          while IFS= read -r name; do
+            [[ -n "$name" ]] || continue
+
+            path="services/$name"
+
+            if [[ -f "$path/package.json" ]]; then
+              type="node"
+            elif [[ -f "$path/pyproject.toml" ]]; then
+              type="python"
+            else
+              echo "Skipping $name: no recognized service manifest"
+              continue
+            fi
+
+            if [[ -f "$path/Dockerfile" ]]; then
+              has_dockerfile=true
+            else
+              has_dockerfile=false
+            fi
+
+            # Nama image Docker tidak boleh diawali "_" atau berisi huruf besar
+            # (mis. "_template-python" -> "template-python").
+            image="$(sed -E 's/^[_.-]+//' <<< "${name,,}")"
+
+            MATRIX="$(
+              jq -c \
+                --arg name "$name" \
+                --arg path "$path" \
+                --arg type "$type" \
+                --arg image "$image" \
+                --argjson dockerfile "$has_dockerfile" \
+                '.include += [{
+                  name: $name,
+                  path: $path,
+                  type: $type,
+                  image: $image,
+                  has_dockerfile: $dockerfile
+                }]' <<< "$MATRIX"
+            )"
+          done < <(printf '%s\n' "${!SELECTED[@]}" | sort)
+
+          if [[ "$(jq '.include | length' <<< "$MATRIX")" -gt 0 ]]; then
+            HAS_SERVICES=true
+          else
+            HAS_SERVICES=false
+          fi
+
+          {
+            echo "matrix=$MATRIX"
+            echo "has_services=$HAS_SERVICES"
+            echo "node_library_changed=$NODE_LIBRARY_CHANGED"
+            echo "contract_validation_changed=$CONTRACT_VALIDATION_CHANGED"
+          } >> "$GITHUB_OUTPUT"
+
+          echo "Detected service matrix:"
+          jq . <<< "$MATRIX"
+
+  node:
+    name: Shared Node.js Library - Lint, Format, Test
+    needs: detect
+    if: needs.detect.outputs.node_library_changed == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: libs/node/package-lock.json
+
+      - name: Install dependencies
+        working-directory: libs/node
+        run: npm ci --no-audit --no-fund
+
+      - name: Run ESLint
+        working-directory: libs/node
+        run: npm run lint
+
+      - name: Check formatting
+        working-directory: libs/node
+        run: npm run format:check
+
+      - name: Run unit tests
+        working-directory: libs/node
+        run: npm test
+
+  contract_validation:
+    name: Contract Validation - T0.6
+    needs: detect
+    if: needs.detect.outputs.contract_validation_changed == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: libs/node/package-lock.json
+
+      - name: Install dependencies
+        working-directory: libs/node
+        run: npm ci --no-audit --no-fund
+
+      - name: Validate event contracts
+        working-directory: libs/node
+        env:
+          CONTRACTS_DIR: ${{ github.workspace }}/contracts
+        run: node --test test/amplop.test.js test/kontrak.test.js
+
+  service_ci:
+    name: Service CI - ${{ matrix.name }}
+    needs: detect
+    if: needs.detect.outputs.has_services == 'true'
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.detect.outputs.matrix) }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        if: matrix.type == 'node'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            libs/node/package-lock.json
+            ${{ matrix.path }}/package-lock.json
+
+      # Dependensi "file:../../libs/node" hanya berupa symlink; npm ci di
+      # layanan tidak memasang dependensi milik libs/node (ajv, amqplib, pg).
+      - name: Install shared Node.js library dependencies
+        if: matrix.type == 'node'
+        working-directory: libs/node
+        run: npm ci --no-audit --no-fund
+
+      - name: Install Node.js dependencies
+        if: matrix.type == 'node'
+        working-directory: ${{ matrix.path }}
+        run: npm ci --no-audit --no-fund
+
+      - name: Run Node.js lint
+        if: matrix.type == 'node'
+        working-directory: ${{ matrix.path }}
+        run: npm run lint --if-present
+
+      - name: Check Node.js formatting
+        if: matrix.type == 'node'
+        working-directory: ${{ matrix.path }}
+        run: npm run format:check --if-present
+
+      - name: Run Node.js tests
+        if: matrix.type == 'node'
+        working-directory: ${{ matrix.path }}
+        run: npm test --if-present
+
+      - name: Setup Python
+        if: matrix.type == 'python'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        if: matrix.type == 'python'
+        working-directory: ${{ matrix.path }}
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Run Ruff
+        if: matrix.type == 'python'
+        working-directory: ${{ matrix.path }}
+        run: ruff check .
+
+      - name: Run Pytest
+        if: matrix.type == 'python'
+        working-directory: ${{ matrix.path }}
+        run: pytest
+
+      - name: Set up Docker Buildx
+        if: matrix.has_dockerfile == true
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build service Docker image
+        if: matrix.has_dockerfile == true
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.path }}/Dockerfile
+          push: false
+          tags: puisiapp-${{ matrix.image }}:ci
