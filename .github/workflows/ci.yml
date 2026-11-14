@@ -259,9 +259,7 @@ jobs:
           cache: npm
           cache-dependency-path: ${{ matrix.path }}/package-lock.json
 
-      # IMPORTANT:
       # Install shared library dependencies first.
-      # This makes packages such as AJV available to libs/node.
       - name: Install shared Node.js library dependencies
         if: matrix.type == 'node'
         working-directory: libs/node
@@ -321,4 +319,4 @@ jobs:
           context: .
           file: ${{ matrix.path }}/Dockerfile
           push: false
-          tags: puisiapp-${{ matrix.name }}:ci
+          tags: puisiapp-service:ci
