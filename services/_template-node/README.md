@@ -45,22 +45,23 @@ npm ci
 
 Dependency `@puisiapp/events` menggunakan local package dari `../../libs/node`.
 
-Ketika template disalin menjadi service baru di dalam direktori `services/`, pastikan struktur repository tetap dipertahankan agar referensi dependency tersebut tetap valid.
+Ketika template disalin menjadi service baru di dalam direktori `services/`, pastikan struktur repository tetap dipertahankan agar referensi dependency tersebut tetap valid. Ganti juga semua `_template-node` di `Dockerfile` dan `name` di `package.json` dengan nama service baru. CI otomatis mendeteksi folder baru tersebut.
 
 ## 4. Environment Configuration
 
 Service menggunakan environment variables untuk mengatur konfigurasi dan koneksi ke dependency.
 
-| Variable     | Keterangan                         | Default      |
-| ------------ | ---------------------------------- | ------------ |
-| SERVICE_NAME | Nama service                       | node-service |
-| HOST         | Host server                        | 0.0.0.0      |
-| PORT         | Port server                        | 8080         |
-| DATABASE_URL | URL koneksi PostgreSQL             | Tidak ada    |
-| AMQP_URL     | URL koneksi RabbitMQ               | Tidak ada    |
-| REDIS_URL    | URL koneksi Redis                  | Tidak ada    |
-| S3_ENDPOINT  | Endpoint penyimpanan S3-compatible | Tidak ada    |
-| SMTP_HOST    | Alamat SMTP server                 | Tidak ada    |
+| Variable     | Keterangan                                                | Default      |
+| ------------ | --------------------------------------------------------- | ------------ |
+| SERVICE_NAME | Nama service                                              | node-service |
+| HOST         | Host server                                               | 0.0.0.0      |
+| PORT         | Port server                                               | 8080         |
+| DATABASE_URL | URL koneksi PostgreSQL                                    | Tidak ada    |
+| AMQP_URL     | URL koneksi RabbitMQ                                      | Tidak ada    |
+| REDIS_URL    | URL koneksi Redis                                         | Tidak ada    |
+| S3_ENDPOINT  | Endpoint penyimpanan S3-compatible                        | Tidak ada    |
+| SMTP_HOST    | Alamat SMTP server                                        | Tidak ada    |
+| OUTBOX       | `true` bila service menerbitkan event (buat tabel outbox) | false        |
 
 Konfigurasikan environment variables sesuai kebutuhan service. Jangan menyimpan credential atau connection string sensitif secara langsung di dalam source code.
 
@@ -106,19 +107,18 @@ Apabila `DATABASE_URL` dikonfigurasi, service akan membuat koneksi PostgreSQL da
 
 Apabila `DATABASE_URL` tidak dikonfigurasi, proses migrasi database dilewati.
 
+Tabel `processed_event` selalu dibuat oleh `libs/node`. Tabel `outbox` beserta publication `outbox_pub` dibuat bila `OUTBOX=true`. Tabel milik service ditaruh di folder `migrations/` (`001_xxx.sql`, `002_xxx.sql`, ...) dan dijalankan urut nama.
+
 Contoh penggunaan:
 
 ```javascript
 import pg from "pg";
 import { buatLogger, jalankanMigrasi } from "@puisiapp/events";
-
 const { Pool } = pg;
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
-
 const log = buatLogger("node-service");
-
 await jalankanMigrasi(pool, { log });
 ```
 

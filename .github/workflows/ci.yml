@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - "T0.7-*"
       - "k1-*"
       - "k2-*"
       - "k3-*"
@@ -18,7 +17,6 @@ on:
   pull_request:
     branches:
       - main
-      - "T.07"
 
 permissions:
   contents: read
@@ -145,16 +143,22 @@ jobs:
               has_dockerfile=false
             fi
 
+            # Nama image Docker tidak boleh diawali "_" atau berisi huruf besar
+            # (mis. "_template-python" -> "template-python").
+            image="$(sed -E 's/^[_.-]+//' <<< "${name,,}")"
+
             MATRIX="$(
               jq -c \
                 --arg name "$name" \
                 --arg path "$path" \
                 --arg type "$type" \
+                --arg image "$image" \
                 --argjson dockerfile "$has_dockerfile" \
                 '.include += [{
                   name: $name,
                   path: $path,
                   type: $type,
+                  image: $image,
                   has_dockerfile: $dockerfile
                 }]' <<< "$MATRIX"
             )"
@@ -257,9 +261,12 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: ${{ matrix.path }}/package-lock.json
+          cache-dependency-path: |
+            libs/node/package-lock.json
+            ${{ matrix.path }}/package-lock.json
 
-      # Install shared library dependencies first.
+      # Dependensi "file:../../libs/node" hanya berupa symlink; npm ci di
+      # layanan tidak memasang dependensi milik libs/node (ajv, amqplib, pg).
       - name: Install shared Node.js library dependencies
         if: matrix.type == 'node'
         working-directory: libs/node
@@ -319,4 +326,4 @@ jobs:
           context: .
           file: ${{ matrix.path }}/Dockerfile
           push: false
-          tags: puisiapp-service:ci
+          tags: puisiapp-${{ matrix.image }}:ci

@@ -1,4 +1,5 @@
-﻿import { createServer } from "node:http";
+import { createServer } from "node:http";
+import { fileURLToPath } from "node:url";
 import pg from "pg";
 import { buatLogger, jalankanMigrasi } from "@puisiapp/events";
 import { loadConfig } from "./config.js";
@@ -39,7 +40,13 @@ async function main() {
     });
 
     try {
-      await jalankanMigrasi(pool, { log });
+      // processed_event dari libs/node selalu dibuat; outbox + publication
+      // hanya untuk layanan yang menerbitkan event (OUTBOX=true).
+      await jalankanMigrasi(pool, {
+        folder: fileURLToPath(new URL("../migrations", import.meta.url)),
+        outbox: process.env.OUTBOX === "true",
+        log,
+      });
       log.info("migrasi database selesai");
     } finally {
       await pool.end();

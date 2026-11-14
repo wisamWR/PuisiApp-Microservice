@@ -1,4 +1,4 @@
-﻿import json
+import json
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from app.config import load_settings

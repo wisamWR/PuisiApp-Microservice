@@ -1,4 +1,4 @@
-﻿CREATE TABLE IF NOT EXISTS outbox (
+CREATE TABLE IF NOT EXISTS outbox (
     event_id UUID PRIMARY KEY,
     aggregate_type VARCHAR(40) NOT NULL,
     aggregate_id VARCHAR(64) NOT NULL,

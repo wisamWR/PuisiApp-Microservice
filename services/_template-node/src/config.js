@@ -1,4 +1,4 @@
-﻿export function loadConfig() {
+export function loadConfig() {
   const serviceUrls = Object.fromEntries(
     Object.entries(process.env)
       .filter(([key, value]) => key.endsWith("_SERVICE_URL") && value)
