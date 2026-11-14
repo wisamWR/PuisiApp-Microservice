@@ -103,12 +103,23 @@ jobs:
             fi
           done
 
-          if [[ "$NODE_LIBRARY_CHANGED" == true ||
-                "$CONTRACTS_CHANGED" == true ||
-                "$WORKFLOW_CHANGED" == true ]]; then
+          # Workflow changes trigger validation for all services.
+          if [[ "$WORKFLOW_CHANGED" == true ]]; then
             for service_dir in services/*/; do
               [[ -d "$service_dir" ]] || continue
               add_service "$(basename "$service_dir")"
+            done
+
+          # Shared Node.js library or contract changes trigger
+          # all Node.js services only.
+          elif [[ "$NODE_LIBRARY_CHANGED" == true ||
+                  "$CONTRACTS_CHANGED" == true ]]; then
+            for service_dir in services/*/; do
+              [[ -d "$service_dir" ]] || continue
+
+              if [[ -f "${service_dir}package.json" ]]; then
+                add_service "$(basename "$service_dir")"
+              fi
             done
           fi
 
@@ -301,4 +312,4 @@ jobs:
           context: .
           file: ${{ matrix.path }}/Dockerfile
           push: false
-          tags: puisiapp-${{ matrix.name }}:ci
+          tags: puisiapp-service:ci
