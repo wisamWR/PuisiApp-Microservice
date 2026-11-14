@@ -24,6 +24,9 @@ include:
   - path: compose/poem.yml
     project_directory: .
     env_file: ../.env
+  - path: compose/frontend.yml
+    project_directory: .
+    env_file: ../.env
   - path: compose/analysis.yml
     project_directory: .
     env_file: ../.env
