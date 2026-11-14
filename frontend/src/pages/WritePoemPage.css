@@ -1,0 +1,82 @@
+/* Halaman Tulis Puisi (T2.6). Mengikuti token warna kerangka T0.5 (App.css). */
+
+.tulis-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
+
+.tulis-tata { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 28px; align-items: start; }
+.tulis-kolom { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+
+.tulis-field { display: flex; flex-direction: column; gap: 7px; color: #655b53; font-size: 11px; }
+.tulis-fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
+.tulis-label { display: flex; justify-content: space-between; align-items: baseline; padding: 0; color: #4f4339; font-size: 12px; font-weight: 700; }
+.tulis-penghitung { color: #aaa39b; font-size: 10px; font-weight: 400; font-variant-numeric: tabular-nums; }
+.tulis-penghitung.lebih { color: #b05a4d; font-weight: 700; }
+.tulis-petunjuk { margin: 0; color: #918b84; font-size: 11px; line-height: 1.6; }
+.tulis-galat { color: #b05a4d; font-size: 11px; }
+
+.tulis-judul { font-family: 'Playfair Display', serif; font-size: 20px; }
+.tulis-isi {
+  resize: vertical; min-height: 280px; font-family: 'Playfair Display', Georgia, serif;
+  font-size: 15px; line-height: 1.85;
+}
+.input[aria-invalid='true'] { border-color: #c98579; }
+
+.tulis-daftar-bait { display: flex; flex-direction: column; gap: 8px; }
+.tulis-bait {
+  position: relative; display: grid; grid-template-columns: auto 1fr; gap: 4px 12px;
+  padding: 12px 14px; border: 1px solid #ebe5de; border-radius: 10px; background: #fff; cursor: pointer;
+}
+.tulis-bait:hover { border-color: #d9cec5; }
+.tulis-bait.dipilih { border-color: #a78a75; background: #fbf8f5; box-shadow: 0 0 0 3px #a78a7514; }
+.tulis-bait.terlalu { opacity: .75; }
+.tulis-bait input { grid-row: 1 / span 3; margin-top: 2px; accent-color: #705747; }
+.tulis-bait-nomor { color: #a17a62; font-size: 9px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; }
+.tulis-bait-teks { color: #3f352d; font-family: 'Playfair Display', Georgia, serif; font-size: 13px; line-height: 1.7; white-space: pre-line; }
+.tulis-bait-meta { color: #aaa39b; font-size: 10px; }
+.tulis-bait.terlalu .tulis-bait-meta { color: #b05a4d; }
+
+.tulis-template { display: flex; flex-wrap: wrap; gap: 10px; }
+.tulis-template-pilihan {
+  display: inline-flex; align-items: center; gap: 9px; padding: 8px 14px 8px 8px;
+  border: 1px solid #e5dfd8; border-radius: 999px; background: #fff; color: #594b40; font-size: 12px; cursor: pointer;
+}
+.tulis-template-pilihan:hover { background: #f8f5f1; }
+.tulis-template-pilihan.dipilih { border-color: #705747; box-shadow: 0 0 0 2px #70574722; font-weight: 700; }
+.tulis-swatch { width: 22px; height: 22px; border-radius: 50%; border: 1px solid #0000001a; }
+
+.tulis-tambahan { padding: 12px 16px; border: 1px solid #ece8e2; border-radius: 10px; background: #fdfcfa; }
+.tulis-tambahan summary { color: #594b40; font-size: 12px; font-weight: 700; cursor: pointer; }
+.tulis-tambahan[open] summary { margin-bottom: 14px; }
+.tulis-tambahan .tulis-field + .tulis-field { margin-top: 14px; }
+
+.tulis-aksi { display: flex; gap: 10px; padding-top: 4px; }
+
+.tulis-pratinjau { position: sticky; top: 24px; display: flex; flex-direction: column; gap: 10px; }
+.tulis-pratinjau-bingkai {
+  display: flex; align-items: center; justify-content: center; aspect-ratio: 1 / 1;
+  overflow: hidden; border: 1px solid #eeeae5; border-radius: 12px; background: #f6f2ed;
+}
+.tulis-pratinjau-bingkai img { width: 100%; height: 100%; object-fit: cover; transition: opacity .2s ease; }
+.tulis-pratinjau-bingkai img.memuat { opacity: .45; }
+.tulis-pratinjau-kosong { max-width: 240px; margin: 0; padding: 20px; color: #8b847d; font-size: 12px; line-height: 1.7; text-align: center; }
+
+.tulis-pemberitahuan {
+  margin: 0 0 20px; padding: 12px 16px; border: 1px solid #efe1c8; border-radius: 10px;
+  background: #fbf6ec; color: #7d6440; font-size: 12px;
+}
+
+/* Kartu puisi yang baru dikirim (tampilan optimistik setelah 202). */
+.puisi-diproses { margin-bottom: 24px; padding: 24px; border: 1px solid #eeeae5; border-radius: 12px; background: #fff; }
+.puisi-diproses-atas { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.puisi-diproses .status-chip { color: #8a7045; background: #f7f0e2; }
+.puisi-diproses h2 { margin: 16px 0 4px; font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 600; }
+.puisi-diproses-isi { margin: 18px 0; color: #3f352d; font-family: 'Playfair Display', Georgia, serif; font-size: 15px; line-height: 1.9; white-space: pre-line; }
+.puisi-diproses-info { margin: 0; padding: 12px 14px; border-radius: 8px; background: #f8f5f1; color: #7f7064; font-size: 12px; line-height: 1.7; }
+
+@media (max-width: 900px) {
+  .tulis-tata { grid-template-columns: 1fr; }
+  .tulis-pratinjau { position: static; order: -1; width: 100%; max-width: 260px; }
+  /* Belum ada pratinjau: kotak ringkas agar form tidak terdorong satu layar ke bawah. */
+  .tulis-pratinjau-bingkai:has(.tulis-pratinjau-kosong) { aspect-ratio: auto; }
+  .tulis-pratinjau-kosong { padding: 14px; }
+  .tulis-heading { flex-direction: column; }
+}

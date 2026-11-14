@@ -1,7 +1,12 @@
-import { useParams } from 'react-router-dom'
+import { useLocation, useParams } from 'react-router-dom'
+import PuisiDiproses from '../components/PuisiDiproses'
 
 export default function PoemDetailPage() {
   const { id } = useParams()
+  // T2.6 (kelompok 2): setelah Tulis Puisi menerima 202, data puisi dikirim lewat
+  // state router dan ditampilkan sebagai "sedang diproses" (read-your-writes).
+  const puisiDiproses = useLocation().state?.puisiDiproses
+  const baruDikirim = puisiDiproses?.poem_id === id ? puisiDiproses : null
 
   return (
     <section className="page-section">
@@ -10,6 +15,8 @@ export default function PoemDetailPage() {
         <h1>Detail Puisi</h1>
         <p>Membaca karya dan berbagi tanggapan bersama komunitas.</p>
       </div>
+
+      <PuisiDiproses puisi={baruDikirim} />
 
       <article className="poem-detail-card">
         <span className="emotion-label">Puisi</span>
