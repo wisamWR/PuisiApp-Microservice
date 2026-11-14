@@ -4,18 +4,18 @@ Pustaka event-driven Python untuk layanan worker PuisiApp. Perilakunya diselaras
 
 ## Cara Pemasangan
 
-Pengembangan lokal:
-pip install -r libs/python/requirements.txt
+Pengembangan & pengujian lokal:
+pip install -r libs/python/requirements-dev.txt
 PYTHONPATH=libs/python pytest -v libs/python/tests
 
-Dockerfile layanan worker:
+Dockerfile layanan worker (hanya dependensi runtime produksi):
 COPY contracts /contracts
 COPY libs/python /app/libs/python
 RUN pip install --no-cache-dir -r /app/libs/python/requirements.txt && pip install --no-cache-dir --no-deps /app/libs/python
 
 ## Variabel Lingkungan
 
-- `SERVICE_NAME` (default `tanpa-nama`): Nama produsen event (`producer`) dan nama layanan di log JSON.
+- `SERVICE_NAME` (**wajib** diisi pada layanan penerbit event; `buat_event` dan `event_turunan` akan melempar `ValueError` jika kosong tanpa parameter `producer`. Khusus `buat_logger()`, jika kosong akan memakai nama cadangan `tanpa-nama`).
 - `CONTRACTS_DIR` (default `<repo>/contracts` atau `/contracts`): Lokasi folder kontrak bersama (`envelope.v1.json`, `routing.json`).
 - `PREFETCH` (default `10`): Jumlah pesan belum di-ack maksimal per worker (`basic_qos`).
 - `LOG_LEVEL` (default `INFO`): Level log JSON (`DEBUG`, `INFO`, `WARNING`, `ERROR`).

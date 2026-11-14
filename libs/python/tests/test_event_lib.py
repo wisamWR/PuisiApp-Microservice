@@ -80,7 +80,7 @@ def test_event_turunan_deterministik_dan_mewarisi_konteks():
     assert turunan1["traceparent"] == sumber["traceparent"]
 
 
-def test_publisher_confirm_dan_header_amqp():
+def test_publisher_confirm_header_amqp_dan_tanpa_mandatory():
     ch = MagicMock()
     pub = buat_publisher(ch)
     ch.confirm_delivery.assert_called_once()
@@ -99,7 +99,7 @@ def test_publisher_confirm_dan_header_amqp():
     kwargs = ch.basic_publish.call_args.kwargs
     assert kwargs["exchange"] == "analysis.events"
     assert kwargs["routing_key"] == "poem.emotion.analyzed"
-    assert kwargs["mandatory"] is True
+    assert not kwargs.get("mandatory", False)
     assert kwargs["properties"].headers["correlation_id"] == evt["correlation_id"]
     assert kwargs["properties"].headers["traceparent"] == evt["traceparent"]
 
@@ -130,6 +130,43 @@ def test_topologi_quorum_dlx_delivery_limit_dan_prefetch_env(monkeypatch):
         handler=MagicMock(),
     )
     ch_konsumen.basic_qos.assert_called_once_with(prefetch_count=25)
+
+
+def test_buat_konsumen_retry_delayed_tanpa_mandatory():
+    ch = MagicMock()
+    store_err = MagicMock()
+    store_err.proses.side_effect = RuntimeError("DB sibuk")
+
+    buat_konsumen(
+        ch,
+        antrean="q.emotion-worker",
+        ikatan=["poem.submitted"],
+        store=store_err,
+        handler=MagicMock(),
+    )
+
+    callback = ch.basic_consume.call_args.kwargs["on_message_callback"]
+    evt = buat_event(
+        "poem.submitted",
+        aggregate_id="poem-1",
+        aggregate_version=1,
+        payload={},
+        producer="test",
+    )
+    body = json.dumps(evt).encode("utf-8")
+    method = MagicMock(delivery_tag=7)
+
+    callback(ch, method, pika.BasicProperties(headers={}), body)
+
+    ch.basic_publish.assert_called_once()
+    kwargs = ch.basic_publish.call_args.kwargs
+    assert kwargs["exchange"] == "retry.delayed"
+    assert kwargs["routing_key"] == "q.emotion-worker"
+    assert not kwargs.get("mandatory", False)
+    assert kwargs["properties"].headers["x-percobaan"] == 1
+    assert isinstance(kwargs["properties"].headers["x-delay"], int)
+    ch.basic_ack.assert_called_once_with(delivery_tag=7)
+    ch.basic_nack.assert_not_called()
 
 
 def test_store_pg_duplikat_dan_event_basi_tetap_dicatat():

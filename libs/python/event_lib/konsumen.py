@@ -132,7 +132,6 @@ def buat_konsumen(
                 routing_key=antrean,
                 body=body,
                 properties=props,
-                mandatory=True,
             )
 
         tangani_pesan(

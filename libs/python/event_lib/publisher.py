@@ -50,7 +50,6 @@ class Publisher:
             routing_key=event["event_type"],
             body=body,
             properties=opsi_pesan(event, headers),
-            mandatory=True,
         )
 
 
