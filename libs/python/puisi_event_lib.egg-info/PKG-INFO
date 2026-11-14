@@ -1,8 +1,0 @@
-Metadata-Version: 2.4
-Name: puisi-event-lib
-Version: 0.1.0
-Summary: Pustaka event bersama RabbitMQ untuk worker Python Puisi App
-Requires-Python: >=3.10
-Requires-Dist: pika
-Requires-Dist: psycopg2-binary
-Requires-Dist: prometheus-client
