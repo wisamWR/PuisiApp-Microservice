@@ -1,0 +1,159 @@
+name: Publish image ke GHCR
+
+# Setiap merge ke main mendorong image yang terdampak ke GitHub Container
+# Registry (aturan "Branch dan image" di All Specifications). Pengujian sudah
+# dijalankan ci.yml pada pull request sebelum merge.
+#
+# Tag yang didorong untuk setiap image:
+#   sha-<7 karakter commit>  tidak pernah berubah; dipakai untuk rollback
+#   main                     selalu versi terbaru di main; dipakai deploy (IMAGE_TAG=main)
+#
+# Nama image: ghcr.io/<pemilik-repo>/puisiapp-<nama>, mis. ghcr.io/wisamwr/puisiapp-api-gateway
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      semua:
+        description: Build dan push semua image (bukan hanya yang berubah)
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  detect:
+    name: Tentukan image yang terdampak
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.detect.outputs.matrix }}
+      ada: ${{ steps.detect.outputs.ada }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - id: detect
+        shell: bash
+        env:
+          BEFORE_SHA: ${{ github.event.before || '' }}
+          HEAD_SHA: ${{ github.sha }}
+          SEMUA_INPUT: ${{ github.event_name == 'workflow_dispatch' && inputs.semua }}
+        run: |
+          set -euo pipefail
+
+          # Daftar semua image: nama|konteks build|Dockerfile
+          declare -A KONTEKS=() DOCKERFILE=()
+          tambah() { KONTEKS["$1"]="$2"; DOCKERFILE["$1"]="$3"; }
+          tambah api-gateway infra/nginx infra/nginx/Dockerfile
+          tambah rabbitmq    infra/rabbitmq infra/rabbitmq/Dockerfile
+          tambah node-tools  .  libs/node/Dockerfile
+          [[ -f frontend/Dockerfile ]] && tambah frontend frontend frontend/Dockerfile
+          for d in services/*/; do
+            layanan="$(basename "$d")"
+            [[ -f "$d/Dockerfile" ]] || continue
+            # Nama image tanpa awalan "_" dan huruf kecil (_template-node -> template-node).
+            tambah "$(sed -E 's/^[_.-]+//' <<< "${layanan,,}")" . "${d}Dockerfile"
+          done
+
+          declare -A PILIH=()
+          pilih_semua() { for n in "${!KONTEKS[@]}"; do PILIH["$n"]=1; done; }
+
+          SEMUA=false
+          if [[ "$SEMUA_INPUT" == "true" ]]; then SEMUA=true; fi
+          # Push pertama kali atau riwayat tidak tersedia: build semua.
+          if [[ -z "$BEFORE_SHA" || "$BEFORE_SHA" =~ ^0+$ ]] || ! git cat-file -e "$BEFORE_SHA" 2>/dev/null; then
+            SEMUA=true
+          fi
+
+          if [[ "$SEMUA" == true ]]; then
+            pilih_semua
+          else
+            mapfile -t BERUBAH < <(git diff --name-only "$BEFORE_SHA" "$HEAD_SHA")
+            for f in "${BERUBAH[@]}"; do
+              case "$f" in
+                .github/workflows/publish.yml) pilih_semua ;;
+                infra/nginx/*)    PILIH[api-gateway]=1 ;;
+                infra/rabbitmq/*) PILIH[rabbitmq]=1 ;;
+                frontend/*)       [[ -n "${KONTEKS[frontend]:-}" ]] && PILIH[frontend]=1 ;;
+                libs/node/*|contracts/*)
+                  # Semua image yang membawa libs/node dan contracts di dalamnya.
+                  PILIH[node-tools]=1
+                  for d in services/*/; do
+                    [[ -f "$d/Dockerfile" && -f "$d/package.json" ]] || continue
+                    PILIH["$(sed -E 's/^[_.-]+//' <<< "$(basename "${d,,}")")"]=1
+                  done
+                  ;;
+                services/poem-common/*)
+                  # Layanan yang memakai paket bersama domain puisi.
+                  for d in services/*/; do
+                    [[ -f "$d/Dockerfile" ]] && grep -q 'poem-common' "$d/package.json" 2>/dev/null || continue
+                    PILIH["$(basename "${d,,}")"]=1
+                  done
+                  ;;
+                services/*)
+                  layanan="$(cut -d/ -f2 <<< "$f")"
+                  nama="$(sed -E 's/^[_.-]+//' <<< "${layanan,,}")"
+                  [[ -n "${KONTEKS[$nama]:-}" ]] && PILIH["$nama"]=1
+                  ;;
+              esac
+            done
+          fi
+
+          MATRIX='{"include":[]}'
+          for n in $(printf '%s\n' "${!PILIH[@]}" | sort); do
+            MATRIX="$(jq -c --arg n "$n" --arg k "${KONTEKS[$n]}" --arg f "${DOCKERFILE[$n]}" \
+              '.include += [{nama: $n, konteks: $k, dockerfile: $f}]' <<< "$MATRIX")"
+          done
+          echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+          echo "ada=$([[ "$(jq '.include | length' <<< "$MATRIX")" -gt 0 ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          echo "Image yang akan dipublikasi:"; jq -r '.include[].nama' <<< "$MATRIX"
+
+  publish:
+    name: Publish ${{ matrix.nama }}
+    needs: detect
+    if: needs.detect.outputs.ada == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.detect.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Nama image (registry wajib huruf kecil)
+        id: nama
+        shell: bash
+        run: |
+          pemilik="${GITHUB_REPOSITORY_OWNER,,}"
+          echo "image=ghcr.io/${pemilik}/puisiapp-${{ matrix.nama }}" >> "$GITHUB_OUTPUT"
+          echo "sha=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.konteks }}
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: |
+            ${{ steps.nama.outputs.image }}:sha-${{ steps.nama.outputs.sha }}
+            ${{ steps.nama.outputs.image }}:main
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.title=puisiapp-${{ matrix.nama }}
+          cache-from: type=gha,scope=${{ matrix.nama }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.nama }}
