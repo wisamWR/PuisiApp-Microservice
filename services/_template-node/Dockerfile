@@ -1,4 +1,5 @@
-﻿FROM node:24-alpine
+﻿
+FROM node:24-alpine
 
 ENV NODE_ENV=production \
     PORT=8080
@@ -11,7 +12,6 @@ RUN npm ci --omit=dev \
     && npm cache clean --force
 
 COPY services/_template-node/src ./src
-COPY services/_template-node/migrations ./migrations
 
 RUN addgroup -S appgroup \
     && adduser -S appuser -G appgroup \

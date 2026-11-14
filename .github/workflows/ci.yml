@@ -245,7 +245,10 @@ jobs:
     needs: [changes, node_template_check]
     if: >-
       always() &&
-      needs.changes.outputs.node_template == 'true' &&
+      (
+        needs.changes.outputs.node_template == 'true' ||
+        needs.changes.outputs.workflow == 'true'
+      ) &&
       needs.changes.result == 'success' &&
       needs.node_template_check.result == 'success'
     runs-on: ubuntu-latest
@@ -260,7 +263,7 @@ jobs:
       - name: Build Node template image
         uses: docker/build-push-action@v6
         with:
-          context: services/_template-node
+          context: .
           file: services/_template-node/Dockerfile
           push: false
           tags: puisiapp-node-template:ci
@@ -270,7 +273,10 @@ jobs:
     needs: [changes, python_template_check]
     if: >-
       always() &&
-      needs.changes.outputs.python_template == 'true' &&
+      (
+        needs.changes.outputs.python_template == 'true' ||
+        needs.changes.outputs.workflow == 'true'
+      ) &&
       needs.changes.result == 'success' &&
       needs.python_template_check.result == 'success'
     runs-on: ubuntu-latest
@@ -280,9 +286,12 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v6
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Python template image
+        uses: docker/build-push-action@v6
         with:
-          context: services/_template-python
+          context: .
           file: services/_template-python/Dockerfile
           push: false
           tags: puisiapp-python-template:ci
