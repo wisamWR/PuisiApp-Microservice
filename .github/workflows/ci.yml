@@ -1,0 +1,289 @@
+name: CI - PuisiApp Microservice
+
+on:
+  push:
+    branches:
+      - main
+      - "T0.7-*"
+      - "k1-*"
+      - "k2-*"
+      - "k3-*"
+      - "k4-*"
+      - "k5-*"
+      - "k6-*"
+      - "k7-*"
+      - "k8-*"
+      - "k9-*"
+
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    name: Detect Changed Components
+    runs-on: ubuntu-latest
+
+    outputs:
+      node: ${{ steps.filter.outputs.node }}
+      contracts: ${{ steps.filter.outputs.contracts }}
+      contract_validation: ${{ steps.filter.outputs.contract_validation }}
+      example_consumer: ${{ steps.filter.outputs.example_consumer }}
+      node_template: ${{ steps.filter.outputs.node_template }}
+      python_template: ${{ steps.filter.outputs.python_template }}
+      workflow: ${{ steps.filter.outputs.workflow }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            node:
+              - 'libs/node/**'
+            contracts:
+              - 'contracts/**'
+            contract_validation:
+              - 'contracts/**'
+              - 'libs/node/src/kontrak.js'
+              - 'libs/node/src/amplop.js'
+              - 'libs/node/test/kontrak.test.js'
+              - 'libs/node/test/amplop.test.js'
+            example_consumer:
+              - 'services/example-consumer/**'
+            node_template:
+              - 'services/_template-node/**'
+            python_template:
+              - 'services/_template-python/**'
+            workflow:
+              - '.github/workflows/**'
+
+  node:
+    name: Node.js - Lint, Format, Test
+    needs: changes
+    if: >-
+      needs.changes.outputs.node == 'true' ||
+      needs.changes.outputs.workflow == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: libs/node/package-lock.json
+
+      - name: Install dependencies
+        working-directory: libs/node
+        run: npm ci
+
+      - name: Run ESLint
+        working-directory: libs/node
+        run: npm run lint
+
+      - name: Check formatting
+        working-directory: libs/node
+        run: npm run format:check
+
+      - name: Run unit tests
+        working-directory: libs/node
+        run: npm test
+
+  contract_validation:
+    name: Contract Validation - T0.6
+    needs: changes
+    if: >-
+      needs.changes.outputs.contract_validation == 'true' ||
+      needs.changes.outputs.workflow == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: libs/node/package-lock.json
+
+      - name: Install dependencies
+        working-directory: libs/node
+        run: npm ci
+
+      - name: Validate event contracts
+        working-directory: libs/node
+        env:
+          CONTRACTS_DIR: ${{ github.workspace }}/contracts
+        run: node --test test/amplop.test.js test/kontrak.test.js
+
+  node_template_check:
+    name: Node Template - Lint, Format, Test
+    needs: changes
+    if: >-
+      needs.changes.outputs.node_template == 'true' ||
+      needs.changes.outputs.workflow == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: services/_template-node/package-lock.json
+
+      - name: Install dependencies
+        working-directory: services/_template-node
+        run: npm ci
+
+      - name: Run ESLint
+        working-directory: services/_template-node
+        run: npm run lint
+
+      - name: Check formatting
+        working-directory: services/_template-node
+        run: npm run format:check
+
+      - name: Run tests
+        working-directory: services/_template-node
+        run: npm test
+
+  python_template_check:
+    name: Python Template - Ruff and Pytest
+    needs: changes
+    if: >-
+      needs.changes.outputs.python_template == 'true' ||
+      needs.changes.outputs.workflow == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        working-directory: services/_template-python
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Run Ruff
+        working-directory: services/_template-python
+        run: ruff check .
+
+      - name: Run Pytest
+        working-directory: services/_template-python
+        run: pytest
+
+  build_example_consumer:
+    name: Build Docker - example-consumer
+    needs: [changes, node, contract_validation]
+    if: >-
+      always() &&
+      (
+        needs.changes.outputs.example_consumer == 'true' ||
+        needs.changes.outputs.node == 'true' ||
+        needs.changes.outputs.contracts == 'true' ||
+        needs.changes.outputs.workflow == 'true'
+      ) &&
+      needs.changes.result == 'success' &&
+      (
+        needs.node.result == 'success' ||
+        needs.node.result == 'skipped'
+      ) &&
+      (
+        needs.contract_validation.result == 'success' ||
+        needs.contract_validation.result == 'skipped'
+      )
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build example-consumer image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: services/example-consumer/Dockerfile
+          push: false
+          tags: puisiapp-example-consumer:ci
+
+  build_node_template:
+    name: Build Docker - Node Template
+    needs: [changes, node_template_check]
+    if: >-
+      always() &&
+      needs.changes.outputs.node_template == 'true' &&
+      needs.changes.result == 'success' &&
+      needs.node_template_check.result == 'success'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Node template image
+        uses: docker/build-push-action@v6
+        with:
+          context: services/_template-node
+          file: services/_template-node/Dockerfile
+          push: false
+          tags: puisiapp-node-template:ci
+
+  build_python_template:
+    name: Build Docker - Python Template
+    needs: [changes, python_template_check]
+    if: >-
+      always() &&
+      needs.changes.outputs.python_template == 'true' &&
+      needs.changes.result == 'success' &&
+      needs.python_template_check.result == 'success'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Python template image
+        uses: docker/build-push-action@v6
+        with:
+          context: services/_template-python
+          file: services/_template-python/Dockerfile
+          push: false
+          tags: puisiapp-python-template:ci

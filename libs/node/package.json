@@ -17,12 +17,20 @@
     "node": ">=22"
   },
   "scripts": {
-    "test": "node --test \"test/**/*.test.js\""
+    "test": "node --test \"test/**/*.test.js\"",
+    "lint": "eslint .",
+    "format:check": "prettier --check eslint.config.js"
   },
   "dependencies": {
     "ajv": "8.20.0",
     "ajv-formats": "3.0.1",
     "amqplib": "2.3.1",
     "pg": "8.23.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.14.0",
+    "globals": "^17.14.0",
+    "prettier": "^3.10.1"
   }
 }
