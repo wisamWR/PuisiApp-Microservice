@@ -5,6 +5,7 @@
  *
  * Klaim: sub (id akun), username, role. Masa berlaku 15 menit (bawaan).
  */
+import { randomUUID } from 'node:crypto';
 import { SignJWT, jwtVerify, importPKCS8, importSPKI } from 'jose';
 
 export const ALGORITMA = 'RS256';
@@ -26,11 +27,12 @@ export async function buatPenerbitToken({ privateKeyPem, publicKeyPem, issuer, a
         .setIssuer(issuer)
         .setAudience(audience)
         .setIssuedAt()
+        .setJti(randomUUID())
         .setExpirationTime(masaBerlaku)
         .sign(kunciPrivat);
     },
 
-    /** @returns {Promise<{ sub: string, username: string, role: string } | null>} null jika tidak valid */
+    /** @returns {Promise<{ sub, username, role, jti, exp } | null>} null jika tidak valid */
     async verify(token) {
       try {
         const { payload } = await jwtVerify(token, kunciPublik, {
@@ -39,7 +41,7 @@ export async function buatPenerbitToken({ privateKeyPem, publicKeyPem, issuer, a
           audience,
         });
         if (!ROLE_VALID.includes(payload.role)) return null;
-        return { sub: payload.sub, username: payload.username, role: payload.role };
+        return { sub: payload.sub, username: payload.username, role: payload.role, jti: payload.jti, exp: payload.exp };
       } catch {
         return null;
       }

@@ -9,12 +9,16 @@ async function kunci() {
 }
 const cfg = { issuer: 'puisiapp-auth', audience: 'puisiapp-web' };
 
-test('token yang diterbitkan bisa diverifikasi dan membawa klaim sub, username, role', async () => {
+test('token yang diterbitkan bisa diverifikasi dan membawa sub, username, role, jti, exp', async () => {
   const k = await kunci();
   const p = await buatPenerbitToken({ ...k, ...cfg });
   const token = await p.sign({ sub: 'acc-1', username: 'azka_01', role: 'writer' });
   const klaim = await p.verify(token);
-  assert.deepEqual(klaim, { sub: 'acc-1', username: 'azka_01', role: 'writer' });
+  assert.equal(klaim.sub, 'acc-1');
+  assert.equal(klaim.username, 'azka_01');
+  assert.equal(klaim.role, 'writer');
+  assert.ok(klaim.jti && klaim.jti.length > 10, 'jti harus ada');
+  assert.ok(klaim.exp > Math.floor(Date.now() / 1000), 'exp harus di masa depan');
 });
 
 test('token kedaluwarsa ditolak (401 di gateway)', async () => {

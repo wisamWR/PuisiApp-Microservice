@@ -9,6 +9,7 @@ import { buatLogger } from '@puisiapp/events';
 import { createClient } from 'redis';
 import { buatPenerbitToken, MASA_BERLAKU_BAWAAN } from './token.js';
 import { buatPenyimpanRefresh, MASA_REFRESH_DETIK } from './refresh.js';
+import { buatDaftarCabut } from './cabut.js';
 
 const log = buatLogger();
 
@@ -17,6 +18,7 @@ const redis = createClient({ url: process.env.REDIS_URL });
 redis.on('error', (err) => log.error('redis galat', { pesan: err.message }));
 await redis.connect();
 const penyimpan = buatPenyimpanRefresh(redis);
+const daftarCabut = buatDaftarCabut(redis);
 
 function cookieRefresh(token) {
   return `refresh_token=${encodeURIComponent(token)}; Path=/api/auth; HttpOnly; Secure; SameSite=Lax; Max-Age=${MASA_REFRESH_DETIK}`;
@@ -96,7 +98,9 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'GET' && url.pathname === '/internal/auth/verify') {
     const token = ambilCookie(req.headers.cookie, 'access_token');
     const klaim = token ? await penerbit.verify(token) : null;
-    if (!klaim) return kirimJson(res, 401, { error: 'unauthorized' });
+    if (!klaim || (await daftarCabut.sudahDicabut(klaim.jti))) {
+      return kirimJson(res, 401, { error: 'unauthorized' });
+    }
     return kirimJson(res, 200, undefined, {
       'X-User-Id': klaim.sub,
       'X-User-Role': klaim.role,
@@ -121,6 +125,18 @@ const server = http.createServer(async (req, res) => {
     } catch (err) {
       return kirimJson(res, 400, { error: err.message });
     }
+  }
+
+  // Logout (T1.4): cabut access token (daftar cabut), hapus refresh token, hapus cookie. Selalu 204.
+  // Publik di gateway, jadi token yang sudah kedaluwarsa tetap bisa keluar.
+  if (req.method === 'POST' && url.pathname === '/api/auth/logout') {
+    const access = ambilCookie(req.headers.cookie, 'access_token');
+    const refresh = ambilCookie(req.headers.cookie, 'refresh_token');
+    const klaim = access ? await penerbit.verify(access) : null;
+    if (klaim) await daftarCabut.tambah(klaim.jti, klaim.exp);
+    if (refresh) await penyimpan.putar(refresh);
+    res.writeHead(204, { 'Set-Cookie': cookieHapus() });
+    return res.end();
   }
 
   // Refresh (T1.2 butir 5): token lama dirotasi, token yang sudah dipakai ditolak.

@@ -6,19 +6,19 @@ rm -f $T/hits-*.log; rm -rf $T/cache/auth/* $T/cache/feed/*
 
 chk "health 200" "$(curl -s -o /dev/null -w '%{http_code}' $G/health)" "200"
 chk "GET /_auth dari luar ditolak" "$(curl -s -o /dev/null -w '%{http_code}' $G/_auth)" "404"
-chk "logout tanpa token -> 401" "$(curl -s -o /dev/null -w '%{http_code}' -X POST $G/api/auth/logout)" "401"
+chk "logout tanpa token -> 204 (publik, T1.4)" "$(curl -s -o /dev/null -w '%{http_code}' -X POST $G/api/auth/logout)" "204"
 chk "/api/me tanpa token -> 401" "$(curl -s -o /dev/null -w '%{http_code}' -X DELETE $G/api/me)" "401"
 chk "/api/profiles/me tanpa token -> 401" "$(curl -s -o /dev/null -w '%{http_code}' $G/api/profiles/me)" "401"
 
-chk "logout dengan token -> 200" "$(curl -s -o /dev/null -w '%{http_code}' -X POST -b 'access_token=abc' $G/api/auth/logout)" "200"
-chk "X-User-Id sampai ke layanan" "$(last login x_user_id)" "stub-user"
-chk "X-User-Role sampai ke layanan" "$(last login x_user_role)" "writer"
+chk "logout dengan token -> 204 (diteruskan ke token-service)" "$(curl -s -o /dev/null -w '%{http_code}' -X POST -b 'access_token=abc' $G/api/auth/logout)" "204"
+chk "X-User-Id sampai ke layanan (rute terlindungi)" "$(curl -s -o /dev/null -b 'access_token=abc' $G/api/profiles/me; last profile x_user_id)" "stub-user"
+chk "X-User-Role sampai ke layanan (rute terlindungi)" "$(last profile x_user_role)" "writer"
 
 curl -s -o /dev/null -X POST -H 'X-User-Id: hacker' -H 'X-User-Role: admin' $G/api/auth/register
 chk "register: X-User-Id palsu tidak sampai" "$(last register x_user_id)" "None"
 chk "register: X-User-Role palsu tidak sampai" "$(last register x_user_role)" "None"
-curl -s -o /dev/null -X POST -H 'X-User-Id: hacker' -b 'access_token=abc' $G/api/auth/logout
-chk "logout: X-User-Id palsu ditimpa gateway" "$(last login x_user_id)" "stub-user"
+curl -s -o /dev/null -H 'X-User-Id: hacker' -b 'access_token=abc' $G/api/profiles/me
+chk "X-User-Id palsu dari klien ditimpa gateway (rute terlindungi)" "$(last profile x_user_id)" "stub-user"
 curl -s -o /dev/null -H 'X-User-Id: hacker' -H 'X-User-Role: admin' $G/beranda
 chk "frontend: X-User-Id palsu tidak sampai" "$(last frontend x_user_id)" "None"
 
