@@ -8,3 +8,5 @@ set $up_profile   "${PROFILE_HOST}";
 set $up_recovery  "${RECOVERY_HOST}";
 set $up_auth      "${AUTH_HOST}";
 set $up_token     "${TOKEN_HOST}";
+# Layanan contoh untuk uji deploy (routes/contoh.conf); kosong = rute 404.
+set $up_contoh    "${CONTOH_HOST}";
