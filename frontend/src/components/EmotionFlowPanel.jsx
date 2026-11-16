@@ -4,17 +4,22 @@ export default function EmotionFlowPanel({ emotionData, textLines = [] }) {
   if (!emotionData) return null
   const poemScores = emotionData.poem_scores || {}
   const lines = Array.isArray(emotionData.lines) ? emotionData.lines : []
+  const dominanLabel = emotionData.dominant
+    ? emotionData.dominant.charAt(0).toUpperCase() + emotionData.dominant.slice(1)
+    : '-'
 
   return (
     <div className="emotion-flow-box">
       <div className="emotion-flow-header">
         <div>
-          <span className="eyebrow">ALUR EMOSI PER BARIS</span>
+          <span className="eyebrow">Alur Emosi per Larik</span>
           <h3>Nuansa Suasana Karya</h3>
         </div>
         <div className="emotion-flow-badges">
-          <span className="emotion-label">Dominan: {emotionData.dominant || '-'}</span>
-          <span className="status-chip">Model: {emotionData.model || 'lexicon-v1'}</span>
+          <span className="emotion-label">Nuansa Utama: {dominanLabel}</span>
+          <span className="status-chip" title={`Mesin analisis: ${emotionData.model || 'lexicon-v1'}`}>
+            {lines.length} Larik Terbaca
+          </span>
         </div>
       </div>
       <div className="emotion-summary-bars">
@@ -34,11 +39,11 @@ export default function EmotionFlowPanel({ emotionData, textLines = [] }) {
           {lines.map((line, idx) => {
             const scores = line.scores || {}
             const dominanBaris = EMOSI_LIST.reduce((best, cur) => ((scores[cur.key] || 0) > (scores[best.key] || 0) ? cur : best), EMOSI_LIST[0])
-            const teksBaris = textLines[line.index ?? idx] || `Baris ke-${(line.index ?? idx) + 1}`
+            const teksBaris = textLines[line.index ?? idx] || `Larik ke-${(line.index ?? idx) + 1}`
             return (
               <div key={line.index ?? idx} className="emotion-line-item">
                 <div className="emotion-line-top">
-                  <span className="muted-text">Baris {(line.index ?? idx) + 1}</span>
+                  <span className="muted-text">Larik {(line.index ?? idx) + 1}</span>
                   <span className="emotion-label">{dominanBaris.label}</span>
                 </div>
                 <p className="emotion-line-verse">“{teksBaris}”</p>
@@ -52,7 +57,7 @@ export default function EmotionFlowPanel({ emotionData, textLines = [] }) {
           })}
         </div>
       )}
-      <p className="emotion-disclaimer">Catatan: Analisis ini menggambarkan nuansa dan suasana hati karya puisi secara leksikal, bukan penilaian kondisi psikologis penulis maupun pembaca.</p>
+      <p className="emotion-disclaimer">Catatan: Pemetaan ini menggambarkan suasana puitis pada tiap larik karya, bukan penilaian kondisi psikologis penulis maupun pembaca.</p>
     </div>
   )
 }

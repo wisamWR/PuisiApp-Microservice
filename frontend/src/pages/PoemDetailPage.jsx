@@ -41,10 +41,14 @@ export default function PoemDetailPage() {
     }
   }, [id, demoPoem])
 
+  const dominanLabel = emotionData?.dominant
+    ? `Dominan: ${emotionData.dominant.charAt(0).toUpperCase() + emotionData.dominant.slice(1)}`
+    : 'Karya Puisi'
+
   return (
     <section className="page-section">
       <div className="page-heading">
-        <span className="eyebrow">PUISIAPP / JELAJAH DAN BACA</span>
+        <span className="eyebrow">Jelajah &amp; Baca</span>
         <h1>{demoPoem ? demoPoem.title : 'Detail Puisi'}</h1>
         <p>
           {demoPoem
@@ -54,9 +58,15 @@ export default function PoemDetailPage() {
       </div>
 
       <article className="poem-detail-card">
-        <div className="poem-card-top">
-          <EmotionLabel emotion={emotionData?.dominant ? `Dominan: ${emotionData.dominant}` : 'Puisi'} />
-          <Link to="/mood-feed" className="text-link">← Kembali ke Mood Feed</Link>
+        <div className="poem-detail-topbar">
+          <EmotionLabel emotion={dominanLabel} />
+          <Link to="/mood-feed" className="back-link-inline">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M19 12H5" />
+              <path d="m12 19-7-7 7-7" />
+            </svg>
+            <span>Kembali ke Mood Feed</span>
+          </Link>
         </div>
 
         {demoPoem ? (
@@ -67,7 +77,7 @@ export default function PoemDetailPage() {
           </div>
         ) : (
           <p className="poem-detail-placeholder">
-            Isi lengkap puisi akan ditampilkan setelah Poem Query Service terintegrasi (ID: {id}).
+            Naskah lengkap puisi ini sedang disiapkan dan akan segera tampil penuh di halaman ini.
           </p>
         )}
 

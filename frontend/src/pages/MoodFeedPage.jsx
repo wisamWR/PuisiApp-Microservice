@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import MoodIcon from '../components/MoodIcon'
 import { EmotionLabel, Loader } from '../components/UI'
 import { api } from '../lib/api'
 import {
@@ -22,7 +23,10 @@ export default function MoodFeedPage() {
   const [sumber, setSumber] = useState('api')
   const sentinelRef = useRef(null)
 
-  const targetList = mode === 'menghibur' ? (PETA_MENGHIBUR[mood] || [mood]) : [mood]
+  const targetList = useMemo(
+    () => (mode === 'menghibur' ? (PETA_MENGHIBUR[mood] || [mood]) : [mood]),
+    [mood, mode],
+  )
 
   const muatHalaman = useCallback(async (targetPage, reset = false) => {
     if (reset) setLoading(true)
@@ -74,22 +78,31 @@ export default function MoodFeedPage() {
   return (
     <section className="page-section">
       <div className="page-heading">
-        <span className="eyebrow">PUISIAPP / MOOD FEED</span>
-        <h1>Kurasi Puisi Berbasis Suasana Hati</h1>
+        <span className="eyebrow">Kurasi Bacaan</span>
+        <h1>Puisi Pilihan untuk Suasana Hatimu</h1>
         <p>
-          Mode <strong>{mode === 'senada' ? 'Senada' : 'Menghibur'}</strong> · Nuansa target:{' '}
-          <strong>{targetList.join(' & ')}</strong>.
+          Mode <strong>{mode === 'senada' ? 'Senada' : 'Menghibur'}</strong> · Nuansa:{' '}
+          <strong>{targetList.map((t) => t.charAt(0).toUpperCase() + t.slice(1)).join(' & ')}</strong>
         </p>
       </div>
 
       <div className="mood-toolbar">
         <div className="mood-chip-row">
-          {EMOSI_LIST.map((item) => (
-            <button key={item.key} type="button" className={`mood-filter-chip${mood === item.key ? ' active' : ''}`} onClick={() => setMood(item.key)}>
-              <span>{item.emoji}</span>
-              {item.label}
-            </button>
-          ))}
+          {EMOSI_LIST.map((item) => {
+            const aktif = mood === item.key
+            return (
+              <button
+                key={item.key}
+                type="button"
+                className={`mood-filter-chip${aktif ? ' active' : ''}`}
+                style={aktif ? { borderColor: item.color, background: item.tint } : undefined}
+                onClick={() => setMood(item.key)}
+              >
+                <MoodIcon mood={item.key} size={15} color={aktif ? item.color : 'currentColor'} />
+                <span>{item.label}</span>
+              </button>
+            )
+          })}
         </div>
         <div className="mood-mode-switch">
           <button type="button" className={`button ${mode === 'senada' ? 'button-primary' : 'button-outline'}`} onClick={() => setMode('senada')}>Senada</button>
@@ -99,17 +112,17 @@ export default function MoodFeedPage() {
 
       {sumber === 'demo' && (
         <div className="mood-demo-banner">
-          <span>Mode Pratinjau Lokal (API gateway belum terjangkau — menampilkan sampel lokal)</span>
-          <Link to="/mood-entry" className="text-link">Ubah Mood Entry →</Link>
+          <span>Menampilkan antologi contoh sementara layanan kurasi sedang memuat.</span>
+          <Link to="/mood-entry" className="text-link">Atur ulang suasana hati</Link>
         </div>
       )}
 
       {loading ? (
-        <div className="placeholder-panel"><Loader label="Menyusun puisi sesuai suasana hati..." /></div>
+        <div className="placeholder-panel"><Loader label="Merangkai puisi untukmu..." /></div>
       ) : items.length === 0 ? (
         <div className="placeholder-panel">
-          <h2>Belum ada puisi terbit untuk suasana ini</h2>
-          <p>Coba ganti pilihan suasana hati atau beralih antara mode Senada dan Menghibur.</p>
+          <h2>Belum ada karya untuk nuansa ini</h2>
+          <p>Silakan pilih suasana hati lain atau beralih antara mode Senada dan Menghibur.</p>
         </div>
       ) : (
         <>
@@ -117,21 +130,23 @@ export default function MoodFeedPage() {
             {items.map((poem) => (
               <article key={poem.poem_id} className="poem-card">
                 <div className="poem-card-top">
-                  <EmotionLabel emotion={`Suasana: ${poem.dominant}`} />
-                  <span className="status-chip">Skor: {poem.feed_score}</span>
+                  <EmotionLabel emotion={poem.dominant ? poem.dominant.charAt(0).toUpperCase() + poem.dominant.slice(1) : 'Netral'} />
+                  <span className="status-chip" title={`Indeks kurasi: ${poem.feed_score}`}>
+                    Selaras {Math.round((poem.emotion_score || 0) * 100)}%
+                  </span>
                 </div>
                 <h3>{poem.title}</h3>
-                <p className="poem-author">Ditulis oleh {poem.author_name || 'Penyair PuisiApp'}</p>
-                {poem.excerpt && <p className="mood-poem-excerpt">{poem.excerpt}</p>}
+                <p className="poem-author">Karya {poem.author_name || 'Penyair PuisiApp'}</p>
+                {poem.excerpt && <blockquote className="mood-poem-excerpt">“{poem.excerpt}”</blockquote>}
                 <div className="poem-card-footer">
-                  <span className="poem-score">Relevansi {poem.target_emotion}: {Math.round((poem.emotion_score || 0) * 100)}%</span>
-                  <Link to={`/poems/${poem.poem_id}`} className="text-link">Lihat alur emosi →</Link>
+                  <span className="poem-score">Nuansa {poem.target_emotion}</span>
+                  <Link to={`/poems/${poem.poem_id}`} className="text-link">Lihat alur emosi</Link>
                 </div>
               </article>
             ))}
           </div>
           <div ref={sentinelRef} className="mood-scroll-sentinel">
-            {loadingMore ? 'Memuat puisi berikutnya...' : hasMore ? 'Gulir ke bawah untuk memuat lebih banyak' : 'Semua puisi untuk suasana ini telah ditampilkan'}
+            {loadingMore ? 'Memuat karya berikutnya...' : hasMore ? 'Gulir ke bawah untuk membaca lebih banyak' : 'Seluruh puisi pada kurasi ini telah ditampilkan'}
           </div>
         </>
       )}

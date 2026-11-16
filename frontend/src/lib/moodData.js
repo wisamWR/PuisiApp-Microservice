@@ -1,9 +1,9 @@
 export const EMOSI_LIST = [
-  { key: 'senang', emoji: '😊', label: 'Senang', desc: 'Cerah, penuh syukur, dan semangat pagi', color: '#6b9470' },
-  { key: 'sedih', emoji: '🌧️', label: 'Sedih', desc: 'Sendu, rindu yang dalam, atau hujan kenangan', color: '#65839c' },
-  { key: 'cinta', emoji: '❤️', label: 'Cinta', desc: 'Hangat, kasih sayang, dan ketulusan hati', color: '#b57379' },
-  { key: 'marah', emoji: '🔥', label: 'Marah', desc: 'Gejolak jiwa, perlawanan, dan bara ketegasan', color: '#b86853' },
-  { key: 'takut', emoji: '🌙', label: 'Takut', desc: 'Cemas, gulita malam, dan langkah yang bimbang', color: '#847496' },
+  { key: 'senang', label: 'Senang', desc: 'Cerah, penuh syukur, dan semangat pagi', color: '#4f7955', tint: 'rgba(79, 121, 85, 0.12)' },
+  { key: 'sedih', label: 'Sedih', desc: 'Sendu, rindu yang dalam, atau hujan kenangan', color: '#4d6d87', tint: 'rgba(77, 109, 135, 0.12)' },
+  { key: 'cinta', label: 'Cinta', desc: 'Hangat, kasih sayang, dan ketulusan hati', color: '#a35b63', tint: 'rgba(163, 91, 99, 0.12)' },
+  { key: 'marah', label: 'Marah', desc: 'Gejolak jiwa, perlawanan, dan bara ketegasan', color: '#a8553f', tint: 'rgba(168, 85, 63, 0.12)' },
+  { key: 'takut', label: 'Takut', desc: 'Cemas, gulita malam, dan langkah yang bimbang', color: '#6e5d82', tint: 'rgba(110, 93, 130, 0.12)' },
 ]
 
 export const PETA_MENGHIBUR = {

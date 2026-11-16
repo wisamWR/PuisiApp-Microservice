@@ -425,3 +425,49 @@
 .mood-choice-top { display: flex; align-items: center; justify-content: space-between; }
 .mood-emoji { font-size: 22px; line-height: 1; }
 .mood-scroll-sentinel { margin-top: 18px; text-align: center; font-size: 11px; color: #8c8279; padding: 10px; }
+
+.mood-icon-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mood-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  transition: border-color 0.18s ease, background-color 0.18s ease, transform 0.18s ease;
+}
+
+.mood-header-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.poem-detail-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.back-link-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #6b5844;
+  line-height: 1;
+  transition: color 0.16s ease, transform 0.16s ease;
+}
+
+.back-link-inline:hover {
+  color: #282522;
+  transform: translateX(-2px);
+}

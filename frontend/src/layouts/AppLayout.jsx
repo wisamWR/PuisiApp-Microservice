@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import MoodIcon from '../components/MoodIcon'
 import { EMOSI_LIST, bacaPreferensiMood, sudahPilihMood } from '../lib/moodData'
 
 const navigation = [
@@ -40,7 +41,7 @@ export default function AppLayout() {
         </NavLink>
         <div className="topbar-actions">
           <NavLink to="/mood-entry" className="mood-header-pill" title="Ubah suasana hati">
-            <span>{infoEmosi.emoji}</span>
+            <MoodIcon mood={infoEmosi.key} size={15} color={infoEmosi.color} />
             <span>{infoEmosi.label} · {pref.mode === 'menghibur' ? 'Menghibur' : 'Senada'}</span>
           </NavLink>
           <NavLink to="/login" className="button button-outline">Masuk</NavLink>
@@ -65,7 +66,10 @@ export default function AppLayout() {
             </div>
           ))}
           <div className="sidebar-note">
-            <span>✦</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M12 20h9" />
+              <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+            </svg>
             <p>Ruang aman untuk setiap cerita dan perasaan.</p>
           </div>
         </aside>
