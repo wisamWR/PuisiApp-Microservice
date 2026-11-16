@@ -1,0 +1,51 @@
+# Layanan contoh (T0.2 dan T0.3). Hanya berjalan bila profil "contoh" diaktifkan:
+#   docker compose --profile contoh up -d --build
+# Tidak ikut di EC2.
+
+services:
+  example-consumer:
+    profiles: [contoh]
+    build:
+      context: ..
+      dockerfile: services/example-consumer/Dockerfile
+    restart: unless-stopped
+    environment:
+      SERVICE_NAME: example-consumer
+      PORT: "8080"
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      PREFETCH: "10"
+      DATABASE_URL: postgres://example:${EXAMPLE_DB_PASS}@${POSTGRES_HOST}:${POSTGRES_PORT}/example_db
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+      RABBITMQ_VHOST: ${RABBITMQ_VHOST}
+    networks: [app, data]
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
+
+  # Relay outbox example_db (T0.3). Pola yang sama dipakai untuk
+  # account_db, submission_db, revision_db, deletion_db, publication_db.
+  outbox-relay-example:
+    profiles: [contoh]
+    extends:
+      file: debezium/relay.yml
+      service: outbox-relay
+    environment:
+      RELAY_DB: example_db
+      RELAY_SLOT: outbox_example
+    volumes:
+      - relay-example-data:/debezium/data
+    depends_on:
+      rabbitmq-topologi: { condition: service_completed_successfully }
+      example-consumer: { condition: service_healthy }
+
+volumes:
+  relay-example-data: {}
