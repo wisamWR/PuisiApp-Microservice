@@ -36,13 +36,15 @@ class PredictorIndoBERT:
             from transformers import AutoModelForSequenceClassification, AutoTokenizer
         except ImportError as exc:
             raise RuntimeError(
-                "Dependensi ML belum terpasang. Jalankan: pip install -r services/emotion-worker/requirements-ml.txt"
+                "Dependensi ML belum terpasang. "
+                "Jalankan: pip install -r services/emotion-worker/requirements-ml.txt"
             ) from exc
 
         path_lokal = Path(self.model_dir)
         if not path_lokal.exists():
             raise FileNotFoundError(
-                f"Direktori bobot IndoBERT tidak ditemukan di {path_lokal}. Jalankan training/train_indobert.py terlebih dahulu."
+                f"Direktori bobot IndoBERT tidak ditemukan di {path_lokal}. "
+                "Jalankan training/train_indobert.py terlebih dahulu."
             )
 
         self._torch = torch
@@ -73,7 +75,12 @@ class PredictorIndoBERT:
         baris_list = [b.strip() for b in str(teks or "").splitlines() if b.strip()]
         if not baris_list:
             netral = {e: 0.2 for e in EMOSI_URUT}
-            return {"lines": [], "poem_scores": netral, "dominant": "senang", "model": "indobert-v1"}
+            return {
+                "lines": [],
+                "poem_scores": netral,
+                "dominant": "senang",
+                "model": "indobert-v1",
+            }
 
         hasil_baris = []
         total_bobot = 0

@@ -52,14 +52,20 @@ def benchmark_model(nama: str, fn_analisis, data_baris: list[dict], data_puisi: 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--indobert-dir", default=str(Path.home() / ".cache/puisiapp/indobert-emot"))
+    parser.add_argument(
+        "--indobert-dir",
+        default=str(Path.home() / ".cache/puisiapp/indobert-emot"),
+    )
     args = parser.parse_args()
 
     folder = Path(__file__).resolve().parent
-    data_baris = [json.loads(line) for line in (folder / "dataset_uji_puisi.jsonl").read_text(encoding="utf-8").splitlines() if line.strip()]
+    baris_raw = (folder / "dataset_uji_puisi.jsonl").read_text(encoding="utf-8").splitlines()
+    data_baris = [json.loads(line) for line in baris_raw if line.strip()]
     data_puisi = json.loads((folder / "puisi_contoh_10.json").read_text(encoding="utf-8"))
     kamus = muat_kamus(ROOT_WORKER / "data/kamus_emosi.json")
-    fn_lex = lambda teks: analisis_puisi(teks, kamus)
+
+    def fn_lex(teks: str) -> dict:
+        return analisis_puisi(teks, kamus)
 
     print("=== VERIFIKASI 10 PUISI CONTOH (T5.1) ===")
     lolos_10 = 0
@@ -67,21 +73,38 @@ def main() -> None:
         hasil = fn_lex(p["content"])
         sesuai = hasil["dominant"] == p["expected"]
         lolos_10 += int(sesuai)
-        print(f"- {p['id']} ({p['title']}): expected={p['expected']} | predicted={hasil['dominant']} | scores={hasil['poem_scores']} -> {'SESUAI' if sesuai else 'BEDA'}")
+        status = "SESUAI" if sesuai else "BEDA"
+        print(
+            f"- {p['id']} ({p['title']}): expected={p['expected']} "
+            f"| predicted={hasil['dominant']} | scores={hasil['poem_scores']} -> {status}"
+        )
     print(f"Total sesuai: {lolos_10}/{len(data_puisi)}\n")
 
     hasil_eval = [benchmark_model("lexicon (lexicon-v1)", fn_lex, data_baris, data_puisi)]
     if Path(args.indobert_dir).exists():
         pred_bert = PredictorIndoBERT(args.indobert_dir)
-        hasil_eval.append(benchmark_model("indobert (indobert-v1)", pred_bert.analisis_puisi, data_baris, data_puisi))
+        hasil_eval.append(
+            benchmark_model(
+                "indobert (indobert-v1)",
+                pred_bert.analisis_puisi,
+                data_baris,
+                data_puisi,
+            )
+        )
     else:
-        print(f"[Info] Bobot IndoBERT belum ditemukan di {args.indobert_dir} (jalankan train_indobert.py untuk menguji mode indobert).\n")
+        print(
+            f"[Info] Bobot IndoBERT belum ditemukan di {args.indobert_dir} "
+            "(jalankan train_indobert.py untuk menguji mode indobert).\n"
+        )
 
     print("=== TABEL HASIL EVALUASI (T5.2) ===")
     print("| Mode Model | Akurasi (60 baris puisi) | F1 Makro | Waktu / Puisi | Memori Python |")
     print("| :--- | :---: | :---: | :---: | :---: |")
     for r in hasil_eval:
-        print(f"| `{r['mode']}` | {r['akurasi_pct']}% | {r['f1_makro_pct']}% | {r['waktu_per_puisi_ms']} ms | {r['puncak_memori_mb']} MB |")
+        print(
+            f"| `{r['mode']}` | {r['akurasi_pct']}% | {r['f1_makro_pct']}% "
+            f"| {r['waktu_per_puisi_ms']} ms | {r['puncak_memori_mb']} MB |"
+        )
 
 
 if __name__ == "__main__":

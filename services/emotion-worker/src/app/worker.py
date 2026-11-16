@@ -61,7 +61,11 @@ def buat_handler_emosi(
     if analyzer is None:
         if kamus is None:
             raise ValueError("Isi parameter analyzer atau kamus")
-        analyzer = lambda teks: analisis_puisi(teks, kamus)
+
+        def _analisis_leksikon(teks: str) -> dict[str, Any]:
+            return analisis_puisi(teks, kamus)
+
+        analyzer = _analisis_leksikon
 
     def _handler(event: dict[str, Any], _db: Any) -> None:
         data_puisi = ekstrak_data_puisi(event)

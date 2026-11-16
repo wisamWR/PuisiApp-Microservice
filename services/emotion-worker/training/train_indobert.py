@@ -28,7 +28,10 @@ def unduh_split(cache_dir: Path, split: str) -> list[tuple[str, int]]:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--base-model", default="indobenchmark/indobert-base-p1")
-    parser.add_argument("--output-dir", default=str(Path.home() / ".cache/puisiapp/indobert-emot"))
+    parser.add_argument(
+        "--output-dir",
+        default=str(Path.home() / ".cache/puisiapp/indobert-emot"),
+    )
     parser.add_argument("--epochs", type=int, default=3)
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--lr", type=float, default=2e-5)
@@ -56,7 +59,9 @@ def main() -> None:
 
         def __getitem__(self, idx):
             teks, y = self.rows[idx]
-            enc = tokenizer(teks, truncation=True, max_length=128, padding="max_length", return_tensors="pt")
+            enc = tokenizer(
+                teks, truncation=True, max_length=128, padding="max_length", return_tensors="pt"
+            )
             return {k: v.squeeze(0) for k, v in enc.items()}, torch.tensor(y, dtype=torch.long)
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -75,7 +80,8 @@ def main() -> None:
             out.loss.backward()
             opt.step()
             total_loss += out.loss.item()
-        print(f"Epoch {ep}/{args.epochs} - loss: {total_loss / len(loader):.4f} (valid samples: {len(valid_rows)})")
+        avg_loss = total_loss / len(loader)
+        print(f"Epoch {ep}/{args.epochs} - loss: {avg_loss:.4f} (valid samples: {len(valid_rows)})")
 
     out_path = Path(args.output_dir)
     out_path.mkdir(parents=True, exist_ok=True)
