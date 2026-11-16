@@ -9,7 +9,7 @@ description = "Worker analisis emosi puisi berbasis leksikon (K5)"
 requires-python = ">=3.11"
 dependencies = [
     "pymongo==4.8.0",
-    "puisi-event-lib"
+    "puisi-event-lib @ file://localhost../../libs/python"
 ]
 
 [project.optional-dependencies]
