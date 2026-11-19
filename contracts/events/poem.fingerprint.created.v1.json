@@ -1,37 +1,65 @@
+
 {
-    "$schema":  "https://json-schema.org/draft/2020-12/schema",
-    "$id":  "https://puisiapp.example/schema/poem.fingerprint.created.v1.json",
-    "title":  "Event fingerprint puisi dibuat",
-    "description":  "Fingerprint puisi berhasil dibuat.",
-    "type":  "object",
-    "required":  [
-                     "poem_id",
-                     "fingerprint",
-                     "algorithm"
-                 ],
-    "properties":  {
-                       "fingerprint":  {
-                                           "minLength":  1,
-                                           "type":  "string"
-                                       },
-                       "poem_id":  {
-                                       "minLength":  1,
-                                       "type":  "string"
-                                   },
-                       "algorithm":  {
-                                         "type":  "string",
-                                         "enum":  [
-                                                      "sha256",
-                                                      "minhash"
-                                                  ]
-                                     }
-                   },
-    "additionalProperties":  false,
-    "examples":  [
-                     {
-                         "poem_id":  "sample-value",
-                         "fingerprint":  "sample-value",
-                         "algorithm":  "sha256"
-                     }
-                 ]
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://puisiapp.example/schema/events/poem.fingerprint.created.v1.json",
+  "title": "Payload poem.fingerprint.created v1",
+  "description": "Fingerprint puisi yang dihasilkan oleh fingerprint-worker (T7.1).",
+  "type": "object",
+  "required": [
+    "poem_id",
+    "version",
+    "shingle_count",
+    "signature",
+    "stanza_signatures"
+  ],
+  "properties": {
+    "poem_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "shingle_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "signature": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "minItems": 128,
+      "maxItems": 128
+    },
+    "stanza_signatures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "stanza",
+          "signature"
+        ],
+        "properties": {
+          "stanza": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "signature": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "minItems": 128,
+            "maxItems": 128
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
 }

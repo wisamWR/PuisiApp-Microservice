@@ -6,4 +6,21 @@
 # (project_directory pada include), jadi build context ditulis ../services/<nama>.
 # Pola lengkap ada di infra/README.md. Alamat dependensi diambil dari .env.
 
-services: {}
+services:
+  fingerprint-worker:
+    build:
+      context: ..
+      dockerfile: services/fingerprint-worker/Dockerfile
+    restart: unless-stopped
+    environment:
+      SERVICE_NAME: fingerprint-worker
+      HOST: 0.0.0.0
+      PORT: "8080"
+      AMQP_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@${RABBITMQ_HOST}:${RABBITMQ_PORT}/${RABBITMQ_VHOST}
+      MINHASH_SEED: "42"
+      MINHASH_NUM_HASHES: "128"
+      SHINGLE_SIZE: "3"
+    networks: [app, data]
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
