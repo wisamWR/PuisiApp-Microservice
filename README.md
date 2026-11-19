@@ -1,53 +1,204 @@
-# k7-keaslian: Plagiarisme dan Jejak Keaslian
+# Puisi App
 
-Branch: `k7-keaslian` | Penanggung jawab: Raffa | Task: T7.1 sampai T7.4 | Frontend: panel Jejak Keaslian dan lencana level originalitas
+Platform komunitas puisi tempat penulis menerbitkan karya dan pembaca menemukan puisi yang sesuai dengan suasana hatinya. Dua ciri utamanya adalah pemilihan puisi menurut suasana hati (Mood) dan jaminan keaslian karya (Keaslian serta Laporan dan sengketa).
 
-## Cakupan
+Proyek tugas Hands-On mata kuliah Pengembangan Perangkat Lunak Scalable (PACS262521), Kelompok D, dengan arsitektur microservice dan event-driven. Nama aplikasi masih sementara.
 
-Deteksi kemiripan teks, penetapan level originalitas, kalibrasi ambang, dan pencatatan Jejak Keaslian (rantai hash SHA-256).
+Rancangan lengkap ada di laporan "Rancangan Arsitektur Platform Publikasi Karya Sastra Puisi Scalable" dan halaman Notion "All Specifications".
 
-## Layanan dan Komponen
+## Arsitektur singkat
 
-| Layanan | Tipe | Data | Task |
-| --- | --- | --- | --- |
-| fingerprint-worker | worker, stateless, CPU-bound | tanpa state | T7.1 |
-| similarity-worker | worker, ber-state | similarity-db (PostgreSQL): signature dan bucket LSH | T7.2 |
-| dataset dan kalibrasi | skrip evaluasi | dataset berlabel | T7.3 |
-| authorship-worker | worker | authorship-db (PostgreSQL, append-only) | T7.4 |
-| authorship-query-service | API | authorship-read-db | T7.4 |
+- Komunikasi sinkron hanya dari klien ke API Gateway (Nginx), lalu ke satu layanan. Perintah yang memicu proses asinkron membalas `202 Accepted`.
+- Komunikasi antarlayanan selalu asinkron lewat RabbitMQ: satu topic exchange per domain, satu queue per layanan konsumen, masing-masing dengan DLQ.
+- Satu basis data per layanan. Layanan lain memakai salinan lewat event.
+- Layanan yang menulis data menerbitkan event dengan Transactional Outbox; outbox relay meneruskannya ke RabbitMQ.
+- Konsumen idempoten (tabel `processed_event`) dan mengabaikan event dengan `aggregate_version` lebih lama.
+- Sesi stateless: JWT RS256 di cookie httpOnly, diverifikasi gateway lewat `auth_request`.
 
-## Endpoint
+## Teknologi
 
-| Metode | Path | Keterangan |
-| --- | --- | --- |
-| GET | `/api/poems/{id}/authorship` | tabel versi dan hash rantai (JSON) |
-| GET | `/api/poems/{id}/authorship/certificate` | sertifikat yang dapat diunduh (PDF) |
-
-## Event
-
-| Event | Peran |
+| Kebutuhan | Teknologi |
 | --- | --- |
-| `poem.submitted`, `poem.revised` | consume (fingerprint dan authorship) |
-| `poem.fingerprint.created` | publish (fingerprint), consume (similarity) |
-| `poem.similarity.scored` | publish (similarity), consume (publication, poem-query, processing-tracker, case-queue) |
-| `authorship.recorded` | publish (authorship), consume (processing-tracker, authorship-query, evidence) |
+| Layanan API | Node.js |
+| Worker analisis teks | Python |
+| Basis data | PostgreSQL 16, MongoDB 7, Redis 7 |
+| Message broker | RabbitMQ 4 (quorum queue, delayed message exchange) |
+| Outbox relay | Debezium Server |
+| Gerbang | Nginx |
+| Penyimpanan gambar | Amazon S3 (MinIO di lokal) |
+| Kontainer | Docker, Docker Compose |
+| Frontend | Belum ditetapkan |
 
-## Catatan Teknis
+## Struktur repositori
 
-- Fingerprint: normalisasi NFC, huruf kecil, buang tanda baca dan stopword; shingle 3 kata; signature MinHash 128 nilai untuk puisi utuh dan untuk setiap bait.
-- Similarity: LSH 32 band × 4 baris. Peluang menjadi kandidat `P(s) = 1 − (1 − s⁴)³²` (0,050 untuk s=0,2; 0,564 untuk 0,4; 0,873 untuk 0,5). Kandidat dihitung Jaccard dan containment; skor akhir adalah nilai terbesar pada tingkat puisi maupun bait.
-- Level originalitas: ORISINAL (<0,20), TERINSPIRASI (0,20 sampai 0,49), MIRIP (0,50 sampai 0,79), DUGAAN_JIPLAKAN (≥0,80). Puisi dengan kurang dari 15 shingle dibatasi paling tinggi pada MIRIP dan tidak pernah ditahan otomatis.
-- `poem.similarity.scored` menjadi gerbang publikasi: puisi tidak terbit tanpa event ini (jalur kritis). Pesan `x-delivery-limit=5` dan DLQ wajib dipantau.
-- Pemisahan fingerprint dan similarity disengaja: fingerprint murni CPU-bound dan mudah direplikasi, sedangkan similarity memegang indeks seluruh repositori di basis data, bukan di memori proses.
-- T7.3: dataset berlabel (asli, terinspirasi, parafrase, salinan) dan tabel presisi/recall per level. Ambang di konfigurasi similarity-worker diperbarui bila perlu; ambang awal belum terkalibrasi.
-- Jejak Keaslian: `h_i = SHA256(i ‖ poem_id ‖ versi ‖ SHA256(teks) ‖ t_i ‖ h_{i−1})` dengan `h_0` berupa 64 karakter nol. Tabel `authorship_record` hanya mengizinkan INSERT (`REVOKE UPDATE, DELETE`) dan memiliki `UNIQUE(poem_id, versi)`. Satu-satunya penulis tabel ini adalah `authorship-worker` agar rantai tercatat berurutan.
-- Batasan fitur dinyatakan eksplisit di UI dan sertifikat: Jejak Keaslian hanya membuktikan kapan teks tercatat di platform, bukan siapa penulis aslinya dan bukan sertifikat hak cipta.
-- Publik hanya melihat label level; skor dan puisi pembanding hanya untuk penulis dan moderator.
+```txt
+services/<nama-layanan>        satu folder per layanan
+libs/node, libs/python         pustaka bersama: amplop event, publisher, konsumen idempoten, outbox
+contracts/events               skema JSON setiap event (pemilik: Zoya)
+contracts/openapi              OpenAPI per layanan
+frontend                       aplikasi web
+infra/docker-compose.yml       compose induk: RabbitMQ, PostgreSQL, MongoDB, Redis, MinIO, Mailpit
+infra/docker-compose.dev.yml   override laptop: port ke 127.0.0.1
+infra/compose/<domain>.yml     layanan per domain, digabung lewat include
+infra/postgres/init            NN-<layanan>.sql: database + user per layanan
+infra/nginx/conf.d             rute gateway per domain
+infra/rabbitmq                 image RabbitMQ + plugin
+infra/observability            Prometheus, Loki, Grafana
+docs                           catatan desain, ADR, runbook
+```
 
-## Dependensi
+Detail infrastruktur dan cara menambah layanan ada di [infra/README.md](infra/README.md).
 
-T0.2, T0.6, T2.1 (event `poem.submitted`; uji awal memakai contoh event dari T0.10).
+## Menjalankan secara lokal
 
-## Alur Git
+Prasyarat: Docker Desktop (atau Docker Engine) dengan Docker Compose v2.20 ke atas, serta Git.
 
-Kerjakan langsung di `k7-keaslian`, awali commit dengan kode task (`T7.1: minhash`). Gabungkan `main` ke branch ini setiap hari kerja dan buat PR ke `main` minimal tiap Jumat.
+```bash
+git clone https://github.com/wisamWR/PuisiApp-Microservice.git
+```
+
+```bash
+cd PuisiApp-Microservice
+```
+
+```bash
+cp .env.example .env
+```
+
+```bash
+docker compose up -d
+```
+
+Perintah dijalankan dari root repositori. Variabel `COMPOSE_FILE` di `.env` otomatis menggabungkan `infra/docker-compose.yml` dengan `infra/docker-compose.dev.yml`. Build pertama mengunduh image dan plugin RabbitMQ, jadi butuh beberapa menit.
+
+Cek bahwa semua container berstatus `healthy`:
+
+```bash
+docker compose ps
+```
+
+| UI | Alamat | Login (dari `.env`) |
+| --- | --- | --- |
+| RabbitMQ management | http://localhost:15672 | `RABBITMQ_USER` / `RABBITMQ_PASS` |
+| MinIO console | http://localhost:9001 | `S3_ACCESS_KEY` / `S3_SECRET_KEY` |
+| Mailpit | http://localhost:8025 | - |
+
+Berkas `.env` tidak boleh di-commit. Nilai di `.env.example` hanya untuk laptop.
+
+Menghentikan semua container (data tetap tersimpan):
+
+```bash
+docker compose down
+```
+## Event Contract & Mock Server
+
+### Struktur kontrak
+
+- `contracts/envelope.v1.json`: skema amplop standar event.
+- `contracts/events/`: JSON Schema untuk setiap payload event.
+- `contracts/routing.json`: pemetaan event ke domain exchange RabbitMQ.
+- `contracts/openapi/`: spesifikasi API menggunakan OpenAPI.
+
+Setiap event menggunakan format versi, misalnya `<event_name>.v1.json`.
+
+### Validasi payload event
+
+Validasi payload dilakukan menggunakan JSON Schema Draft 2020-12 dan AJV.
+
+Jalankan dari root repository:
+
+```bash
+node tools/validate-event/index.js <event_type> <payload.json>
+```
+
+Contoh:
+
+```bash
+node tools/validate-event/index.js poem.submitted poem-submitted-test.json
+```
+
+Validator akan menampilkan status `VALID` jika payload sesuai schema. Jika tidak sesuai, validator menampilkan detail kesalahan validasi.
+
+### Prism Mock Server
+
+Prism digunakan untuk menjalankan mock API berdasarkan spesifikasi OpenAPI.
+
+Jalankan dari root repository:
+
+```bash
+cd libs/node
+npx prism mock ../../contracts/openapi/comment-service.yaml --host 127.0.0.1 --port 4010
+```
+
+Mock Server dapat diakses melalui:
+
+```text
+http://127.0.0.1:4010
+```
+
+Contoh pengujian health check:
+
+```bash
+curl http://127.0.0.1:4010/health
+```
+
+### Aturan perubahan kontrak
+
+1. Perubahan kontrak harus dikoordinasikan dengan pemilik producer dan consumer terkait.
+2. Setiap perubahan payload harus memperbarui JSON Schema dan contoh payload yang digunakan untuk pengujian.
+3. Perubahan yang tidak kompatibel harus menggunakan versi schema baru, bukan mengubah kontrak versi lama secara diam-diam.
+4. Field sensitif seperti password tidak boleh dimasukkan ke dalam payload event.
+5. Validasi schema dan pengujian integrasi producer-consumer harus dilakukan sebelum perubahan diajukan melalui Pull Request.
+6. Perubahan pada direktori `contracts/` harus diinformasikan kepada Zoya sesuai aturan repository.
+## Alur kerja Git
+
+### Branch
+
+Ada 10 branch tetap: `main` dan 9 branch kelompok fitur.
+
+| Branch | Kelompok fitur | Penanggung jawab |
+| --- | --- | --- |
+| `main` | Integrasi dan rilis, diberi tag per milestone | PM (review dan merge) |
+| `k1-akun` | 1. Akun dan identitas | Azka |
+| `k2-penulisan` | 2. Penulisan puisi | Wisam |
+| `k3-search` | 3. Jelajah dan baca | Azka |
+| `k4-community` | 4. Komunitas | Zoya |
+| `k5-mood` | 5. Mood | Sabila |
+| `k6-theme` | 6. Tema | Sabila |
+| `k7-auth` | 7. Keaslian (authorship dan plagiarisme) | Raffa |
+| `k8-laporan` | 8. Laporan dan sengketa | Zoya |
+| `k9-vote` | 9. Suara dan peringkat | Raffa |
+
+`k7-auth` adalah Keaslian (authorship), bukan autentikasi. Autentikasi ada di `k1-akun`.
+
+### Aturan
+
+1. Kerjakan task kelompok langsung di branch kelompoknya; tidak perlu membuat branch baru. Awali setiap commit dengan kode task, misalnya `T2.1: validasi judul dan isi`. Jalankan `git pull --rebase` sebelum push.
+2. Setiap hari kerja dan sebelum membuat PR, gabungkan `main` ke branch kelompok supaya perubahan kontrak, pustaka, dan infrastruktur cepat masuk. Konflik diselesaikan pemilik kelompok.
+3. Hanya PM yang me-review dan me-merge ke `main`. Anggota membuat pull request lalu menunggu PM; tidak perlu approval dari anggota lain.
+4. Branch kelompok diajukan ke `main` lewat PR **secara berkala**, minimal setiap Jumat, dan setiap kali kelompok lain membutuhkan hasilnya (event, endpoint, kontrak). Jangan menunggu sampai fitur lengkap di akhir: merge kecil yang sering mencegah konflik menumpuk di berkas bersama. Syarat merge: CI hijau dan uji integrasi kelompok lolos.
+5. Task lintas kelompok dikerjakan di branch kelompok pemilik fitur: T1.6 (Sabila) di `k1-akun`, T3.4 (Raffa) di `k3-search`.
+6. Task di luar kelompok (semua T0.x, T10.x, dan perubahan bersama pada `contracts/`, `libs/`, `infra/`) memakai branch pendek `T<kode>-<deskripsi>` (contoh `T0.3-outbox-relay`), diajukan ke `main` lewat PR, lalu branch dihapus setelah di-merge. Beri tahu Zoya bila mengubah `contracts/`.
+7. Ubah berkas bersama hanya di bagian domain sendiri: `infra/compose/<domain>.yml`, `infra/nginx/conf.d/<domain>.conf`, `infra/nginx/routes/<domain>.conf`, `infra/postgres/init/NN-<layanan>.sql`.
+8. PM memberi tag di `main` pada setiap milestone (PA3 dan seterusnya).
+
+### Proteksi branch
+
+| Branch | Aturan di GitHub |
+| --- | --- |
+| `main` | Wajib lewat pull request (tanpa minimal approval), hanya PM yang dapat merge, force push diblokir. Push langsung ditolak dengan pesan `GH013: Repository rule violations` |
+| `k1` sampai `k9` | Tanpa aturan; setiap branch dikelola pemilik kelompoknya |
+
+Bila push ke `main` ditolak, pindahkan commit ke branch baru lalu ajukan PR:
+
+```bash
+git switch -c T<kode>-<deskripsi>
+```
+
+```bash
+git push -u origin T<kode>-<deskripsi>
+```
+
+```bash
+git branch -f main origin/main
+```

@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "description": "Peta event_type ke topic exchange domain. Routing key = event_type. Event tanpa entri di sini ditolak publisher dan outbox-relay. Sumber: Tabel 6.2 dan 6.3 laporan + event [BARU] di All Specifications. Pemilik: T0.6.",
+  "exchanges": {
+    "identity.events": [
+      "user.registered",
+      "user.profile.updated",
+      "user.deleted",
+      "user.role.changed"
+    ],
+    "poem.events": [
+      "poem.submitted",
+      "poem.revised",
+      "poem.deleted",
+      "poem.published",
+      "poem.held",
+      "poem.hidden"
+    ],
+    "analysis.events": [
+      "poem.emotion.analyzed",
+      "poem.keywords.extracted",
+      "poem.themes.extracted",
+      "poem.fingerprint.created",
+      "poem.similarity.scored",
+      "poem.image.rendered",
+      "authorship.recorded"
+    ],
+    "processing.events": [
+      "poem.processing.updated",
+      "poem.processing.completed"
+    ],
+    "vote.events": [
+      "vote.cast",
+      "poem.score.updated"
+    ],
+    "moderation.events": [
+      "report.created",
+      "report.evidence.ready",
+      "case.opened",
+      "case.claimed",
+      "case.decided",
+      "appeal.filed"
+    ],
+    "community.events": [
+      "comment.created",
+      "comment.deleted"
+    ]
+  }
+}

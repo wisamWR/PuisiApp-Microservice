@@ -1,0 +1,9 @@
+# Domain analysis
+# Kelompok: 5 Mood, 6 Tema (Sabila); 7 Keaslian (Raffa)
+# Layanan: emotion-worker, mood-feed, keyword-worker, theme-worker, theme-feed, fingerprint-worker, similarity-worker, authorship-worker, authorship-query
+#
+# Tulis layanan domain ini di sini. Path relatif dihitung dari folder infra/
+# (project_directory pada include), jadi build context ditulis ../services/<nama>.
+# Pola lengkap ada di infra/README.md. Alamat dependensi diambil dari .env.
+
+services: {}
