@@ -3,6 +3,8 @@ import AppLayout from './layouts/AppLayout'
 import { PlaceholderPage } from './pages/PlaceholderPage'
 import { ToastProvider } from './components/ToastContext'
 import './App.css'
+import MoodEntryPage from './pages/MoodEntryPage'
+import MoodFeedPage from './pages/MoodFeedPage'
 import PoemDetailPage from './pages/PoemDetailPage'
 
 function App() {
@@ -12,8 +14,8 @@ function App() {
         <Routes>
           <Route element={<AppLayout />}>
             <Route index element={<PlaceholderPage pageKey="home" />} />
-            <Route path="mood-entry" element={<PlaceholderPage pageKey="moodEntry" />} />
-            <Route path="mood-feed" element={<PlaceholderPage pageKey="moodFeed" />} />
+            <Route path="mood-entry" element={<MoodEntryPage />} />
+            <Route path="mood-feed" element={<MoodFeedPage />} />
             <Route path="poems/:id" element={<PoemDetailPage />} />
             <Route path="write" element={<PlaceholderPage pageKey="writePoem" />} />
             <Route path="my-poems" element={<PlaceholderPage pageKey="myPoems" />} />

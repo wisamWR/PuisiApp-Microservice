@@ -1,0 +1,16 @@
+{
+  "senada": {
+    "senang": ["senang"],
+    "sedih": ["sedih"],
+    "cinta": ["cinta"],
+    "marah": ["marah"],
+    "takut": ["takut"]
+  },
+  "menghibur": {
+    "sedih": ["senang", "cinta"],
+    "takut": ["senang", "cinta"],
+    "marah": ["senang", "cinta"],
+    "senang": ["senang"],
+    "cinta": ["cinta"]
+  }
+}

@@ -9,3 +9,4 @@ set $up_recovery  "${RECOVERY_HOST}";
 set $up_auth      "${AUTH_HOST}";
 # Layanan contoh untuk uji deploy (routes/contoh.conf); kosong = rute 404.
 set $up_contoh    "${CONTOH_HOST}";
+set $up_mood_feed "${MOOD_FEED_HOST}";
