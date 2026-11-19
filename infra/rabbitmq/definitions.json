@@ -1,0 +1,596 @@
+{
+    "queues":  [
+                   {
+                       "vhost":  "puisiApp",
+                       "durable":  true,
+                       "auto_delete":  false,
+                       "name":  "q.outbox.unrouted",
+                       "arguments":  {
+                                         "x-queue-type":  "quorum"
+                                     }
+                   },
+                   {
+                       "vhost":  "puisiApp",
+                       "durable":  true,
+                       "auto_delete":  false,
+                       "name":  "q.comment-service",
+                       "arguments":  {
+                                         "x-dead-letter-routing-key":  "q.comment-service.dlq",
+                                         "x-queue-type":  "quorum",
+                                         "x-delivery-limit":  5,
+                                         "x-dead-letter-exchange":  "dlx"
+                                     }
+                   },
+                   {
+                       "vhost":  "puisiApp",
+                       "durable":  true,
+                       "auto_delete":  false,
+                       "name":  "q.comment-service.dlq",
+                       "arguments":  {
+                                         "x-queue-type":  "quorum"
+                                     }
+                   },
+                   {
+                       "vhost":  "puisiApp",
+                       "durable":  true,
+                       "auto_delete":  false,
+                       "name":  "q.example",
+                       "arguments":  {
+                                         "x-dead-letter-routing-key":  "q.example.dlq",
+                                         "x-queue-type":  "quorum",
+                                         "x-delivery-limit":  5,
+                                         "x-dead-letter-exchange":  "dlx"
+                                     }
+                   },
+                   {
+                       "vhost":  "puisiApp",
+                       "durable":  true,
+                       "auto_delete":  false,
+                       "name":  "q.example.dlq",
+                       "arguments":  {
+                                         "x-queue-type":  "quorum"
+                                     }
+                   }
+               ],
+    "vhosts":  [
+                   {
+                       "name":  "puisiApp"
+                   }
+               ],
+    "bindings":  [
+                     {
+                         "source":  "outbox.relay",
+                         "destination":  "identity.events",
+                         "arguments":  {
+
+                                       },
+                         "vhost":  "puisiApp",
+                         "destination_type":  "exchange",
+                         "routing_key":  "user.registered"
+                     },
+                     {
+                         "source":  "outbox.relay",
+                         "destination":  "identity.events",
+                         "arguments":  {
+
+                                       },
+                         "vhost":  "puisiApp",
+                         "destination_type":  "exchange",
+                         "routing_key":  "user.profile.updated"
+                     },
+                     {
+                         "source":  "outbox.relay",
+                         "destination":  "identity.events",
+                         "arguments":  {
+
+                                       },
+                         "vhost":  "puisiApp",
+                         "destination_type":  "exchange",
+                         "routing_key":  "user.deleted"
+                     },
+                     {
+                         "source":  "outbox.relay",
+                         "destination":  "identity.events",
+                         "arguments":  {
+
+                                       },
+                         "vhost":  "puisiApp",
+                         "destination_type":  "exchange",
+                         "routing_key":  "user.role.changed"
+                     },
+                     {
+                         "source":  "outbox.relay",
+                         "destination":  "poem.events",
+                         "arguments":  {
+
+                                       },
+                         "vhost":  "puisiApp",
+                         "destination_type":  "exchange",
+                         "routing_key":  "poem.submitted"
+                     },
+                     {
+                         "source":  "outbox.relay",
+                         "destination":  "poem.events",
+                         "arguments":  {
+
+                                       },
+                         "vhost":  "puisiApp",
+                         "destination_type":  "exchange",
+                         "routing_key":  "poem.revised"
+                     },
+                     {
+                         "source":  "outbox.relay",
+                         "destination":  "poem.events",
+                         "arguments":  {
+
+                                       },
+                         "vhost":  "puisiApp",
+                         "destination_type":  "exchange",
+                         "routing_key":  "poem.deleted"
+                     },
+                     {
+                         "source":  "outbox.relay",
+                         "destination":  "poem.events",
+                         "arguments":  {
+
+                                       },
+                         "vhost":  "puisiApp",
+                         "destination_type":  "exchange",
+                         "routing_key":  "poem.published"
+                     },
+                     {
+                         "source":  "outbox.relay",
+                         "destination":  "poem.events",
+                         "arguments":  {
+
+                                       },
+                         "vhost":  "puisiApp",
+                         "destination_type":  "exchange",
+                         "routing_key":  "poem.held"
+                     },
+                     {
+                         "source":  "outbox.relay",
+                         "destination":  "poem.events",
+                         "arguments":  {
+
+                                       },
+                         "vhost":  "puisiApp",
+                         "destination_type":  "exchange",
+                         "routing_key":  "poem.hidden"
+                     },
+                     {
+                         "source":  "outbox.relay",
+                         "destination":  "analysis.events",
+                         "arguments":  {
+
+                                       },
+                         "vhost":  "puisiApp",
+                         "destination_type":  "exchange",
+                         "routing_key":  "poem.emotion.analyzed"
+                     },
+                     {
+                         "source":  "outbox.relay",
+                         "destination":  "analysis.events",
+                         "arguments":  {
+
+                                       },
+                         "vhost":  "puisiApp",
+                         "destination_type":  "exchange",
+                         "routing_key":  "poem.keywords.extracted"
+                     },
+                     {
+                         "source":  "outbox.relay",
+                         "destination":  "analysis.events",
+                         "arguments":  {
+
+                                       },
+                         "vhost":  "puisiApp",
+                         "destination_type":  "exchange",
+                         "routing_key":  "poem.themes.extracted"
+                     },
+                     {
+                         "source":  "outbox.relay",
+                         "destination":  "analysis.events",
+                         "arguments":  {
+
+                                       },
+                         "vhost":  "puisiApp",
+                         "destination_type":  "exchange",
+                         "routing_key":  "poem.fingerprint.created"
+                     },
+                     {
+                         "source":  "outbox.relay",
+                         "destination":  "analysis.events",
+                         "arguments":  {
+
+                                       },
+                         "vhost":  "puisiApp",
+                         "destination_type":  "exchange",
+                         "routing_key":  "poem.similarity.scored"
+                     },
+                     {
+                         "source":  "outbox.relay",
+                         "destination":  "analysis.events",
+                         "arguments":  {
+
+                                       },
+                         "vhost":  "puisiApp",
+                         "destination_type":  "exchange",
+                         "routing_key":  "poem.image.rendered"
+                     },
+                     {
+                         "source":  "outbox.relay",
+                         "destination":  "analysis.events",
+                         "arguments":  {
+
+                                       },
+                         "vhost":  "puisiApp",
+                         "destination_type":  "exchange",
+                         "routing_key":  "authorship.recorded"
+                     },
+                     {
+                         "source":  "outbox.relay",
+                         "destination":  "processing.events",
+                         "arguments":  {
+
+                                       },
+                         "vhost":  "puisiApp",
+                         "destination_type":  "exchange",
+                         "routing_key":  "poem.processing.updated"
+                     },
+                     {
+                         "source":  "outbox.relay",
+                         "destination":  "processing.events",
+                         "arguments":  {
+
+                                       },
+                         "vhost":  "puisiApp",
+                         "destination_type":  "exchange",
+                         "routing_key":  "poem.processing.completed"
+                     },
+                     {
+                         "source":  "outbox.relay",
+                         "destination":  "vote.events",
+                         "arguments":  {
+
+                                       },
+                         "vhost":  "puisiApp",
+                         "destination_type":  "exchange",
+                         "routing_key":  "vote.cast"
+                     },
+                     {
+                         "source":  "outbox.relay",
+                         "destination":  "vote.events",
+                         "arguments":  {
+
+                                       },
+                         "vhost":  "puisiApp",
+                         "destination_type":  "exchange",
+                         "routing_key":  "poem.score.updated"
+                     },
+                     {
+                         "source":  "outbox.relay",
+                         "destination":  "moderation.events",
+                         "arguments":  {
+
+                                       },
+                         "vhost":  "puisiApp",
+                         "destination_type":  "exchange",
+                         "routing_key":  "report.created"
+                     },
+                     {
+                         "source":  "outbox.relay",
+                         "destination":  "moderation.events",
+                         "arguments":  {
+
+                                       },
+                         "vhost":  "puisiApp",
+                         "destination_type":  "exchange",
+                         "routing_key":  "report.evidence.ready"
+                     },
+                     {
+                         "source":  "outbox.relay",
+                         "destination":  "moderation.events",
+                         "arguments":  {
+
+                                       },
+                         "vhost":  "puisiApp",
+                         "destination_type":  "exchange",
+                         "routing_key":  "case.opened"
+                     },
+                     {
+                         "source":  "outbox.relay",
+                         "destination":  "moderation.events",
+                         "arguments":  {
+
+                                       },
+                         "vhost":  "puisiApp",
+                         "destination_type":  "exchange",
+                         "routing_key":  "case.claimed"
+                     },
+                     {
+                         "source":  "outbox.relay",
+                         "destination":  "moderation.events",
+                         "arguments":  {
+
+                                       },
+                         "vhost":  "puisiApp",
+                         "destination_type":  "exchange",
+                         "routing_key":  "case.decided"
+                     },
+                     {
+                         "source":  "outbox.relay",
+                         "destination":  "moderation.events",
+                         "arguments":  {
+
+                                       },
+                         "vhost":  "puisiApp",
+                         "destination_type":  "exchange",
+                         "routing_key":  "appeal.filed"
+                     },
+                     {
+                         "source":  "outbox.relay",
+                         "destination":  "community.events",
+                         "arguments":  {
+
+                                       },
+                         "vhost":  "puisiApp",
+                         "destination_type":  "exchange",
+                         "routing_key":  "comment.created"
+                     },
+                     {
+                         "source":  "outbox.relay",
+                         "destination":  "community.events",
+                         "arguments":  {
+
+                                       },
+                         "vhost":  "puisiApp",
+                         "destination_type":  "exchange",
+                         "routing_key":  "comment.deleted"
+                     },
+                     {
+                         "source":  "outbox.relay",
+                         "destination":  "outbox.heartbeat",
+                         "arguments":  {
+
+                                       },
+                         "vhost":  "puisiApp",
+                         "destination_type":  "exchange",
+                         "routing_key":  "*"
+                     },
+                     {
+                         "source":  "outbox.unrouted",
+                         "destination":  "q.outbox.unrouted",
+                         "arguments":  {
+
+                                       },
+                         "vhost":  "puisiApp",
+                         "destination_type":  "queue",
+                         "routing_key":  ""
+                     },
+                     {
+                         "source":  "dlx",
+                         "destination":  "q.comment-service.dlq",
+                         "arguments":  {
+
+                                       },
+                         "vhost":  "puisiApp",
+                         "destination_type":  "queue",
+                         "routing_key":  "q.comment-service.dlq"
+                     },
+                     {
+                         "source":  "retry.delayed",
+                         "destination":  "q.comment-service",
+                         "arguments":  {
+
+                                       },
+                         "vhost":  "puisiApp",
+                         "destination_type":  "queue",
+                         "routing_key":  "q.comment-service"
+                     },
+                     {
+                         "source":  "poem.events",
+                         "destination":  "q.comment-service",
+                         "arguments":  {
+
+                                       },
+                         "vhost":  "puisiApp",
+                         "destination_type":  "queue",
+                         "routing_key":  "poem.published"
+                     },
+                     {
+                         "source":  "poem.events",
+                         "destination":  "q.comment-service",
+                         "arguments":  {
+
+                                       },
+                         "vhost":  "puisiApp",
+                         "destination_type":  "queue",
+                         "routing_key":  "poem.hidden"
+                     },
+                     {
+                         "source":  "poem.events",
+                         "destination":  "q.comment-service",
+                         "arguments":  {
+
+                                       },
+                         "vhost":  "puisiApp",
+                         "destination_type":  "queue",
+                         "routing_key":  "poem.deleted"
+                     },
+                     {
+                         "source":  "dlx",
+                         "destination":  "q.example.dlq",
+                         "arguments":  {
+
+                                       },
+                         "vhost":  "puisiApp",
+                         "destination_type":  "queue",
+                         "routing_key":  "q.example.dlq"
+                     },
+                     {
+                         "source":  "retry.delayed",
+                         "destination":  "q.example",
+                         "arguments":  {
+
+                                       },
+                         "vhost":  "puisiApp",
+                         "destination_type":  "queue",
+                         "routing_key":  "q.example"
+                     },
+                     {
+                         "source":  "poem.events",
+                         "destination":  "q.example",
+                         "arguments":  {
+
+                                       },
+                         "vhost":  "puisiApp",
+                         "destination_type":  "queue",
+                         "routing_key":  "poem.submitted"
+                     },
+                     {
+                         "source":  "poem.events",
+                         "destination":  "q.example",
+                         "arguments":  {
+
+                                       },
+                         "vhost":  "puisiApp",
+                         "destination_type":  "queue",
+                         "routing_key":  "poem.revised"
+                     }
+                 ],
+    "exchanges":  [
+                      {
+                          "internal":  false,
+                          "name":  "identity.events",
+                          "durable":  true,
+                          "type":  "topic",
+                          "auto_delete":  false,
+                          "vhost":  "puisiApp",
+                          "arguments":  {
+
+                                        }
+                      },
+                      {
+                          "internal":  false,
+                          "name":  "poem.events",
+                          "durable":  true,
+                          "type":  "topic",
+                          "auto_delete":  false,
+                          "vhost":  "puisiApp",
+                          "arguments":  {
+
+                                        }
+                      },
+                      {
+                          "internal":  false,
+                          "name":  "analysis.events",
+                          "durable":  true,
+                          "type":  "topic",
+                          "auto_delete":  false,
+                          "vhost":  "puisiApp",
+                          "arguments":  {
+
+                                        }
+                      },
+                      {
+                          "internal":  false,
+                          "name":  "processing.events",
+                          "durable":  true,
+                          "type":  "topic",
+                          "auto_delete":  false,
+                          "vhost":  "puisiApp",
+                          "arguments":  {
+
+                                        }
+                      },
+                      {
+                          "internal":  false,
+                          "name":  "vote.events",
+                          "durable":  true,
+                          "type":  "topic",
+                          "auto_delete":  false,
+                          "vhost":  "puisiApp",
+                          "arguments":  {
+
+                                        }
+                      },
+                      {
+                          "internal":  false,
+                          "name":  "moderation.events",
+                          "durable":  true,
+                          "type":  "topic",
+                          "auto_delete":  false,
+                          "vhost":  "puisiApp",
+                          "arguments":  {
+
+                                        }
+                      },
+                      {
+                          "internal":  false,
+                          "name":  "community.events",
+                          "durable":  true,
+                          "type":  "topic",
+                          "auto_delete":  false,
+                          "vhost":  "puisiApp",
+                          "arguments":  {
+
+                                        }
+                      },
+                      {
+                          "internal":  false,
+                          "name":  "outbox.relay",
+                          "durable":  true,
+                          "type":  "topic",
+                          "auto_delete":  false,
+                          "vhost":  "puisiApp",
+                          "arguments":  {
+                                            "alternate-exchange":  "outbox.unrouted"
+                                        }
+                      },
+                      {
+                          "internal":  false,
+                          "name":  "outbox.unrouted",
+                          "durable":  true,
+                          "type":  "fanout",
+                          "auto_delete":  false,
+                          "vhost":  "puisiApp",
+                          "arguments":  {
+
+                                        }
+                      },
+                      {
+                          "internal":  false,
+                          "name":  "outbox.heartbeat",
+                          "durable":  true,
+                          "type":  "fanout",
+                          "auto_delete":  false,
+                          "vhost":  "puisiApp",
+                          "arguments":  {
+
+                                        }
+                      },
+                      {
+                          "internal":  false,
+                          "name":  "dlx",
+                          "durable":  true,
+                          "type":  "direct",
+                          "auto_delete":  false,
+                          "vhost":  "puisiApp",
+                          "arguments":  {
+
+                                        }
+                      },
+                      {
+                          "internal":  false,
+                          "name":  "retry.delayed",
+                          "durable":  true,
+                          "type":  "x-delayed-message",
+                          "auto_delete":  false,
+                          "vhost":  "puisiApp",
+                          "arguments":  {
+                                            "x-delayed-type":  "direct"
+                                        }
+                      }
+                  ]
+}

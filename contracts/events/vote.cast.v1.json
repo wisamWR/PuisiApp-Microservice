@@ -1,0 +1,48 @@
+{
+    "$schema":  "https://json-schema.org/draft/2020-12/schema",
+    "$id":  "https://puisiapp.example/schema/events/vote.cast.v1.json",
+    "title":  "Vote Cast Event",
+    "type":  "object",
+    "additionalProperties":  false,
+    "required":  [
+                     "vote_id",
+                     "poem_id",
+                     "user_id",
+                     "vote_value",
+                     "cast_at"
+                 ],
+    "properties":  {
+                       "vote_id":  {
+                                       "type":  "string",
+                                       "format":  "uuid"
+                                   },
+                       "poem_id":  {
+                                       "type":  "string",
+                                       "minLength":  1
+                                   },
+                       "user_id":  {
+                                       "type":  "string",
+                                       "minLength":  1
+                                   },
+                       "vote_value":  {
+                                          "type":  "integer",
+                                          "enum":  [
+                                                       -1,
+                                                       1
+                                                   ]
+                                      },
+                       "cast_at":  {
+                                       "type":  "string",
+                                       "format":  "date-time"
+                                   }
+                   },
+    "examples":  [
+                     {
+                         "vote_id":  "550e8400-e29b-41d4-a716-446655440001",
+                         "poem_id":  "sample-value",
+                         "user_id":  "sample-value",
+                         "vote_value":  -1,
+                         "cast_at":  "2026-11-19T08:30:00Z"
+                     }
+                 ]
+}

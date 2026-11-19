@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://puisiapp.example/schema/poem.keywords.extracted.v1.json",
+  "title": "Event kata kunci diekstraksi",
+  "description": "Hasil ekstraksi kata kunci dari puisi.",
+  "type": "object",
+  "required": [
+    "poem_id",
+    "keywords"
+  ],
+  "properties": {
+    "poem_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "keywords": {
+      "minItems": 1,
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "type": "array"
+    }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "poem_id": "0b7d6f0e-4a8b-4a52-9d0b-3f4f0e9b2a10",
+      "keywords": [
+        "hujan",
+        "jendela",
+        "rindu"
+      ]
+    }
+  ]
+}

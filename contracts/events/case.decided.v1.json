@@ -1,0 +1,58 @@
+
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://puisiapp.example/schema/events/case.decided.v1.json",
+  "title": "Moderation Case Decided Event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "case_id",
+    "poem_id",
+    "moderator_id",
+    "decision",
+    "reason",
+    "decided_at"
+  ],
+  "properties": {
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "poem_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "moderator_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "decision": {
+      "type": "string",
+      "enum": [
+        "APPROVE",
+        "REJECT",
+        "HIDE",
+        "DELETE",
+        "RESTORE"
+      ]
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 1
+    },
+    "decided_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "examples": [
+    {
+      "case_id": "550e8400-e29b-41d4-a716-446655440001",
+      "poem_id": "poem-001",
+      "moderator_id": "user-moderator-001",
+      "decision": "HIDE",
+      "reason": "Konten melanggar pedoman komunitas",
+      "decided_at": "2026-11-19T08:30:00Z"
+    }
+  ]
+}
