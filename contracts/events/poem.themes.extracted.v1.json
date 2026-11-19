@@ -1,42 +1,43 @@
 {
-    "$schema":  "https://json-schema.org/draft/2020-12/schema",
-    "$id":  "https://puisiapp.example/schema/poem.themes.extracted.v1.json",
-    "title":  "Event tema puisi diekstraksi",
-    "description":  "Hasil ekstraksi tema dari puisi.",
-    "type":  "object",
-    "required":  [
-                     "poem_id",
-                     "themes"
-                 ],
-    "properties":  {
-                       "poem_id":  {
-                                       "minLength":  1,
-                                       "type":  "string"
-                                   },
-                       "themes":  {
-                                      "minItems":  1,
-                                      "items":  {
-                                                    "type":  "string",
-                                                    "enum":  [
-                                                                 "rindu",
-                                                                 "kesepian",
-                                                                 "alam",
-                                                                 "perjuangan",
-                                                                 "keluarga",
-                                                                 "religius",
-                                                                 "lainnya"
-                                                             ]
-                                                },
-                                      "type":  "array"
-                                  }
-                   },
-    "additionalProperties":  false,
-    "examples":  [
-                     {
-                         "poem_id":  "sample-value",
-                         "themes":  [
-
-                                    ]
-                     }
-                 ]
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://puisiapp.example/schema/poem.themes.extracted.v1.json",
+  "title": "Event tema puisi diekstraksi",
+  "description": "Hasil ekstraksi tema dari puisi.",
+  "type": "object",
+  "required": [
+    "poem_id",
+    "themes"
+  ],
+  "properties": {
+    "poem_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "themes": {
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "enum": [
+          "rindu",
+          "kesepian",
+          "alam",
+          "perjuangan",
+          "keluarga",
+          "religius",
+          "lainnya"
+        ]
+      },
+      "type": "array"
+    }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "poem_id": "0b7d6f0e-4a8b-4a52-9d0b-3f4f0e9b2a10",
+      "themes": [
+        "rindu",
+        "alam"
+      ]
+    }
+  ]
 }

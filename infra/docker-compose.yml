@@ -56,7 +56,6 @@ services:
       RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST:-rasa}
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
-      - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
     networks: [app, data]
     healthcheck:
       test: ["CMD-SHELL", "rabbitmq-diagnostics -q check_running && rabbitmq-diagnostics -q check_local_alarms"]
