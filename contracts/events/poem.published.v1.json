@@ -1,0 +1,17 @@
+﻿{
+    "$schema":  "https://json-schema.org/draft/2020-12/schema",
+    "$id":  "https://puisiapp.example/schema/poem.published.v1.json",
+    "title":  "Event puisi diterbitkan",
+    "description":  "Diterbitkan ketika puisi berhasil dipublikasikan.",
+    "type":  "object",
+    "required":  [
+                     "published_at"
+                 ],
+    "properties":  {
+                       "published_at":  {
+                                            "type":  "string",
+                                            "format":  "date-time"
+                                        }
+                   },
+    "additionalProperties":  false
+}

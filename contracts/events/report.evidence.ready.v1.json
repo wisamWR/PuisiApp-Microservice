@@ -1,0 +1,15 @@
+﻿{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://puisiapp.example/schema/events/report.evidence.ready.v1.json",
+  "title": "Report Evidence Ready Event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["report_id", "poem_id", "evidence_id", "evidence_url", "ready_at"],
+  "properties": {
+    "report_id": { "type": "string", "format": "uuid" },
+    "poem_id": { "type": "string", "minLength": 1 },
+    "evidence_id": { "type": "string", "format": "uuid" },
+    "evidence_url": { "type": "string", "format": "uri" },
+    "ready_at": { "type": "string", "format": "date-time" }
+  }
+}

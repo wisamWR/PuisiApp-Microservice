@@ -1,0 +1,56 @@
+﻿{
+    "$schema":  "https://json-schema.org/draft/2020-12/schema",
+    "$id":  "https://puisiapp.example/schema/poem.similarity.scored.v1.json",
+    "title":  "Event skor kemiripan puisi tersedia",
+    "description":  "Hasil perhitungan kemiripan puisi dan level originalitas.",
+    "type":  "object",
+    "required":  [
+                     "poem_id",
+                     "score",
+                     "level",
+                     "comparisons"
+                 ],
+    "properties":  {
+                       "poem_id":  {
+                                       "minLength":  1,
+                                       "type":  "string"
+                                   },
+                       "level":  {
+                                     "type":  "string",
+                                     "enum":  [
+                                                  "original",
+                                                  "inspired",
+                                                  "similar",
+                                                  "suspected_plagiarism"
+                                              ]
+                                 },
+                       "comparisons":  {
+                                           "items":  {
+                                                         "additionalProperties":  false,
+                                                         "properties":  {
+                                                                            "score":  {
+                                                                                          "maximum":  1,
+                                                                                          "type":  "number",
+                                                                                          "minimum":  0
+                                                                                      },
+                                                                            "compared_poem_id":  {
+                                                                                                     "minLength":  1,
+                                                                                                     "type":  "string"
+                                                                                                 }
+                                                                        },
+                                                         "type":  "object",
+                                                         "required":  [
+                                                                          "compared_poem_id",
+                                                                          "score"
+                                                                      ]
+                                                     },
+                                           "type":  "array"
+                                       },
+                       "score":  {
+                                     "maximum":  1,
+                                     "type":  "number",
+                                     "minimum":  0
+                                 }
+                   },
+    "additionalProperties":  false
+}

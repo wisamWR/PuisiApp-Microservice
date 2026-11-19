@@ -1,0 +1,52 @@
+﻿{
+    "$schema":  "https://json-schema.org/draft/2020-12/schema",
+    "$id":  "https://puisiapp.example/schema/poem.emotion.analyzed.v1.json",
+    "title":  "Event analisis emosi puisi",
+    "description":  "Hasil analisis emosi puisi per baris.",
+    "type":  "object",
+    "required":  [
+                     "poem_id",
+                     "emotions"
+                 ],
+    "properties":  {
+                       "poem_id":  {
+                                       "minLength":  1,
+                                       "type":  "string"
+                                   },
+                       "emotions":  {
+                                        "minItems":  1,
+                                        "items":  {
+                                                      "additionalProperties":  false,
+                                                      "properties":  {
+                                                                         "label":  {
+                                                                                       "type":  "string",
+                                                                                       "enum":  [
+                                                                                                    "senang",
+                                                                                                    "sedih",
+                                                                                                    "cinta",
+                                                                                                    "marah",
+                                                                                                    "takut"
+                                                                                                ]
+                                                                                   },
+                                                                         "score":  {
+                                                                                       "maximum":  1,
+                                                                                       "type":  "number",
+                                                                                       "minimum":  0
+                                                                                   },
+                                                                         "line_number":  {
+                                                                                             "type":  "integer",
+                                                                                             "minimum":  1
+                                                                                         }
+                                                                     },
+                                                      "type":  "object",
+                                                      "required":  [
+                                                                       "line_number",
+                                                                       "label",
+                                                                       "score"
+                                                                   ]
+                                                  },
+                                        "type":  "array"
+                                    }
+                   },
+    "additionalProperties":  false
+}

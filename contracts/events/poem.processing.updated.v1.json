@@ -1,0 +1,30 @@
+﻿{
+    "$schema":  "https://json-schema.org/draft/2020-12/schema",
+    "$id":  "https://puisiapp.example/schema/poem.processing.updated.v1.json",
+    "title":  "Event status pemrosesan diperbarui",
+    "description":  "Status pemrosesan puisi mengalami perubahan.",
+    "type":  "object",
+    "required":  [
+                     "poem_id",
+                     "status"
+                 ],
+    "properties":  {
+                       "status":  {
+                                      "type":  "string",
+                                      "enum":  [
+                                                   "PROCESSING",
+                                                   "REPROCESSING",
+                                                   "COMPLETED",
+                                                   "FAILED"
+                                               ]
+                                  },
+                       "poem_id":  {
+                                       "minLength":  1,
+                                       "type":  "string"
+                                   },
+                       "stage":  {
+                                     "type":  "string"
+                                 }
+                   },
+    "additionalProperties":  false
+}

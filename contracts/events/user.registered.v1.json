@@ -1,0 +1,23 @@
+﻿{
+    "$schema":  "https://json-schema.org/draft/2020-12/schema",
+    "$id":  "https://puisiapp.example/schema/user.registered.v1.json",
+    "title":  "Event pengguna terdaftar",
+    "description":  "Diterbitkan ketika pengguna berhasil mendaftar.",
+    "type":  "object",
+    "required":  [
+                     "username",
+                     "email"
+                 ],
+    "properties":  {
+                       "email":  {
+                                     "type":  "string",
+                                     "format":  "email"
+                                 },
+                       "username":  {
+                                        "maxLength":  50,
+                                        "minLength":  1,
+                                        "type":  "string"
+                                    }
+                   },
+    "additionalProperties":  false
+}

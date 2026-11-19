@@ -1,0 +1,30 @@
+﻿{
+    "$schema":  "https://json-schema.org/draft/2020-12/schema",
+    "$id":  "https://puisiapp.example/schema/poem.fingerprint.created.v1.json",
+    "title":  "Event fingerprint puisi dibuat",
+    "description":  "Fingerprint puisi berhasil dibuat.",
+    "type":  "object",
+    "required":  [
+                     "poem_id",
+                     "fingerprint",
+                     "algorithm"
+                 ],
+    "properties":  {
+                       "fingerprint":  {
+                                           "minLength":  1,
+                                           "type":  "string"
+                                       },
+                       "poem_id":  {
+                                       "minLength":  1,
+                                       "type":  "string"
+                                   },
+                       "algorithm":  {
+                                         "type":  "string",
+                                         "enum":  [
+                                                      "sha256",
+                                                      "minhash"
+                                                  ]
+                                     }
+                   },
+    "additionalProperties":  false
+}

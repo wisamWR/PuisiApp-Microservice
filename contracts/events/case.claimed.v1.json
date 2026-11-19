@@ -1,0 +1,13 @@
+﻿{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://puisiapp.example/schema/events/case.claimed.v1.json",
+  "title": "Moderation Case Claimed Event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["case_id", "moderator_id", "claimed_at"],
+  "properties": {
+    "case_id": { "type": "string", "format": "uuid" },
+    "moderator_id": { "type": "string", "minLength": 1 },
+    "claimed_at": { "type": "string", "format": "date-time" }
+  }
+}
