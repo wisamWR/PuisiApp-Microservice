@@ -1,0 +1,23 @@
+{
+  "name": "puisiapp-node-service-template",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Template layanan Node.js untuk PuisiApp Microservice",
+  "scripts": {
+    "start": "node src/main.js",
+    "test": "node --test",
+    "lint": "eslint .",
+    "format:check": "prettier --check ."
+  },
+  "dependencies": {
+    "@puisiapp/events": "file:../../libs/node",
+    "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.14.0",
+    "globals": "^17.14.0",
+    "prettier": "^3.10.1"
+  }
+}

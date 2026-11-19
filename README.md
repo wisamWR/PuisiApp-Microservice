@@ -90,7 +90,66 @@ Menghentikan semua container (data tetap tersimpan):
 ```bash
 docker compose down
 ```
+## Event Contract & Mock Server
 
+### Struktur kontrak
+
+- `contracts/envelope.v1.json`: skema amplop standar event.
+- `contracts/events/`: JSON Schema untuk setiap payload event.
+- `contracts/routing.json`: pemetaan event ke domain exchange RabbitMQ.
+- `contracts/openapi/`: spesifikasi API menggunakan OpenAPI.
+
+Setiap event menggunakan format versi, misalnya `<event_name>.v1.json`.
+
+### Validasi payload event
+
+Validasi payload dilakukan menggunakan JSON Schema Draft 2020-12 dan AJV.
+
+Jalankan dari root repository:
+
+```bash
+node tools/validate-event/index.js <event_type> <payload.json>
+```
+
+Contoh:
+
+```bash
+node tools/validate-event/index.js poem.submitted poem-submitted-test.json
+```
+
+Validator akan menampilkan status `VALID` jika payload sesuai schema. Jika tidak sesuai, validator menampilkan detail kesalahan validasi.
+
+### Prism Mock Server
+
+Prism digunakan untuk menjalankan mock API berdasarkan spesifikasi OpenAPI.
+
+Jalankan dari root repository:
+
+```bash
+cd libs/node
+npx prism mock ../../contracts/openapi/comment-service.yaml --host 127.0.0.1 --port 4010
+```
+
+Mock Server dapat diakses melalui:
+
+```text
+http://127.0.0.1:4010
+```
+
+Contoh pengujian health check:
+
+```bash
+curl http://127.0.0.1:4010/health
+```
+
+### Aturan perubahan kontrak
+
+1. Perubahan kontrak harus dikoordinasikan dengan pemilik producer dan consumer terkait.
+2. Setiap perubahan payload harus memperbarui JSON Schema dan contoh payload yang digunakan untuk pengujian.
+3. Perubahan yang tidak kompatibel harus menggunakan versi schema baru, bukan mengubah kontrak versi lama secara diam-diam.
+4. Field sensitif seperti password tidak boleh dimasukkan ke dalam payload event.
+5. Validasi schema dan pengujian integrasi producer-consumer harus dilakukan sebelum perubahan diajukan melalui Pull Request.
+6. Perubahan pada direktori `contracts/` harus diinformasikan kepada Zoya sesuai aturan repository.
 ## Alur kerja Git
 
 ### Branch

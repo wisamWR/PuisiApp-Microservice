@@ -14,3 +14,5 @@ secrets
 *.pem
 *.key
 docs
+
+**/.venv-ci/

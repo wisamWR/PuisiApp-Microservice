@@ -12,3 +12,5 @@ set $up_poem_query  "${POEM_QUERY_HOST}";
 set $up_image_preview "${IMAGE_PREVIEW_HOST}";
 set $up_poem_edit   "${POEM_EDIT_HOST}";
 set $up_poem_delete "${POEM_DELETE_HOST}";
+# Layanan contoh untuk uji deploy (routes/contoh.conf); kosong = rute 404.
+set $up_contoh    "${CONTOH_HOST}";

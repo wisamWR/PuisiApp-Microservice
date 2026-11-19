@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://puisiapp.example/schema/poem.emotion.analyzed.v1.json",
+  "title": "Event analisis emosi puisi",
+  "description": "Hasil analisis emosi puisi per baris.",
+  "type": "object",
+  "required": [
+    "poem_id",
+    "emotions"
+  ],
+  "properties": {
+    "poem_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "emotions": {
+      "minItems": 1,
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "type": "string",
+            "enum": [
+              "senang",
+              "sedih",
+              "cinta",
+              "marah",
+              "takut"
+            ]
+          },
+          "score": {
+            "maximum": 1,
+            "type": "number",
+            "minimum": 0
+          },
+          "line_number": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "type": "object",
+        "required": [
+          "line_number",
+          "label",
+          "score"
+        ]
+      },
+      "type": "array"
+    }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "poem_id": "0b7d6f0e-4a8b-4a52-9d0b-3f4f0e9b2a10",
+      "emotions": [
+        {
+          "label": "sedih",
+          "score": 0.82,
+          "line_number": 1
+        },
+        {
+          "label": "cinta",
+          "score": 0.61,
+          "line_number": 3
+        }
+      ]
+    }
+  ]
+}

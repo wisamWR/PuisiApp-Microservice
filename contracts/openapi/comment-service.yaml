@@ -1,0 +1,164 @@
+openapi: 3.0.3
+info:
+  title: PuisiApp Comment Service API
+  version: 1.0.0
+  description: API untuk membaca, membuat, dan menghapus komentar puisi.
+
+servers:
+  - url: http://localhost
+    description: API Gateway lokal
+
+security:
+  - AccessTokenCookie: []
+
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      summary: Health check
+      security: []
+      responses:
+        '200':
+          description: Service berjalan
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  service:
+                    type: string
+
+  /api/poems/{id}/comments:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+    get:
+      operationId: getComments
+      summary: Mendapatkan daftar komentar puisi
+      responses:
+        '200':
+          description: Daftar komentar
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  page:
+                    type: integer
+                  limit:
+                    type: integer
+                    example: 10
+                  comments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Comment'
+        '401':
+          description: Autentikasi diperlukan
+        '404':
+          description: Puisi tidak tersedia
+        '429':
+          description: Batas permintaan terlampaui
+    post:
+      operationId: createComment
+      summary: Membuat komentar pada puisi
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - content
+              properties:
+                content:
+                  type: string
+                  minLength: 1
+                  maxLength: 1000
+                  example: Puisinya sangat menarik.
+      responses:
+        '201':
+          description: Komentar berhasil dibuat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '400':
+          description: Konten tidak valid atau JSON tidak valid
+        '401':
+          description: Autentikasi diperlukan
+        '404':
+          description: Puisi tidak tersedia
+        '413':
+          description: Body terlalu besar
+        '429':
+          description: Batas permintaan terlampaui
+
+  /api/comments/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    delete:
+      operationId: deleteComment
+      summary: Menghapus komentar
+      description: Hanya pemilik komentar atau moderator yang dapat menghapusnya.
+      responses:
+        '200':
+          description: Komentar berhasil dihapus
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  comment_id:
+                    type: string
+        '401':
+          description: Autentikasi diperlukan
+        '403':
+          description: Tidak memiliki izin
+        '404':
+          description: Komentar tidak ditemukan
+        '429':
+          description: Batas permintaan terlampaui
+
+components:
+  securitySchemes:
+    AccessTokenCookie:
+      type: apiKey
+      in: cookie
+      name: access_token
+      description: Cookie autentikasi yang diverifikasi oleh API Gateway.
+
+  schemas:
+    Comment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        poem_id:
+          type: string
+        user_id:
+          type: string
+        content:
+          type: string
+        created_at:
+          type: string
+          format: date-time
