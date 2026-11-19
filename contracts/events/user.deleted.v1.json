@@ -1,4 +1,4 @@
-﻿{
+{
     "$schema":  "https://json-schema.org/draft/2020-12/schema",
     "$id":  "https://puisiapp.example/schema/user.deleted.v1.json",
     "title":  "Event akun pengguna dihapus",
@@ -16,5 +16,10 @@
                                                         ]
                                            }
                    },
-    "additionalProperties":  false
+    "additionalProperties":  false,
+    "examples":  [
+                     {
+                         "deletion_status":  "pending"
+                     }
+                 ]
 }

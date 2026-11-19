@@ -21,7 +21,6 @@ function bacaJson(nama) {
 
 let ajv;
 let validatorEnvelope;
-const validatorPayload = new Map();
 
 function ambilAjv() {
   if (!ajv) {
@@ -46,27 +45,6 @@ function ambilValidatorEnvelope() {
   return validatorEnvelope;
 }
 
-function ambilValidatorPayload(eventType) {
-  if (!validatorPayload.has(eventType)) {
-    let schema;
-
-    try {
-      schema = bacaJson(path.join('events', `${eventType}.v1.json`));
-    } catch (error) {
-      if (error.code === 'ENOENT') {
-        throw new GalatPermanen(
-          `Skema payload untuk event ${eventType} tidak ditemukan.`,
-        );
-      }
-
-      throw error;
-    }
-
-    validatorPayload.set(eventType, ambilAjv().compile(schema));
-  }
-
-  return validatorPayload.get(eventType);
-}
 
 function rincianValidasi(errors) {
   return (errors ?? [])
@@ -83,14 +61,6 @@ export function validasiEvent(event) {
   if (!validasiEnvelope(event)) {
     throw new GalatPermanen(
       `Amplop event tidak valid: ${rincianValidasi(validasiEnvelope.errors)}`,
-    );
-  }
-
-  const validasiPayload = ambilValidatorPayload(event.event_type);
-
-  if (!validasiPayload(event.payload)) {
-    throw new GalatPermanen(
-      `Payload event ${event.event_type} tidak valid: ${rincianValidasi(validasiPayload.errors)}`,
     );
   }
 
@@ -135,6 +105,5 @@ export function exchangeUntuk(eventType) {
 export function _resetCacheKontrak() {
   ajv = undefined;
   validatorEnvelope = undefined;
-  validatorPayload.clear();
   petaRouting = undefined;
 }

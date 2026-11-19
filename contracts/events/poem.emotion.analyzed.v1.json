@@ -1,4 +1,4 @@
-﻿{
+{
     "$schema":  "https://json-schema.org/draft/2020-12/schema",
     "$id":  "https://puisiapp.example/schema/poem.emotion.analyzed.v1.json",
     "title":  "Event analisis emosi puisi",
@@ -48,5 +48,13 @@
                                         "type":  "array"
                                     }
                    },
-    "additionalProperties":  false
+    "additionalProperties":  false,
+    "examples":  [
+                     {
+                         "poem_id":  "sample-value",
+                         "emotions":  [
+
+                                      ]
+                     }
+                 ]
 }

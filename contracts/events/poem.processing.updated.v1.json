@@ -1,4 +1,4 @@
-﻿{
+{
     "$schema":  "https://json-schema.org/draft/2020-12/schema",
     "$id":  "https://puisiapp.example/schema/poem.processing.updated.v1.json",
     "title":  "Event status pemrosesan diperbarui",
@@ -26,5 +26,11 @@
                                      "type":  "string"
                                  }
                    },
-    "additionalProperties":  false
+    "additionalProperties":  false,
+    "examples":  [
+                     {
+                         "poem_id":  "sample-value",
+                         "status":  "PROCESSING"
+                     }
+                 ]
 }

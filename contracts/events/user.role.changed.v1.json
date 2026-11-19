@@ -1,4 +1,4 @@
-﻿{
+{
     "$schema":  "https://json-schema.org/draft/2020-12/schema",
     "$id":  "https://puisiapp.example/schema/user.role.changed.v1.json",
     "title":  "Event peran pengguna berubah",
@@ -28,5 +28,11 @@
                                                  ]
                                     }
                    },
-    "additionalProperties":  false
+    "additionalProperties":  false,
+    "examples":  [
+                     {
+                         "old_role":  "reader",
+                         "new_role":  "reader"
+                     }
+                 ]
 }

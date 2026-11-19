@@ -57,7 +57,6 @@ services:
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
       - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
-      - ./rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
     networks: [app, data]
     healthcheck:
       test: ["CMD-SHELL", "rabbitmq-diagnostics -q check_running && rabbitmq-diagnostics -q check_local_alarms"]

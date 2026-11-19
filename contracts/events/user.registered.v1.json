@@ -1,4 +1,4 @@
-﻿{
+{
     "$schema":  "https://json-schema.org/draft/2020-12/schema",
     "$id":  "https://puisiapp.example/schema/user.registered.v1.json",
     "title":  "Event pengguna terdaftar",
@@ -19,5 +19,11 @@
                                         "type":  "string"
                                     }
                    },
-    "additionalProperties":  false
+    "additionalProperties":  false,
+    "examples":  [
+                     {
+                         "username":  "sample-value",
+                         "email":  "sample-value"
+                     }
+                 ]
 }

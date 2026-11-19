@@ -1,4 +1,4 @@
-﻿{
+{
     "$schema":  "https://json-schema.org/draft/2020-12/schema",
     "$id":  "https://puisiapp.example/schema/poem.held.v1.json",
     "title":  "Event puisi ditahan",
@@ -20,5 +20,11 @@
                                       "type":  "string"
                                   }
                    },
-    "additionalProperties":  false
+    "additionalProperties":  false,
+    "examples":  [
+                     {
+                         "similarity_level":  "suspected_plagiarism",
+                         "reason":  "sample-value"
+                     }
+                 ]
 }

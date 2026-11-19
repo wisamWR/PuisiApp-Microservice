@@ -1,39 +1,47 @@
-
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://puisiapp.example/schema/comment.created.v1.json",
-  "title": "Event komentar dibuat",
-  "description": "Diterbitkan ketika pengguna berhasil membuat komentar pada puisi yang dipublikasikan.",
-  "type": "object",
-  "required": [
-    "comment_id",
-    "poem_id",
-    "user_id",
-    "content",
-    "created_at"
-  ],
-  "properties": {
-    "comment_id": {
-      "type": "string",
-      "format": "uuid"
-    },
-    "poem_id": {
-      "type": "string",
-      "minLength": 1
-    },
-    "user_id": {
-      "type": "string",
-      "minLength": 1
-    },
-    "content": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 1000
-    },
-    "created_at": {
-      "type": "string",
-      "format": "date-time"
-    }
-  },
-  "additionalProperties": false
+    "$schema":  "https://json-schema.org/draft/2020-12/schema",
+    "$id":  "https://puisiapp.example/schema/comment.created.v1.json",
+    "title":  "Event komentar dibuat",
+    "description":  "Diterbitkan ketika pengguna berhasil membuat komentar pada puisi yang dipublikasikan.",
+    "type":  "object",
+    "required":  [
+                     "comment_id",
+                     "poem_id",
+                     "user_id",
+                     "content",
+                     "created_at"
+                 ],
+    "properties":  {
+                       "comment_id":  {
+                                          "type":  "string",
+                                          "format":  "uuid"
+                                      },
+                       "poem_id":  {
+                                       "type":  "string",
+                                       "minLength":  1
+                                   },
+                       "user_id":  {
+                                       "type":  "string",
+                                       "minLength":  1
+                                   },
+                       "content":  {
+                                       "type":  "string",
+                                       "minLength":  1,
+                                       "maxLength":  1000
+                                   },
+                       "created_at":  {
+                                          "type":  "string",
+                                          "format":  "date-time"
+                                      }
+                   },
+    "additionalProperties":  false,
+    "examples":  [
+                     {
+                         "comment_id":  "550e8400-e29b-41d4-a716-446655440001",
+                         "poem_id":  "sample-value",
+                         "user_id":  "sample-value",
+                         "content":  "sample-value",
+                         "created_at":  "2026-11-19T08:30:00Z"
+                     }
+                 ]
 }

@@ -1,4 +1,4 @@
-﻿{
+{
     "$schema":  "https://json-schema.org/draft/2020-12/schema",
     "$id":  "https://puisiapp.example/schema/poem.themes.extracted.v1.json",
     "title":  "Event tema puisi diekstraksi",
@@ -30,5 +30,13 @@
                                       "type":  "array"
                                   }
                    },
-    "additionalProperties":  false
+    "additionalProperties":  false,
+    "examples":  [
+                     {
+                         "poem_id":  "sample-value",
+                         "themes":  [
+
+                                    ]
+                     }
+                 ]
 }

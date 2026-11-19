@@ -1,4 +1,4 @@
-﻿{
+{
     "$schema":  "https://json-schema.org/draft/2020-12/schema",
     "$id":  "https://puisiapp.example/schema/poem.hidden.v1.json",
     "title":  "Event puisi disembunyikan",
@@ -18,5 +18,11 @@
                                       "type":  "string"
                                   }
                    },
-    "additionalProperties":  false
+    "additionalProperties":  false,
+    "examples":  [
+                     {
+                         "reason":  "sample-value",
+                         "hidden_at":  "2026-11-19T08:30:00Z"
+                     }
+                 ]
 }

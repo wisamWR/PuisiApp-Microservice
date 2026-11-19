@@ -1,4 +1,4 @@
-﻿{
+{
     "$schema":  "https://json-schema.org/draft/2020-12/schema",
     "$id":  "https://puisiapp.example/schema/poem.processing.completed.v1.json",
     "title":  "Event pemrosesan puisi selesai",
@@ -23,5 +23,12 @@
                                       "type":  "string"
                                   }
                    },
-    "additionalProperties":  false
+    "additionalProperties":  false,
+    "examples":  [
+                     {
+                         "poem_id":  "sample-value",
+                         "completed_at":  "2026-11-19T08:30:00Z",
+                         "status":  "COMPLETED"
+                     }
+                 ]
 }

@@ -1,15 +1,46 @@
-﻿{
+﻿
+{
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://puisiapp.example/schema/events/case.opened.v1.json",
   "title": "Moderation Case Opened Event",
   "type": "object",
   "additionalProperties": false,
-  "required": ["case_id", "report_id", "poem_id", "status", "opened_at"],
+  "required": [
+    "case_id",
+    "report_id",
+    "poem_id",
+    "status",
+    "opened_at"
+  ],
   "properties": {
-    "case_id": { "type": "string", "format": "uuid" },
-    "report_id": { "type": "string", "format": "uuid" },
-    "poem_id": { "type": "string", "minLength": 1 },
-    "status": { "type": "string", "const": "OPEN" },
-    "opened_at": { "type": "string", "format": "date-time" }
-  }
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "report_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "poem_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "const": "OPEN"
+    },
+    "opened_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "examples": [
+    {
+      "case_id": "550e8400-e29b-41d4-a716-446655440001",
+      "report_id": "550e8400-e29b-41d4-a716-446655440002",
+      "poem_id": "poem-001",
+      "status": "OPEN",
+      "opened_at": "2026-11-19T08:00:00Z"
+    }
+  ]
 }

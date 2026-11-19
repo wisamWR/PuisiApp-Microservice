@@ -1,4 +1,4 @@
-﻿{
+{
     "$schema":  "https://json-schema.org/draft/2020-12/schema",
     "$id":  "https://puisiapp.example/schema/user.profile.updated.v1.json",
     "title":  "Event profil pengguna diperbarui",
@@ -19,5 +19,11 @@
                                    "type":  "string"
                                }
                    },
-    "additionalProperties":  false
+    "additionalProperties":  false,
+    "examples":  [
+                     {
+                         "display_name":  "sample-value",
+                         "bio":  "sample-value"
+                     }
+                 ]
 }

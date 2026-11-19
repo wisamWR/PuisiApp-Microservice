@@ -1,4 +1,4 @@
-﻿{
+{
     "$schema":  "https://json-schema.org/draft/2020-12/schema",
     "$id":  "https://puisiapp.example/schema/authorship.recorded.v1.json",
     "title":  "Event catatan keaslian direkam",
@@ -28,5 +28,13 @@
                                             "pattern":  "^[a-fA-F0-9]{64}$"
                                         }
                    },
-    "additionalProperties":  false
+    "additionalProperties":  false,
+    "examples":  [
+                     {
+                         "poem_id":  "sample-value",
+                         "version":  1,
+                         "content_hash":  "sample-value",
+                         "algorithm":  "SHA-256"
+                     }
+                 ]
 }
