@@ -61,7 +61,11 @@ const server = http.createServer(async (req, res) => {
   // Ubah peran (T1.7): hanya admin. Gateway sudah menolak non-admin; layanan memeriksa lagi.
   const cocokPeran = url.pathname.match(/^\/api\/admin\/users\/([^/]+)\/role$/);
   if (cocokPeran && req.method === 'PUT') {
-    if (req.headers['x-user-role'] !== 'admin') return kirimJson(res, 403, { error: 'forbidden' });
+    if (req.headers['x-user-role'] !== 'admin') {
+      // Catat peran yang diterima untuk diagnosis (tanpa token atau kata sandi).
+      log.warn('ubah peran ditolak', { peran_diterima: req.headers['x-user-role'] ?? null, id_pemanggil: req.headers['x-user-id'] ?? null });
+      return kirimJson(res, 403, { error: 'forbidden' });
+    }
     if (!/^[0-9a-f-]{36}$/i.test(cocokPeran[1])) return kirimJson(res, 404, { error: 'akun tidak ditemukan' });
     let body;
     try {
