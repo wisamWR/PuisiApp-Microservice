@@ -55,3 +55,12 @@ test('role di luar daftar tidak bisa diterbitkan', async () => {
   const p = await buatPenerbitToken({ ...k, ...cfg });
   await assert.rejects(() => p.sign({ sub: 'x', username: 'x', role: 'superuser' }), /role tidak dikenal/);
 });
+
+test('semua peran dari kontrak (reader, writer, moderator, admin) bisa diterbitkan', async () => {
+  const k = await kunci();
+  const p = await buatPenerbitToken({ ...k, ...cfg });
+  for (const role of ['reader', 'writer', 'moderator', 'admin']) {
+    const token = await p.sign({ sub: 'x', username: 'x', role });
+    assert.equal((await p.verify(token)).role, role);
+  }
+});

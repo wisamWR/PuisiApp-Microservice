@@ -10,7 +10,8 @@ import { SignJWT, jwtVerify, importPKCS8, importSPKI } from 'jose';
 
 export const ALGORITMA = 'RS256';
 export const MASA_BERLAKU_BAWAAN = '15m';
-export const ROLE_VALID = ['writer', 'moderator', 'admin'];
+// Sesuai contracts/events/user.role.changed (enum peran).
+export const ROLE_VALID = ['reader', 'writer', 'moderator', 'admin'];
 
 /** @returns {Promise<{ sign: Function, verify: Function }>} */
 export async function buatPenerbitToken({ privateKeyPem, publicKeyPem, issuer, audience, masaBerlaku = MASA_BERLAKU_BAWAAN }) {
