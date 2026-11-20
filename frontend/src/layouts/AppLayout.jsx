@@ -58,7 +58,7 @@ export default function AppLayout() {
           <span className="topbar-caption">Ruang ekspresi dan apresiasi</span>
           {user ? (
             <>
-              <span className="topbar-user">Halo, {user.username}</span>
+              <NavLink to="/profile" className="topbar-user">Halo, {user.username}</NavLink>
               <Button variant="outline" onClick={keluar}>Keluar</Button>
             </>
           ) : (

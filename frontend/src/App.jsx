@@ -7,6 +7,7 @@ import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import './App.css'
 import PoemDetailPage from './pages/PoemDetailPage'
+import ProfilePage from './pages/ProfilePage'
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
             <Route path="search" element={<PlaceholderPage pageKey="search" />} />
             <Route path="themes" element={<PlaceholderPage pageKey="themes" />} />
             <Route path="notifications" element={<PlaceholderPage pageKey="notifications" />} />
+            <Route path="profile" element={<ProfilePage />} />
             <Route path="login" element={<LoginPage />} />
             <Route path="register" element={<RegisterPage />} />
             <Route path="moderation" element={<PlaceholderPage pageKey="moderation" />} />
