@@ -45,14 +45,9 @@ export async function ubahProfil(pool, id, { display_name, bio }, ctx = {}) {
       EVENT_PROFIL,
       baru.id,
       baru.version,
-      {
-        id: baru.id,
-        username: baru.username,
-        display_name: baru.display_name,
-        bio: baru.bio,
-        version: baru.version,
-        updated_at: new Date(baru.updated_at).toISOString(),
-      },
+      // Payload sesuai kontrak user.profile.updated (contracts/events): hanya display_name dan bio.
+      // Identitas ada di aggregate_id, versi di aggregate_version.
+      { display_name: baru.display_name, bio: baru.bio },
       { correlationId: ctx.correlationId },
     );
     return { hasil: baru, event };
