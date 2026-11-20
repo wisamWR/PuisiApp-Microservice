@@ -1,0 +1,25 @@
+{
+    "$schema":  "https://json-schema.org/draft/2020-12/schema",
+    "$id":  "https://puisiapp.example/schema/user.deleted.v1.json",
+    "title":  "Event akun pengguna dihapus",
+    "description":  "Diterbitkan ketika permintaan penghapusan akun diterima.",
+    "type":  "object",
+    "required":  [
+                     "deletion_status"
+                 ],
+    "properties":  {
+                       "deletion_status":  {
+                                               "type":  "string",
+                                               "enum":  [
+                                                            "pending",
+                                                            "completed"
+                                                        ]
+                                           }
+                   },
+    "additionalProperties":  false,
+    "examples":  [
+                     {
+                         "deletion_status":  "pending"
+                     }
+                 ]
+}

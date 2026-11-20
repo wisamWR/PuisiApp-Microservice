@@ -1,0 +1,38 @@
+{
+    "$schema":  "https://json-schema.org/draft/2020-12/schema",
+    "$id":  "https://puisiapp.example/schema/user.role.changed.v1.json",
+    "title":  "Event peran pengguna berubah",
+    "description":  "Diterbitkan ketika admin mengubah peran pengguna.",
+    "type":  "object",
+    "required":  [
+                     "old_role",
+                     "new_role"
+                 ],
+    "properties":  {
+                       "old_role":  {
+                                        "type":  "string",
+                                        "enum":  [
+                                                     "reader",
+                                                     "writer",
+                                                     "moderator",
+                                                     "admin"
+                                                 ]
+                                    },
+                       "new_role":  {
+                                        "type":  "string",
+                                        "enum":  [
+                                                     "reader",
+                                                     "writer",
+                                                     "moderator",
+                                                     "admin"
+                                                 ]
+                                    }
+                   },
+    "additionalProperties":  false,
+    "examples":  [
+                     {
+                         "old_role":  "reader",
+                         "new_role":  "reader"
+                     }
+                 ]
+}

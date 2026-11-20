@@ -1,26 +1,29 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://puisiapp.example/schema/events/user.profile.updated.v1.json",
-  "title": "Payload user.profile.updated v1",
-  "description": "Profil publik pengguna berubah (nama tampil atau bio). Produsen: profile-service (T1.5), lewat outbox. Exchange: identity.events. aggregate_id = id pengguna, aggregate_version = version profil. Konsumen: poem-query (kartu puisi), author-profile (T3.3). Tambah field boleh; konsumen mengabaikan field yang tidak dikenal.",
-  "type": "object",
-  "required": ["id", "username", "display_name", "bio", "version", "updated_at"],
-  "properties": {
-    "id": { "type": "string", "format": "uuid" },
-    "username": { "type": "string", "minLength": 3, "maxLength": 30 },
-    "display_name": { "type": "string", "minLength": 1, "maxLength": 50 },
-    "bio": { "type": "string", "maxLength": 300 },
-    "version": { "type": "integer", "minimum": 1 },
-    "updated_at": { "type": "string", "format": "date-time" }
-  },
-  "examples": [
-    {
-      "id": "1d0a0000-0000-4000-8000-000000000001",
-      "username": "azka_01",
-      "display_name": "Azka",
-      "bio": "Menulis tentang hujan.",
-      "version": 2,
-      "updated_at": "2026-12-02T09:00:00Z"
-    }
-  ]
+    "$schema":  "https://json-schema.org/draft/2020-12/schema",
+    "$id":  "https://puisiapp.example/schema/user.profile.updated.v1.json",
+    "title":  "Event profil pengguna diperbarui",
+    "description":  "Diterbitkan ketika profil pengguna berhasil diperbarui.",
+    "type":  "object",
+    "required":  [
+                     "display_name",
+                     "bio"
+                 ],
+    "properties":  {
+                       "display_name":  {
+                                            "maxLength":  100,
+                                            "minLength":  1,
+                                            "type":  "string"
+                                        },
+                       "bio":  {
+                                   "maxLength":  500,
+                                   "type":  "string"
+                               }
+                   },
+    "additionalProperties":  false,
+    "examples":  [
+                     {
+                         "display_name":  "sample-value",
+                         "bio":  "sample-value"
+                     }
+                 ]
 }
