@@ -1,11 +1,29 @@
 const API_BASE_URL = '/api'
 
 export class ApiError extends Error {
-  constructor(message, status, data = null) {
+  constructor(message, status, data = null, retryAfter = null) {
     super(message)
     this.name = 'ApiError'
     this.status = status
     this.data = data
+    // Detik sampai boleh mencoba lagi (dari header Retry-After, untuk 429).
+    this.retryAfter = retryAfter
+  }
+}
+
+// Endpoint auth tidak memicu refresh: 401 di sana berarti kredensial salah, bukan sesi kedaluwarsa.
+const JALUR_AUTH = ['/auth/login', '/auth/register', '/auth/refresh', '/auth/logout']
+
+async function refreshSesi() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { Accept: 'application/json' },
+    })
+    return res.ok
+  } catch {
+    return false
   }
 }
 
@@ -61,11 +79,12 @@ export async function apiRequest(path, options = {}) {
     throw new TypeError('API path harus berupa string yang valid.')
   }
 
+  const { sudahCobaRefresh = false, ...fetchOptions } = options
   const normalizedPath = path.startsWith('/') ? path : `/${path}`
   const url = `${API_BASE_URL}${normalizedPath}`
 
-  const headers = new Headers(options.headers || {})
-  let body = options.body
+  const headers = new Headers(fetchOptions.headers || {})
+  let body = fetchOptions.body
 
   if (
     body !== undefined &&
@@ -85,13 +104,21 @@ export async function apiRequest(path, options = {}) {
   }
 
   const response = await fetch(url, {
-    ...options,
+    ...fetchOptions,
     headers,
     body,
     credentials: 'include',
   })
 
   const data = await parseResponse(response)
+
+  // Sesi kedaluwarsa: perbarui lewat refresh token sekali, lalu ulangi request.
+  if (response.status === 401 && !sudahCobaRefresh && !JALUR_AUTH.includes(normalizedPath)) {
+    const diperbarui = await refreshSesi()
+    if (diperbarui) {
+      return apiRequest(path, { ...fetchOptions, sudahCobaRefresh: true })
+    }
+  }
 
   if (response.status === 401) {
     const currentPath = window.location.pathname
@@ -111,10 +138,12 @@ export async function apiRequest(path, options = {}) {
   }
 
   if (!response.ok) {
+    const retryAfter = Number(response.headers.get('Retry-After')) || null
     throw new ApiError(
       errorMessage(data, `Request gagal (${response.status}).`),
       response.status,
       data,
+      retryAfter,
     )
   }
 

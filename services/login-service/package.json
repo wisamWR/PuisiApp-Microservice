@@ -1,0 +1,17 @@
+{
+  "name": "login-service",
+  "version": "0.1.0",
+  "description": "T1.2: konsumsi user.registered, POST /api/auth/login (Argon2id, penundaan 5 gagal per 15 menit), terbitkan token lewat token-service.",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "@node-rs/argon2": "2.2.2",
+    "@puisiapp/events": "file:../../libs/node",
+    "pg": "8.23.1"
+  }
+}
