@@ -4,10 +4,13 @@
   "description": "T1.1: registrasi akun (POST /api/auth/register) dan event user.registered lewat outbox.",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "start": "node src/index.js",
-    "test": "node --test test/*.test.js"
+    "test": "node --test test/*.test.js",
+    "seed-admin": "node scripts/seed-admin.js"
   },
   "dependencies": {
     "@node-rs/argon2": "2.2.2",

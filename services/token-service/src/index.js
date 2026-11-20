@@ -107,6 +107,17 @@ const server = http.createServer(async (req, res) => {
     });
   }
 
+  // Cek peran admin untuk gateway (T1.7). 200 jika admin, 403 jika bukan, 401 jika tidak valid.
+  if (req.method === 'GET' && url.pathname === '/internal/auth/admin') {
+    const token = ambilCookie(req.headers.cookie, 'access_token');
+    const klaim = token ? await penerbit.verify(token) : null;
+    if (!klaim || (await daftarCabut.sudahDicabut(klaim.jti))) {
+      return kirimJson(res, 401, { error: 'unauthorized' });
+    }
+    if (klaim.role !== 'admin') return kirimJson(res, 403, { error: 'forbidden' });
+    return kirimJson(res, 200, undefined, { 'X-User-Id': klaim.sub, 'X-User-Role': klaim.role });
+  }
+
   // Penerbitan token untuk login-service. Tidak diteruskan gateway.
   if (req.method === 'POST' && url.pathname === '/internal/tokens') {
     let body;

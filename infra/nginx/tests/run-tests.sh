@@ -41,4 +41,6 @@ curl -s -o /dev/null $G/api/feed/x; curl -s -o /dev/null $G/api/feed/x
 chk "feed 2 request dalam 3 detik -> 1 sampai layanan" "$(grep -c feed $T/hits-profile.log)" "1"
 sleep 4; curl -s -o /dev/null $G/api/feed/x
 chk "feed setelah 4 detik -> sampai lagi (total 2)" "$(grep -c feed $T/hits-profile.log)" "2"
+chk "ubah peran tanpa token -> 401 (T1.7)" "$(curl -s -o /dev/null -w '%{http_code}' -X PUT $G/api/admin/users/11111111-1111-1111-1111-111111111111/role -H 'Content-Type: application/json' -d '{"role":"admin"}')" "401"
+chk "ubah peran dengan token non-admin -> 403 (T1.7)" "$(curl -s -o /dev/null -w '%{http_code}' -X PUT -b 'access_token=abc' $G/api/admin/users/11111111-1111-1111-1111-111111111111/role -H 'Content-Type: application/json' -d '{"role":"admin"}')" "403"
 echo "----- RINGKASAN: lulus=$pass gagal=$fail"

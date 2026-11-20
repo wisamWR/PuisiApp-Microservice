@@ -16,3 +16,19 @@ export async function simpanKredensial(event, { tx }) {
     [p.id, p.username, p.password_hash, p.role ?? 'writer'],
   );
 }
+
+/**
+ * Konsumen user.role.changed (T1.7): perbarui peran di credentials.
+ * Login berikutnya memakai peran ini saat menerbitkan token. Idempoten lewat event_id.
+ */
+const PERAN_VALID = ['reader', 'writer', 'moderator', 'admin'];
+
+export async function ubahPeranKredensial(event, { tx }) {
+  const role = event.payload?.new_role;
+  if (!PERAN_VALID.includes(role)) return; // peran tidak dikenal: abaikan, jangan gagalkan konsumen
+  await tx.query(
+    'UPDATE credentials SET role = $2, updated_at = now() WHERE id = $1',
+    [event.aggregate_id, role],
+  );
+}
+

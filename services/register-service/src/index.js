@@ -10,6 +10,8 @@ import pg from 'pg';
 import { buatLogger, jalankanMigrasi } from '@puisiapp/events';
 import { validasiRegistrasi } from './validasi.js';
 import { daftarAkun, GalatDuplikat } from './daftar.js';
+import { ubahPeran } from './ubahPeran.js';
+import { validasiPeran } from './peran.js';
 
 const log = buatLogger();
 const folderIni = path.dirname(fileURLToPath(import.meta.url));
@@ -54,6 +56,24 @@ const server = http.createServer(async (req, res) => {
 
   if (req.method === 'GET' && url.pathname === '/health') {
     return kirimJson(res, 200, { status: 'ok' });
+  }
+
+  // Ubah peran (T1.7): hanya admin. Gateway sudah menolak non-admin; layanan memeriksa lagi.
+  const cocokPeran = url.pathname.match(/^\/api\/admin\/users\/([^/]+)\/role$/);
+  if (cocokPeran && req.method === 'PUT') {
+    if (req.headers['x-user-role'] !== 'admin') return kirimJson(res, 403, { error: 'forbidden' });
+    if (!/^[0-9a-f-]{36}$/i.test(cocokPeran[1])) return kirimJson(res, 404, { error: 'akun tidak ditemukan' });
+    let body;
+    try {
+      body = JSON.parse((await bacaBody(req)) || '{}');
+    } catch {
+      return kirimJson(res, 400, { error: 'JSON tidak valid' });
+    }
+    const v = validasiPeran(body);
+    if (!v.ok) return kirimJson(res, 400, { error: 'input tidak valid', details: v.errors });
+    const hasil = await ubahPeran(pool, cocokPeran[1], v.role, { correlationId: req.headers['x-request-id'] });
+    if (hasil.status === 'tidak_ada') return kirimJson(res, 404, { error: 'akun tidak ditemukan' });
+    return kirimJson(res, 200, hasil.akun);
   }
 
   if (req.method !== 'POST' || url.pathname !== '/api/auth/register') {
