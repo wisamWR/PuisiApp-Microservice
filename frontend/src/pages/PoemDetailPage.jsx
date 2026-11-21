@@ -1,12 +1,17 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useLocation, useParams } from 'react-router-dom'
 import EmotionFlowPanel from '../components/EmotionFlowPanel'
+import PuisiDiproses from '../components/PuisiDiproses'
 import { EmotionLabel, Loader } from '../components/UI'
 import { api } from '../lib/api'
 import { SAMPLE_MOOD_POEMS } from '../lib/moodData'
 
 export default function PoemDetailPage() {
   const { id } = useParams()
+  // T2.6 (kelompok 2): setelah Tulis Puisi menerima 202, data puisi dikirim lewat
+  // state router dan ditampilkan sebagai "sedang diproses" (read-your-writes).
+  const puisiDiproses = useLocation().state?.puisiDiproses
+  const baruDikirim = puisiDiproses?.poem_id === id ? puisiDiproses : null
   const [emotionData, setEmotionData] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -56,6 +61,8 @@ export default function PoemDetailPage() {
             : 'Membaca karya dan menelusuri alur suasana puisi.'}
         </p>
       </div>
+
+      <PuisiDiproses puisi={baruDikirim} />
 
       <article className="poem-detail-card">
         <div className="poem-detail-topbar">

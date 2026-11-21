@@ -1,0 +1,314 @@
+openapi: 3.1.0
+info:
+  title: poem-query-service
+  version: 1.0.0
+  description: |
+    Sisi baca puisi (T2.3, kelompok 2 Penulisan). Read model dibangun dari
+    event (CQRS): teks dan versi dari poem-create / poem-edit, status dari
+    publication-service, gambar dari image-render-worker, kata kunci, tema,
+    emosi, dan originalitas dari worker analisis, skor dari ranking-worker,
+    nama penulis dari kelompok 1. Tidak ada panggilan sinkron ke layanan lain.
+
+    Data muncul bertahap (eventual consistency): field analisis bernilai
+    `null` atau array kosong sampai worker terkait selesai.
+
+    Visibilitas:
+    - `PUBLISHED`: semua pengguna yang login. Pengguna lain melihat versi yang
+      sedang tampil (`version`), walaupun penulis sedang merevisi.
+    - `PROCESSING`, `REPROCESSING`, `HELD`, `HIDDEN`: hanya penulis (dan peran
+      moderator / admin). Pengguna lain mendapat 404, bukan 403, supaya
+      keberadaan puisi tidak bocor.
+    - `DELETED`: 404 untuk semua orang.
+
+    Mock server (contract-first, T3.1):
+
+        npx @stoplight/prism-cli mock contracts/openapi/poem-query.yaml --port 4011
+servers:
+  - url: http://localhost:8080
+    description: api-gateway lokal (butuh cookie sesi)
+paths:
+  /api/poems/{id}:
+    get:
+      operationId: detailPuisi
+      summary: Detail satu puisi
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Detail puisi sesuai hak lihat pengguna
+          headers:
+            X-Cache:
+              description: HIT bila diambil dari cache Redis, MISS bila dari basis data
+              schema: { type: string, enum: [HIT, MISS] }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DetailPuisi' }
+              examples:
+                terbit:
+                  summary: Puisi terbit, semua analisis sudah selesai
+                  value:
+                    poem_id: 0b7d6f0e-4a8b-4a52-9d0b-3f4f0e9b2a10
+                    version: 1
+                    latest_version: 1
+                    status: PUBLISHED
+                    is_owner: false
+                    author: { id: u-0042, username: rinai, display_name: Rinai Senja }
+                    title: Jendela yang Basah
+                    body: "sore turun tanpa permisi\nhujan mengetuk kaca\n\nseperti nama yang tak jadi kupanggil\nkusimpan hangatmu di saku jaket"
+                    quote: { stanza: 0, text: "sore turun tanpa permisi\nhujan mengetuk kaca" }
+                    template_id: latar2
+                    category: lirik
+                    tags: [hujan, rindu]
+                    image:
+                      url: http://localhost:9000/puisi-images/poems/0b7d6f0e-4a8b-4a52-9d0b-3f4f0e9b2a10/v1.jpg
+                      width: 1080
+                      height: 1080
+                    analysis:
+                      keywords: [hujan, kaca, nama]
+                      themes: [rindu, alam]
+                      emotion:
+                        dominant: sedih
+                        lines:
+                          - { line_number: 1, label: sedih, score: 0.71 }
+                          - { line_number: 2, label: sedih, score: 0.64 }
+                          - { line_number: 4, label: cinta, score: 0.58 }
+                          - { line_number: 5, label: cinta, score: 0.66 }
+                      originality: { level: original, score: 0.04 }
+                    score: { value: 12, vote_count: 15 }
+                    submitted_at: '2026-11-17T03:00:00.120Z'
+                    published_at: '2026-11-17T03:00:21.400Z'
+                    updated_at: '2026-11-17T03:05:00.000Z'
+                diproses:
+                  summary: Dilihat penulisnya sesaat setelah dikirim
+                  value:
+                    poem_id: 0b7d6f0e-4a8b-4a52-9d0b-3f4f0e9b2a10
+                    version: 1
+                    latest_version: 1
+                    status: PROCESSING
+                    is_owner: true
+                    author: { id: u-0042, username: null, display_name: null }
+                    title: Jendela yang Basah
+                    body: "sore turun tanpa permisi\nhujan mengetuk kaca"
+                    quote: { stanza: 0, text: "sore turun tanpa permisi\nhujan mengetuk kaca" }
+                    template_id: latar2
+                    category: null
+                    tags: []
+                    image: null
+                    analysis:
+                      keywords: []
+                      themes: []
+                      emotion: null
+                      originality: null
+                    score: { value: 0, vote_count: 0 }
+                    submitted_at: '2026-11-17T03:00:00.120Z'
+                    published_at: null
+                    updated_at: '2026-11-17T03:00:00.300Z'
+        '401':
+          description: Belum login (dari gateway)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Galat' }
+        '404':
+          description: Puisi tidak ada, sudah dihapus, atau tidak boleh dilihat pengguna ini
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Galat' }
+              example: { error: tidak_ditemukan, message: Puisi tidak ditemukan }
+
+  /api/poems:
+    get:
+      operationId: daftarPuisiPenulis
+      summary: Daftar puisi satu penulis
+      description: |
+        Penulis yang melihat daftarnya sendiri mendapat semua puisi (kecuali
+        DELETED) beserta statusnya. Pengguna lain hanya mendapat puisi
+        PUBLISHED. Urut dari yang terbaru. Halaman "Puisi Saya" (T2.8) memakai
+        endpoint terpisah `GET /api/me/poems`.
+      parameters:
+        - name: author
+          in: query
+          required: true
+          description: ID penulis (klaim `sub` token, sama dengan `author.id`)
+          schema: { type: string, minLength: 1, maxLength: 64 }
+        - name: page
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: size
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+      responses:
+        '200':
+          description: Satu halaman puisi
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/HalamanPuisi' }
+              example:
+                items:
+                  - poem_id: 0b7d6f0e-4a8b-4a52-9d0b-3f4f0e9b2a10
+                    version: 1
+                    status: PUBLISHED
+                    title: Jendela yang Basah
+                    quote_text: "sore turun tanpa permisi\nhujan mengetuk kaca"
+                    image_url: http://localhost:9000/puisi-images/poems/0b7d6f0e-4a8b-4a52-9d0b-3f4f0e9b2a10/v1.jpg
+                    themes: [rindu, alam]
+                    originality_level: original
+                    score: { value: 12, vote_count: 15 }
+                    submitted_at: '2026-11-17T03:00:00.120Z'
+                    published_at: '2026-11-17T03:00:21.400Z'
+                page: 1
+                size: 20
+                total: 1
+        '400':
+          description: Parameter author kosong atau page / size tidak valid
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Galat' }
+        '401':
+          description: Belum login (dari gateway)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Galat' }
+
+components:
+  schemas:
+    Status:
+      type: string
+      enum: [PROCESSING, REPROCESSING, PUBLISHED, HELD, HIDDEN]
+      description: |
+        REPROCESSING = puisi terbit yang revisinya sedang dinilai; versi lama
+        tetap tampil untuk pengguna lain. Hanya penulis yang melihat status
+        selain PUBLISHED.
+    Penulis:
+      type: object
+      required: [id, username, display_name]
+      properties:
+        id: { type: string }
+        username:
+          type: [string, 'null']
+          description: null sampai event user.registered diterima
+        display_name: { type: [string, 'null'] }
+    Skor:
+      type: object
+      required: [value, vote_count]
+      properties:
+        value: { type: integer, description: 'Skor dari poem.score.updated (kelompok 9)' }
+        vote_count: { type: integer, minimum: 0 }
+    DetailPuisi:
+      type: object
+      required: [poem_id, version, latest_version, status, is_owner, author, title, body, quote, template_id,
+        category, tags, image, analysis, score, submitted_at, published_at, updated_at]
+      properties:
+        poem_id: { type: string, format: uuid }
+        version:
+          type: integer
+          minimum: 1
+          description: Versi yang ditampilkan. Untuk penulis = versi terbaru; untuk pengguna lain = versi terbit.
+        latest_version: { type: integer, minimum: 1 }
+        status: { $ref: '#/components/schemas/Status' }
+        is_owner: { type: boolean }
+        author: { $ref: '#/components/schemas/Penulis' }
+        title: { type: string }
+        body: { type: string, description: 'Baris dipisah \n, bait dipisah baris kosong' }
+        quote:
+          type: object
+          required: [stanza, text]
+          properties:
+            stanza: { type: integer, minimum: 0 }
+            text: { type: string }
+        template_id: { type: string }
+        category: { type: [string, 'null'] }
+        tags:
+          type: array
+          description: Kata kunci yang diisi penulis saat mengirim
+          items: { type: string }
+        image:
+          description: Gambar kutipan final versi ini; null sampai poem.image.rendered tiba
+          oneOf:
+            - type: 'null'
+            - type: object
+              required: [url, width, height]
+              properties:
+                url: { type: string, format: uri }
+                width: { type: integer }
+                height: { type: integer }
+        analysis:
+          type: object
+          required: [keywords, themes, emotion, originality]
+          properties:
+            keywords:
+              type: array
+              description: Kata kunci otomatis TF-IDF (kelompok 6)
+              items: { type: string }
+            themes:
+              type: array
+              items: { type: string, enum: [rindu, kesepian, alam, perjuangan, keluarga, religius, lainnya] }
+            emotion:
+              description: Emosi per baris (kelompok 5); null sampai dianalisis
+              oneOf:
+                - type: 'null'
+                - type: object
+                  required: [dominant, lines]
+                  properties:
+                    dominant:
+                      type: string
+                      enum: [senang, sedih, cinta, marah, takut]
+                      description: Label dengan total skor tertinggi dari semua baris
+                    lines:
+                      type: array
+                      items:
+                        type: object
+                        required: [line_number, label, score]
+                        properties:
+                          line_number: { type: integer, minimum: 1 }
+                          label: { type: string, enum: [senang, sedih, cinta, marah, takut] }
+                          score: { type: number, minimum: 0, maximum: 1 }
+            originality:
+              description: Level originalitas (kelompok 7); null sampai dinilai
+              oneOf:
+                - type: 'null'
+                - type: object
+                  required: [level, score]
+                  properties:
+                    level: { type: string, enum: [original, inspired, similar, suspected_plagiarism] }
+                    score: { type: number, minimum: 0, maximum: 1 }
+        score: { $ref: '#/components/schemas/Skor' }
+        submitted_at: { type: string, format: date-time, description: Waktu versi yang ditampilkan dikirim }
+        published_at: { type: [string, 'null'], format: date-time }
+        updated_at: { type: string, format: date-time }
+    RingkasanPuisi:
+      type: object
+      required: [poem_id, version, status, title, quote_text, image_url, themes, originality_level, score,
+        submitted_at, published_at]
+      properties:
+        poem_id: { type: string, format: uuid }
+        version: { type: integer, minimum: 1 }
+        status: { $ref: '#/components/schemas/Status' }
+        title: { type: string }
+        quote_text: { type: string }
+        image_url: { type: [string, 'null'], format: uri }
+        themes: { type: array, items: { type: string } }
+        originality_level: { type: [string, 'null'] }
+        score: { $ref: '#/components/schemas/Skor' }
+        submitted_at: { type: string, format: date-time }
+        published_at: { type: [string, 'null'], format: date-time }
+    HalamanPuisi:
+      type: object
+      required: [items, page, size, total]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/RingkasanPuisi' }
+        page: { type: integer, minimum: 1 }
+        size: { type: integer, minimum: 1 }
+        total: { type: integer, minimum: 0 }
+    Galat:
+      type: object
+      required: [error, message]
+      properties:
+        error: { type: string }
+        message: { type: string }

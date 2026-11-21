@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://puisiapp.example/schema/events/poem.deleted.v1.json",
+  "title": "Payload poem.deleted v1",
+  "description": "Puisi dihapus lunak (soft delete) oleh pemiliknya. Produsen: poem-delete-service (T2.4). Exchange: poem.events. aggregate_id = poem_id, aggregate_version = last_version. ATURAN KONSUMEN: poem.deleted bersifat FINAL. Proses tanpa membandingkan aggregate_version dengan versi tersimpan, karena penghapusan bisa berbalapan dengan revisi yang belum tercatat di poem-delete-service. Jejak Keaslian, snapshot bukti, dan log audit tetap disimpan (laporan 7.5). Konsumen: poem-edit, publication, poem-query, mood-feed, theme-feed, vote, comment, search.",
+  "type": "object",
+  "required": ["poem_id", "author_id", "last_version", "deleted_at"],
+  "properties": {
+    "poem_id": { "type": "string", "format": "uuid" },
+    "author_id": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "last_version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Versi terakhir yang diketahui poem-delete-service saat dihapus"
+    },
+    "deleted_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "poem_id": "0b7d6f0e-4a8b-4a52-9d0b-3f4f0e9b2a10",
+      "author_id": "u-0042",
+      "last_version": 2,
+      "deleted_at": "2026-12-05T10:00:00.000Z"
+    }
+  ]
+}

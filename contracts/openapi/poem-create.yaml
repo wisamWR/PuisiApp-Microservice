@@ -1,0 +1,144 @@
+openapi: 3.1.0
+info:
+  title: poem-create-service
+  version: 1.0.0
+  description: |
+    Pengajuan puisi baru (T2.1, kelompok 2 Penulisan). Layanan menyimpan puisi
+    versi 1 dan event `poem.submitted` dalam satu transaksi (Transactional
+    Outbox), lalu langsung membalas 202. Analisis, gambar kutipan, dan
+    pengecekan plagiarisme berjalan asinkron.
+
+    Identitas penulis diambil dari header `X-User-Id` yang diisi gateway
+    setelah verifikasi sesi, bukan dari body.
+servers:
+  - url: http://localhost:8080
+    description: api-gateway lokal
+paths:
+  /api/poems:
+    post:
+      operationId: ajukanPuisi
+      summary: Ajukan puisi baru
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: |
+            Dibuat klien sekali per draf. Permintaan ulang dengan key dan isi
+            yang sama mengembalikan jawaban yang sama tanpa membuat puisi baru.
+          schema:
+            type: string
+            pattern: '^[A-Za-z0-9_-]{8,64}$'
+        - name: X-Request-Id
+          in: header
+          required: false
+          description: Diisi gateway; menjadi correlation_id event.
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PengajuanPuisi' }
+            example:
+              title: Jendela yang Basah
+              body: "sore turun tanpa permisi\nhujan mengetuk kaca\n\nseperti nama yang tak jadi kupanggil\nkusimpan hangatmu di saku jaket"
+              quote_stanza: 0
+              template_id: latar2
+              category: lirik
+              keywords: [hujan, rindu]
+      responses:
+        '202':
+          description: |
+            Puisi diterima dan sedang diproses. Header `Idempotent-Replayed: true`
+            menandai jawaban ulang untuk Idempotency-Key yang sama.
+          headers:
+            Location:
+              schema: { type: string, example: /api/poems/0b7d6f0e-4a8b-4a52-9d0b-3f4f0e9b2a10 }
+            Idempotent-Replayed:
+              schema: { type: string, enum: ['true'] }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PuisiDiterima' }
+        '400':
+          description: Validasi gagal atau Idempotency-Key tidak ada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GalatValidasi' }
+        '401':
+          description: Belum login
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Galat' }
+        '409':
+          description: Idempotency-Key sudah dipakai untuk isi puisi yang berbeda
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Galat' }
+        '413':
+          description: Body lebih dari 64 KB
+        '415':
+          description: Content-Type bukan application/json
+components:
+  schemas:
+    PengajuanPuisi:
+      type: object
+      required: [title, body, quote_stanza, template_id]
+      additionalProperties: false
+      properties:
+        title:
+          type: string
+          description: 1 sampai 150 karakter setelah HTML dibuang dan spasi dirapikan
+        body:
+          type: string
+          description: |
+            1 sampai 8.000 karakter setelah HTML dibuang. Baris dipisah newline;
+            bait dipisah satu baris kosong. Minimal satu baris berisi.
+        quote_stanza:
+          type: integer
+          minimum: 0
+          description: Indeks bait kutipan (berbasis 0). Bait terpilih maksimal 280 karakter.
+        template_id:
+          type: string
+          description: Salah satu template sah (bawaan latar1, latar2, latar3)
+        category:
+          type: [string, 'null']
+          maxLength: 60
+        keywords:
+          type: array
+          maxItems: 10
+          items: { type: string, maxLength: 40 }
+    PuisiDiterima:
+      type: object
+      required: [poem_id, version, status, author_id, title, body, quote_stanza, quote_text, template_id, submitted_at]
+      properties:
+        poem_id: { type: string, format: uuid }
+        version: { type: integer, const: 1 }
+        status: { type: string, const: PROCESSING }
+        author_id: { type: string }
+        title: { type: string }
+        body: { type: string }
+        quote_stanza: { type: integer }
+        quote_text: { type: string }
+        template_id: { type: string }
+        category: { type: [string, 'null'] }
+        keywords: { type: array, items: { type: string } }
+        submitted_at: { type: string, format: date-time }
+    Galat:
+      type: object
+      required: [error, message]
+      properties:
+        error: { type: string, example: unauthorized }
+        message: { type: string }
+    GalatValidasi:
+      type: object
+      required: [error, message, rincian]
+      properties:
+        error: { type: string, const: validasi }
+        message: { type: string, example: Isi puisi tidak valid }
+        rincian:
+          type: array
+          items:
+            type: object
+            required: [field, pesan]
+            properties:
+              field: { type: string, example: title }
+              pesan: { type: string, example: Judul maksimal 150 karakter }
