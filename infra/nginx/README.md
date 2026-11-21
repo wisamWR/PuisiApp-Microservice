@@ -8,7 +8,7 @@ PJ: @MdAzka.
 | --- | --- |
 | `nginx.conf` | Pengaturan umum, zona rate limit (login 10 per menit per IP), zona cache (auth 30 detik, feed 3 detik), resolver DNS Docker |
 | `docker-entrypoint.sh` | Merender alamat layanan dari variabel lingkungan, lalu menjalankan nginx |
-| `templates/vars.conf.template` | Variabel `$up_*` berisi alamat layanan (dari `.env`) |
+| `templates/vars.d/<domain>.conf.template` | Variabel `$up_*` berisi alamat layanan (dari `.env`), satu berkas per domain. Digabung menjadi `/etc/nginx/vars.conf` saat start |
 | `conf.d/gateway.conf` | Server utama: verifikasi token (`/_auth`), `/health`, respons 401, rute frontend |
 | `conf.d/stub-auth.conf` | Stub verifikasi token untuk pengembangan. Hapus setelah token-service (T1.2) dipakai |
 | `routes/<domain>.conf` | Lokasi per domain. Setiap kelompok menambah berkasnya sendiri |
@@ -45,6 +45,15 @@ auth_request_set $user_role $upstream_http_x_user_role;
 error_page 401 = @unauthorized;
 ```
 Jangan menulis `proxy_set_header X-User-Id` sendiri di lokasi, karena header akan terkirim dua kali.
+
+## Menambah layanan baru ke gateway
+Setiap kelompok hanya menyentuh berkas domainnya sendiri, sehingga branch kelompok tidak saling bentrok (T0.11):
+
+1. `templates/vars.d/<domain>.conf.template`: satu baris per layanan, `set $up_<layanan> "${<LAYANAN>_HOST}";`. Nama variabel lingkungan wajib berakhiran `_HOST`.
+2. `routes/<domain>.conf`: blok `location` yang memakai `$up_<layanan>`.
+3. `.env.example`: `<LAYANAN>_HOST=<nama-container>:8080` di blok API gateway.
+
+`docker-entrypoint.sh` tidak perlu diubah: daftar variabel untuk `envsubst` dibaca otomatis dari semua berkas `vars.d`.
 
 ## Variabel lingkungan
 Lihat blok "API gateway (T0.4)" di `.env.example`. Nama variabel adalah `FRONTEND_HOST`, `REGISTER_HOST`, `LOGIN_HOST`, `PROFILE_HOST`, `RECOVERY_HOST`, dan `AUTH_HOST`. Sebelum token-service ada, `AUTH_HOST=127.0.0.1:8099` menunjuk ke stub di dalam gateway sendiri.
