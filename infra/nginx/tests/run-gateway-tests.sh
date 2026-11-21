@@ -10,7 +10,9 @@ sleep 2
 rm -rf $T; mkdir -p $T/etc $T/log $T/cache/auth $T/cache/feed
 cp -r "$HERE"/nginx.conf "$HERE"/conf.d "$HERE"/routes "$HERE"/common $T/etc/; cp /etc/nginx/mime.types $T/etc/
 export FRONTEND_HOST=127.0.0.1:3005 REGISTER_HOST=127.0.0.1:3001 LOGIN_HOST=127.0.0.1:3002 PROFILE_HOST=127.0.0.1:3003 RECOVERY_HOST=127.0.0.1:3004 AUTH_HOST=127.0.0.1:8099
-envsubst '${FRONTEND_HOST} ${REGISTER_HOST} ${LOGIN_HOST} ${PROFILE_HOST} ${RECOVERY_HOST} ${AUTH_HOST}' < "$HERE/templates/vars.conf.template" > $T/etc/vars.conf
+# Render seperti docker-entrypoint.sh: semua templates/vars.d/*.conf.template, variabel *_HOST otomatis.
+VARIABEL=$(cat "$HERE"/templates/vars.d/*.conf.template | grep -o '\${[A-Z0-9_]*_HOST}' | sort -u | tr '\n' ' ')
+for t in "$HERE"/templates/vars.d/*.conf.template; do envsubst "$VARIABEL" < "$t"; done > $T/etc/vars.conf
 find $T/etc -name '*.conf' -exec sed -i -e "s#/etc/nginx/#$T/etc/#g" -e "s#listen 80;#listen 8080;#" {} \;
 sed -i -e "s#/etc/nginx/#$T/etc/#g" -e "s#/var/log/nginx/#$T/log/#g" -e "s#/var/cache/nginx/#$T/cache/#g" -e "s#/var/run/nginx.pid#$T/nginx.pid#" -e "/^user /d" -e "s#/etc/nginx/mime.types#$T/etc/mime.types#" $T/etc/nginx.conf
 # Rute feed sementara HANYA untuk tes micro-cache. Rute feed asli milik kelompok lain.
