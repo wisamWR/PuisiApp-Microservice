@@ -66,6 +66,7 @@ src/
 | Mood Feed | /mood-feed |
 | Detail Puisi | /poems/:id |
 | Tulis Puisi | /write |
+| Revisi Puisi | /poems/:id/edit |
 | Puisi Saya | /my-poems |
 | Profil Penulis | /authors/:id |
 | Pencarian | /search |
@@ -74,6 +75,26 @@ src/
 | Masuk | /login |
 | Daftar | /register |
 | Moderasi | /moderation |
+
+### Halaman Tulis Puisi (T2.6, kelompok 2)
+
+`src/pages/WritePoemPage.jsx`, logika tanpa React di `src/lib/puisi.js`.
+
+- Puisi baru (`/write`) mengirim `POST /api/poems`; revisi (`/poems/:id/edit`) mengirim `PUT /api/poems/{id}`.
+- Validasi klien sama dengan server (`services/poem-common`): judul 150, isi 8.000, bait kutipan 280 karakter, template sah.
+- Draf tersimpan otomatis di `localStorage` (`puisiapp:draf:baru` atau `puisiapp:draf:edit:<id>`) dan dipulihkan saat halaman dibuka lagi. Draf dihapus setelah terkirim.
+- `Idempotency-Key` dibuat sekali per draf dan ikut tersimpan, sehingga klik ganda atau kirim ulang setelah muat ulang tetap satu puisi.
+- Pratinjau gambar kutipan memanggil `/api/images/preview` dengan debounce 500 ms; bila gagal, form tetap bisa dikirim.
+- Setelah 202, halaman pindah ke `/poems/:id` dengan data respons di state router; `PoemDetailPage` menampilkannya lewat `components/PuisiDiproses.jsx` (tampilan optimistik).
+- Mode edit memuat data dari state router, draf, atau `GET /api/poems/{id}` (poem-query, T2.3). Selama T2.3 belum ada, muncul pemberitahuan dan form tetap bisa diisi.
+
+Untuk mencoba lokal sebelum token-service (T1.2) ada, stub auth gateway menerima cookie `access_token` apa pun. Jalankan sekali di konsol browser: `document.cookie = 'access_token=dev; path=/'`.
+
+Uji logika halaman:
+
+```bash
+npm test
+```
 
 ## 6. Menambahkan halaman
 

@@ -272,6 +272,25 @@ jobs:
         working-directory: libs/node
         run: npm ci --no-audit --no-fund
 
+      # Sama untuk dependensi lokal lain ("file:../poem-common", dst.): pasang
+      # dependensi tiap folder yang dirujuk package.json layanan.
+      - name: Install local file dependencies
+        if: matrix.type == 'node'
+        working-directory: ${{ matrix.path }}
+        run: |
+          node -e '
+            const p = require("./package.json");
+            const semua = { ...p.dependencies, ...p.devDependencies };
+            for (const v of Object.values(semua)) {
+              if (typeof v === "string" && v.startsWith("file:")) console.log(require("path").resolve(v.slice(5)));
+            }
+          ' | while read -r dir; do
+            if [ "$dir" != "$GITHUB_WORKSPACE/libs/node" ] && [ -f "$dir/package-lock.json" ]; then
+              echo "npm ci di $dir"
+              (cd "$dir" && npm ci --no-audit --no-fund)
+            fi
+          done
+
       - name: Install Node.js dependencies
         if: matrix.type == 'node'
         working-directory: ${{ matrix.path }}

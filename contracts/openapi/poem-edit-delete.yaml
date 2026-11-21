@@ -1,0 +1,88 @@
+openapi: 3.1.0
+info:
+  title: poem-edit-service dan poem-delete-service
+  version: 1.0.0
+  description: |
+    Revisi dan penghapusan puisi oleh pemiliknya (T2.4, kelompok 2).
+    Kepemilikan diperiksa dari salinan lokal yang dibangun dari event
+    `poem.submitted` (database-per-service, tanpa panggilan sinkron ke
+    layanan lain). Keduanya membalas 202; pemrosesan lanjutan asinkron.
+servers:
+  - url: http://localhost:8080
+    description: api-gateway lokal
+paths:
+  /api/poems/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    put:
+      operationId: revisiPuisi
+      summary: Ajukan versi baru (poem-edit-service)
+      description: |
+        Revisi disimpan sebagai versi baru (append-only) dan diterbitkan sebagai
+        `poem.revised`. Versi lama tetap tampil sampai versi baru selesai dinilai.
+        Aturan validasi sama dengan `POST /api/poems`.
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string, pattern: '^[A-Za-z0-9_-]{8,64}$' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: './poem-create.yaml#/components/schemas/PengajuanPuisi' }
+      responses:
+        '202':
+          description: Versi baru diterima. `Idempotent-Replayed` untuk kirim ulang.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RevisiDiterima' }
+        '400': { description: Validasi gagal atau Idempotency-Key tidak ada }
+        '401': { description: Belum login }
+        '403': { description: Bukan pemilik puisi }
+        '404': { description: Puisi tidak ada, sudah dihapus, atau baru diajukan dan belum tercatat (coba lagi beberapa detik) }
+        '409': { description: Idempotency-Key sudah dipakai untuk isi berbeda }
+    delete:
+      operationId: hapusPuisi
+      summary: Hapus lunak (poem-delete-service)
+      description: |
+        Menandai puisi terhapus dan menerbitkan `poem.deleted`. Idempoten:
+        menghapus puisi yang sudah terhapus mengembalikan 202 yang sama tanpa
+        event baru.
+      responses:
+        '202':
+          description: Penghapusan diterima
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PenghapusanDiterima' }
+        '401': { description: Belum login }
+        '403': { description: Bukan pemilik puisi }
+        '404': { description: Puisi tidak ada atau belum tercatat }
+components:
+  schemas:
+    RevisiDiterima:
+      type: object
+      required: [poem_id, version, status, author_id, title, body, quote_stanza, quote_text, template_id, revised_at]
+      properties:
+        poem_id: { type: string, format: uuid }
+        version: { type: integer, minimum: 2 }
+        status: { type: string, const: PROCESSING }
+        author_id: { type: string }
+        title: { type: string }
+        body: { type: string }
+        quote_stanza: { type: integer }
+        quote_text: { type: string }
+        template_id: { type: string }
+        category: { type: [string, 'null'] }
+        keywords: { type: array, items: { type: string } }
+        revised_at: { type: string, format: date-time }
+    PenghapusanDiterima:
+      type: object
+      required: [poem_id, status, deleted_at]
+      properties:
+        poem_id: { type: string, format: uuid }
+        status: { type: string, const: DELETED }
+        deleted_at: { type: string, format: date-time }

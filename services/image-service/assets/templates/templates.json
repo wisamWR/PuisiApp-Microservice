@@ -1,0 +1,50 @@
+{
+  "description": "Template gambar kutipan. Koordinat dalam ruang 1080 x 1080; ukuran keluaran lain diskalakan. Menambah template: buat SVG latar (tanpa teks) lalu tambahkan entri di sini dan di TEMPLATE_SAH poem-create-service.",
+  "templates": [
+    {
+      "id": "latar1",
+      "nama": "Malam Hujan",
+      "latar": "latar1.svg",
+      "teks": {
+        "warna": "#F1ECE2",
+        "font": "DejaVu Serif",
+        "gaya": "italic",
+        "bobot": "normal",
+        "kotak": { "x": 130, "y": 210, "w": 820, "h": 640 },
+        "ukuranMaks": 60,
+        "ukuranMin": 30
+      },
+      "merek": { "warna": "#F1ECE2", "opasitas": 0.6, "y": 1032 }
+    },
+    {
+      "id": "latar2",
+      "nama": "Kertas Senja",
+      "latar": "latar2.svg",
+      "teks": {
+        "warna": "#3B2F25",
+        "font": "DejaVu Serif",
+        "gaya": "normal",
+        "bobot": "normal",
+        "kotak": { "x": 150, "y": 220, "w": 780, "h": 620 },
+        "ukuranMaks": 56,
+        "ukuranMin": 28
+      },
+      "merek": { "warna": "#8C6E4E", "opasitas": 0.8, "y": 960 }
+    },
+    {
+      "id": "latar3",
+      "nama": "Daun Pagi",
+      "latar": "latar3.svg",
+      "teks": {
+        "warna": "#FFFFFF",
+        "font": "DejaVu Sans",
+        "gaya": "normal",
+        "bobot": "bold",
+        "kotak": { "x": 130, "y": 230, "w": 820, "h": 620 },
+        "ukuranMaks": 56,
+        "ukuranMin": 28
+      },
+      "merek": { "warna": "#FFFFFF", "opasitas": 0.7, "y": 1010 }
+    }
+  ]
+}
