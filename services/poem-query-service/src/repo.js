@@ -112,3 +112,64 @@ export async function poemIdPenulis(pool, authorId) {
   const { rows } = await pool.query('SELECT poem_id FROM poem WHERE author_id = $1', [authorId]);
   return rows.map((r) => r.poem_id);
 }
+
+const STATUS_TAMPIL = `CASE WHEN p.status = 'PUBLISHED' AND p.versi_tampil IS NOT NULL AND p.versi_terbaru > p.versi_tampil
+                            THEN 'REPROCESSING' ELSE p.status END`;
+
+/**
+ * Halaman Puisi Saya (T2.8): semua puisi milik pengguna kecuali DELETED,
+ * versi terbaru, dengan status tampil (REPROCESSING bila revisi sedang
+ * dinilai), alasan HELD / HIDDEN, dan jumlah per status untuk filter.
+ * @param {{ authorId: string, status: string|null, page: number, size: number }} q
+ */
+export async function daftarMilik(pool, { authorId, status, page, size }) {
+  const { rows } = await pool.query(
+    `WITH milik AS (
+       SELECT p.*, ${STATUS_TAMPIL} AS status_tampil FROM poem p
+        WHERE p.author_id = $1 AND p.status IN ('PROCESSING', 'PUBLISHED', 'HELD', 'HIDDEN')
+     )
+     SELECT m.poem_id, m.status_tampil, m.versi_terbaru, m.versi_tampil, m.alasan_status, m.published_at,
+            m.skor, m.jumlah_suara, m.dikirim_at,
+            v.versi, v.judul, v.bait_kutipan, v.gambar_url, v.tema, v.level_kemiripan, v.dikirim_at AS versi_dikirim_at,
+            count(*) OVER () AS total
+       FROM milik m
+       JOIN LATERAL (
+         SELECT * FROM poem_versi pv
+          WHERE pv.poem_id = m.poem_id AND pv.judul IS NOT NULL AND pv.versi <= m.versi_terbaru
+          ORDER BY pv.versi DESC LIMIT 1
+       ) v ON true
+      WHERE ($2::text IS NULL OR m.status_tampil = $2)
+      ORDER BY COALESCE(v.dikirim_at, m.dikirim_at) DESC NULLS LAST, m.poem_id
+      LIMIT $3 OFFSET $4`,
+    [authorId, status, size, (page - 1) * size],
+  );
+  const jumlah = await pool.query(
+    `SELECT ${STATUS_TAMPIL} AS status, count(*)::int AS n FROM poem p
+      WHERE p.author_id = $1 AND p.status IN ('PROCESSING', 'PUBLISHED', 'HELD', 'HIDDEN')
+      GROUP BY 1`,
+    [authorId],
+  );
+  const counts = { PROCESSING: 0, REPROCESSING: 0, PUBLISHED: 0, HELD: 0, HIDDEN: 0 };
+  for (const r of jumlah.rows) counts[r.status] = r.n;
+  return {
+    total: rows[0] ? Number(rows[0].total) : 0,
+    counts,
+    baris: rows.map((r) => ({
+      poem_id: r.poem_id,
+      status: r.status_tampil,
+      versi: r.versi,
+      versi_terbaru: r.versi_terbaru,
+      versi_tampil: r.versi_tampil,
+      alasan_status: r.alasan_status,
+      judul: r.judul,
+      bait_kutipan: r.bait_kutipan,
+      gambar_url: r.gambar_url,
+      tema: r.tema ?? [],
+      level_kemiripan: r.level_kemiripan,
+      skor: r.skor,
+      jumlah_suara: r.jumlah_suara,
+      dikirim_at: iso(r.versi_dikirim_at ?? r.dikirim_at),
+      published_at: iso(r.published_at),
+    })),
+  };
+}

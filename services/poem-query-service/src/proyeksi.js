@@ -78,20 +78,21 @@ async function upsertKolomVersi(tx, poemId, versi, kolom) {
 }
 
 /** Ubah status bila event lebih baru dari status tersimpan dan puisi belum dihapus. */
-async function ubahStatus(tx, poemId, status, occurredAt, { versiTampil = null, publishedAt = null } = {}) {
+async function ubahStatus(tx, poemId, status, occurredAt, { versiTampil = null, publishedAt = null, alasan = null } = {}) {
   await tx.query(
-    `INSERT INTO poem (poem_id, status, status_at, versi_tampil, published_at, versi_terbaru)
-     VALUES ($1, $2, $3, $4, $5, COALESCE($4, 1))
+    `INSERT INTO poem (poem_id, status, status_at, versi_tampil, published_at, versi_terbaru, alasan_status)
+     VALUES ($1, $2, $3, $4, $5, COALESCE($4, 1), $6)
      ON CONFLICT (poem_id) DO UPDATE
        SET status = EXCLUDED.status,
            status_at = EXCLUDED.status_at,
            versi_tampil = COALESCE(EXCLUDED.versi_tampil, poem.versi_tampil),
            versi_terbaru = GREATEST(poem.versi_terbaru, COALESCE(EXCLUDED.versi_tampil, 1)),
            published_at = COALESCE(poem.published_at, EXCLUDED.published_at),
+           alasan_status = EXCLUDED.alasan_status,
            diubah_at = now()
      WHERE poem.status IS DISTINCT FROM 'DELETED'
        AND (poem.status_at IS NULL OR poem.status_at <= EXCLUDED.status_at)`,
-    [poemId, status, occurredAt, versiTampil, publishedAt],
+    [poemId, status, occurredAt, versiTampil, publishedAt, alasan],
   );
 }
 
@@ -154,7 +155,9 @@ export async function proyeksikan(tx, event) {
     case 'poem.held':
     case 'poem.hidden': {
       const poemId = poemIdDari(event);
-      await ubahStatus(tx, poemId, event.event_type === 'poem.held' ? 'HELD' : 'HIDDEN', event.occurred_at);
+      await ubahStatus(tx, poemId, event.event_type === 'poem.held' ? 'HELD' : 'HIDDEN', event.occurred_at, {
+        alasan: typeof p.reason === 'string' ? p.reason : null,
+      });
       return { poemId };
     }
 

@@ -2,6 +2,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { Button } from '../components/UI'
 import { api } from '../lib/api'
 import { useAuth } from '../lib/auth'
+import NotifBadge from '../components/NotifBadge'
 
 const navigation = [
   {
@@ -58,6 +59,7 @@ export default function AppLayout() {
           <span className="topbar-caption">Ruang ekspresi dan apresiasi</span>
           {user ? (
             <>
+              <NotifBadge />
               <NavLink to="/profile" className="topbar-user">Halo, {user.username}</NavLink>
               {user.role === 'admin' && <NavLink to="/admin/users" className="button button-outline">Admin</NavLink>}
               <Button variant="outline" onClick={keluar}>Keluar</Button>

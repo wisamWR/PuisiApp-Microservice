@@ -277,6 +277,40 @@ services:
         limits:
           memory: 128M
 
+  # ---------------------------------------------------------------- T2.8
+  # Notifikasi penulis dan pelapor dari event status, laporan, keputusan, banding.
+  # Hanya konsumen + API, tanpa outbox dan relay. Tahap "Lengkap".
+  notification-service:
+    profiles: [lengkap]
+    build:
+      context: ..
+      dockerfile: services/notification-service/Dockerfile
+    restart: unless-stopped
+    environment:
+      SERVICE_NAME: notification-service
+      PORT: "8080"
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      DATABASE_URL: postgres://notification:${NOTIFICATION_DB_PASS}@${POSTGRES_HOST}:${POSTGRES_PORT}/notif_db
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+      RABBITMQ_VHOST: ${RABBITMQ_VHOST}
+    networks: [app, data]
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq-topologi: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          memory: 160M
+
   # ---------------------------------------------------------------- T2.5
   # Satu image (services/image-service), dua entrypoint.
   # Pratinjau: sinkron, stateless, tanpa basis data; template di memori.
