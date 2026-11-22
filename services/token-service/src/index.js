@@ -35,16 +35,27 @@ function cookieHapus() {
 const PORT = Number(process.env.PORT) || 8080;
 const MAKS_BODY = 4 * 1024;
 
-const ambilPem = (nama) => {
-  const v = process.env[nama];
-  if (!v) throw new Error(`${nama} belum diisi`);
-  // Di .env, PEM ditulis satu baris dengan \n literal.
-  return v.replace(/\\n/g, '\n');
-};
+// Kunci tetap dari .env. Kalau belum diisi (masih placeholder atau kosong), pakai kunci sementara
+// dan beri peringatan, supaya layanan tidak crash. Kunci sementara HANYA untuk pengembangan:
+// tiap replika punya kunci sendiri, jadi jalankan `bash infra/jwt-keys.sh` untuk kunci tetap.
+const PLACEHOLDER = (v) => !v || v.startsWith('isi-');
+
+let kunciPrivat = process.env.JWT_PRIVATE_KEY_PEM;
+let kunciPublik = process.env.JWT_PUBLIC_KEY_PEM;
+
+if (PLACEHOLDER(kunciPrivat) || PLACEHOLDER(kunciPublik)) {
+  const { generateKeyPair, exportPKCS8, exportSPKI } = await import('jose');
+  const pasangan = await generateKeyPair('RS256', { extractable: true });
+  kunciPrivat = await exportPKCS8(pasangan.privateKey);
+  kunciPublik = await exportSPKI(pasangan.publicKey);
+  log.warn('kunci JWT belum diisi: memakai kunci sementara (dev). Jalankan: bash infra/jwt-keys.sh');
+}
+
+const ambilPem = (nilai) => nilai.replace(/\\n/g, '\n');
 
 const penerbit = await buatPenerbitToken({
-  privateKeyPem: ambilPem('JWT_PRIVATE_KEY_PEM'),
-  publicKeyPem: ambilPem('JWT_PUBLIC_KEY_PEM'),
+  privateKeyPem: ambilPem(kunciPrivat),
+  publicKeyPem: ambilPem(kunciPublik),
   issuer: process.env.JWT_ISSUER || 'puisiapp-auth',
   audience: process.env.JWT_AUDIENCE || 'puisiapp-web',
   masaBerlaku: process.env.ACCESS_TOKEN_TTL || MASA_BERLAKU_BAWAAN,
