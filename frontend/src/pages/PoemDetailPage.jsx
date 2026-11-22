@@ -19,7 +19,9 @@ export default function PoemDetailPage() {
 
   useEffect(() => {
     let aktif = true
-    setLoading(true)
+    const timer = setTimeout(() => {
+      if (aktif) setLoading(true)
+    }, 0)
 
     api
       .get(`/emotions/poems/${encodeURIComponent(id)}`)
@@ -43,6 +45,7 @@ export default function PoemDetailPage() {
 
     return () => {
       aktif = false
+      clearTimeout(timer)
     }
   }, [id, demoPoem])
 

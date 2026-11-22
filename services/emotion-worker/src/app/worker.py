@@ -71,17 +71,37 @@ def buat_handler_emosi(
         data_puisi = ekstrak_data_puisi(event)
         hasil = analyzer(data_puisi["content"])
 
+        emotions = []
+        for baris in hasil.get("lines") or []:
+            scores = baris.get("scores") or {}
+            line_num = int(baris.get("index", 0)) + 1
+            for label, score in scores.items():
+                if float(score) > 0:
+                    emotions.append({
+                        "line_number": line_num,
+                        "label": label,
+                        "score": float(score),
+                    })
+        if not emotions:
+            emotions.append({
+                "line_number": 1,
+                "label": hasil["dominant"],
+                "score": float((hasil.get("poem_scores") or {}).get(hasil["dominant"], 0.2)),
+            })
+
         payload_keluar = {
+            "poem_id": data_puisi["poem_id"],
+            "emotions": emotions,
+        }
+
+        dokumen_db = {
             "poem_id": data_puisi["poem_id"],
             "version": data_puisi["version"],
             "lines": hasil["lines"],
             "poem_scores": hasil["poem_scores"],
             "dominant": hasil["dominant"],
             "model": hasil["model"],
-        }
-
-        dokumen_db = {
-            **payload_keluar,
+            "emotions": emotions,
             "title": data_puisi["title"],
             "source_event_id": event["event_id"],
             "analyzed_at": datetime.now(UTC).isoformat(),

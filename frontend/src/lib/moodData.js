@@ -28,7 +28,9 @@ export function simpanPreferensiMood(mood, mode = 'senada') {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ mood, mode, savedAt: new Date().toISOString() }))
     window.dispatchEvent(new Event('puisiapp:mood-changed'))
-  } catch {}
+  } catch {
+    // abaikan kegagalan akses localStorage/window
+  }
 }
 
 export function bacaPreferensiMood() {

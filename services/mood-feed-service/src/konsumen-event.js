@@ -5,6 +5,42 @@ export const EVENT_DIKONSUMSI = [
 
 const EVENT_VERSI_KONTEN = new Set(['poem.submitted', 'poem.revised', 'poem.emotion.analyzed']);
 
+const EMOSI_VALID = ['senang', 'sedih', 'cinta', 'marah', 'takut'];
+
+function turunkanDariEmotions(emotions) {
+  if (!Array.isArray(emotions) || emotions.length === 0) {
+    return { dominant: null, poemScores: {}, lines: [] };
+  }
+  const totals = Object.fromEntries(EMOSI_VALID.map((e) => [e, 0]));
+  const lineMap = new Map();
+
+  for (const item of emotions) {
+    const label = String(item?.label || '').toLowerCase().trim();
+    const score = Number(item?.score ?? 0);
+    const lineNum = Number(item?.line_number ?? 1);
+    if (!EMOSI_VALID.includes(label) || !Number.isFinite(score)) continue;
+    totals[label] = Number((totals[label] + score).toFixed(4));
+
+    if (!lineMap.has(lineNum)) {
+      lineMap.set(lineNum, {
+        index: Math.max(0, lineNum - 1),
+        line_number: lineNum,
+        scores: Object.fromEntries(EMOSI_VALID.map((e) => [e, 0])),
+      });
+    }
+    lineMap.get(lineNum).scores[label] = score;
+  }
+
+  const lines = [...lineMap.values()].sort((a, b) => a.line_number - b.line_number);
+  const sumAll = Object.values(totals).reduce((acc, v) => acc + v, 0);
+  const poemScores = {};
+  for (const e of EMOSI_VALID) {
+    poemScores[e] = sumAll > 0 ? Number((totals[e] / sumAll).toFixed(4)) : 0;
+  }
+  const dominant = EMOSI_VALID.reduce((best, cur) => (poemScores[cur] > poemScores[best] ? cur : best), EMOSI_VALID[0]);
+  return { dominant, poemScores, lines };
+}
+
 function buatRingkasan(teks) {
   const bersih = String(teks || '').replace(/\s+/g, ' ').trim();
   return bersih.length > 160 ? `${bersih.slice(0, 157)}...` : bersih;
@@ -64,6 +100,10 @@ export function buatHandlerEvent({ indeks, log } = {}) {
           [poemId, versi, statusBaru],
         );
       } else if (event.event_type === 'poem.emotion.analyzed') {
+        const turunan = Array.isArray(p.emotions) ? turunkanDariEmotions(p.emotions) : null;
+        const dominantFinal = p.dominant ? String(p.dominant) : (turunan?.dominant || null);
+        const scoresFinal = p.poem_scores && Object.keys(p.poem_scores).length > 0 ? p.poem_scores : (turunan?.poemScores || {});
+        const linesFinal = Array.isArray(p.lines) && p.lines.length > 0 ? p.lines : (turunan?.lines || []);
         await tx.query(
           `INSERT INTO mood_poems (poem_id, version, dominant, model, poem_scores, lines, updated_at)
            VALUES ($1, $2, $3, $4, $5::jsonb, $6::jsonb, now())
@@ -71,8 +111,8 @@ export function buatHandlerEvent({ indeks, log } = {}) {
              version = EXCLUDED.version, dominant = EXCLUDED.dominant, model = EXCLUDED.model,
              poem_scores = EXCLUDED.poem_scores, lines = EXCLUDED.lines, updated_at = now()
            WHERE mood_poems.version <= EXCLUDED.version`,
-          [poemId, versi, p.dominant ? String(p.dominant) : null, String(p.model || 'lexicon-v1'),
-           JSON.stringify(p.poem_scores || {}), JSON.stringify(Array.isArray(p.lines) ? p.lines : [])],
+          [poemId, versi, dominantFinal, String(p.model || 'lexicon-v1'),
+           JSON.stringify(scoresFinal), JSON.stringify(linesFinal)],
         );
       } else if (event.event_type === 'poem.score.updated') {
         const wilson = Number(p.wilson_score ?? p.score ?? 0);

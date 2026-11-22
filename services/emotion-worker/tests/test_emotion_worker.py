@@ -104,8 +104,13 @@ def test_worker_menerbitkan_event_valid_dan_idempoten_terhadap_duplikat():
     validasi_event(published_event)
     assert published_event["event_type"] == "poem.emotion.analyzed"
     assert exchange_untuk(published_event["event_type"]) == "analysis.events"
-    assert published_event["payload"]["dominant"] == "senang"
-    assert published_event["payload"]["model"] == "lexicon-v1"
+    assert published_event["payload"]["poem_id"] == "poem-101"
+    assert isinstance(published_event["payload"]["emotions"], list)
+    assert len(published_event["payload"]["emotions"]) > 0
+    assert all(
+        {"line_number", "label", "score"} == set(item.keys())
+        for item in published_event["payload"]["emotions"]
+    )
 
     assert store.proses(evt, handler) == "duplikat"
     assert len(db["poem_emotions"].docs) == 1

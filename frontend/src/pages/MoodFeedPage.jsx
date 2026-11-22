@@ -59,7 +59,10 @@ export default function MoodFeedPage() {
 
   useEffect(() => {
     simpanPreferensiMood(mood, mode)
-    muatHalaman(1, true)
+    const timer = setTimeout(() => {
+      void muatHalaman(1, true)
+    }, 0)
+    return () => clearTimeout(timer)
   }, [mood, mode, muatHalaman])
 
   useEffect(() => {
