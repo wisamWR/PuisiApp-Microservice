@@ -4,6 +4,7 @@
  * Versi basi (aggregate_version lebih lama) diabaikan oleh pustaka lewat versiTersimpan.
  */
 export async function simpanKredensial(event, { tx }) {
+  // Kontrak user.credentials.created: id dari aggregate_id, isi kredensial dari payload.
   const p = event.payload;
   await tx.query(
     `INSERT INTO credentials (id, username, password_hash, role)
@@ -13,7 +14,7 @@ export async function simpanKredensial(event, { tx }) {
            password_hash = EXCLUDED.password_hash,
            role = EXCLUDED.role,
            updated_at = now()`,
-    [p.id, p.username, p.password_hash, p.role ?? 'writer'],
+    [event.aggregate_id, p.username, p.password_hash, p.role ?? 'writer'],
   );
 }
 

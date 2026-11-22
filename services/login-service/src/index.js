@@ -2,7 +2,7 @@
  * login-service (T1.2).
  *   POST /api/auth/login   publik, dibatasi gateway (10 per menit per IP) dan penundaan 5 gagal per 15 menit.
  *   GET  /health
- * Konsumer: event user.registered dari queue q.login.user-registered -> tabel credentials.
+ * Konsumer: event user.credentials.created dari queue q.login.user-credentials -> tabel credentials.
  */
 import http from 'node:http';
 import path from 'node:path';
@@ -32,8 +32,8 @@ if (process.env.RABBITMQ_HOST) {
   konsumen = await buatKonsumen({
     koneksi,
     log,
-    antrean: 'q.login.user-registered',
-    ikatan: ['user.registered'],
+    antrean: 'q.login.user-credentials',
+    ikatan: ['user.credentials.created'],
     store: buatStorePg(pool),
     handler: simpanKredensial,
   });
@@ -45,7 +45,7 @@ if (process.env.RABBITMQ_HOST) {
     store: buatStorePg(pool),
     handler: ubahPeranKredensial,
   });
-  log.info('konsumen user.registered aktif');
+  log.info('konsumen user.credentials.created aktif');
 }
 
 async function mintaToken(akun) {

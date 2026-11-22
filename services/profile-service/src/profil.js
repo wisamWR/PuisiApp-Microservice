@@ -7,12 +7,14 @@ export const EVENT_PROFIL = 'user.profile.updated';
 
 /** Konsumen user.registered: buat profil awal. Idempoten (ON CONFLICT DO NOTHING). */
 export async function buatProfilAwal(event, { tx }) {
+  // Kontrak user.registered hanya memuat username dan email; id dari aggregate_id.
+  // Nama tampil awal = username (bisa diubah pengguna lewat PUT /api/profiles/me).
   const p = event.payload;
   await tx.query(
     `INSERT INTO profiles (id, username, display_name, bio)
-     VALUES ($1, $2, $3, '')
+     VALUES ($1, $2, $2, '')
      ON CONFLICT (id) DO NOTHING`,
-    [p.id, p.username, p.display_name],
+    [event.aggregate_id, p.username],
   );
 }
 
