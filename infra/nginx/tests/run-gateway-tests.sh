@@ -9,7 +9,7 @@ ps -eo pid,args | grep '[b]ackend.py [0-9]' | awk '{print $1}' | xargs -r kill 2
 sleep 2
 rm -rf $T; mkdir -p $T/etc $T/log $T/cache/auth $T/cache/feed
 cp -r "$HERE"/nginx.conf "$HERE"/conf.d "$HERE"/routes "$HERE"/common $T/etc/; cp /etc/nginx/mime.types $T/etc/
-export FRONTEND_HOST=127.0.0.1:3005 REGISTER_HOST=127.0.0.1:3001 LOGIN_HOST=127.0.0.1:3002 PROFILE_HOST=127.0.0.1:3003 RECOVERY_HOST=127.0.0.1:3004 AUTH_HOST=127.0.0.1:8099
+export FRONTEND_HOST=127.0.0.1:3005 REGISTER_HOST=127.0.0.1:3001 LOGIN_HOST=127.0.0.1:3002 PROFILE_HOST=127.0.0.1:3003 RECOVERY_HOST=127.0.0.1:3004 AUTH_HOST=127.0.0.1:8099 TOKEN_HOST=127.0.0.1:8099 CONTOH_HOST=127.0.0.1:8099
 # Render seperti docker-entrypoint.sh: semua templates/vars.d/*.conf.template, variabel *_HOST otomatis.
 VARIABEL=$(cat "$HERE"/templates/vars.d/*.conf.template | grep -o '\${[A-Z0-9_]*_HOST}' | sort -u | tr '\n' ' ')
 for t in "$HERE"/templates/vars.d/*.conf.template; do envsubst "$VARIABEL" < "$t"; done > $T/etc/vars.conf

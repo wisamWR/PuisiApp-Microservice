@@ -2,13 +2,19 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import AppLayout from './layouts/AppLayout'
 import { PlaceholderPage } from './pages/PlaceholderPage'
 import { ToastProvider } from './components/ToastContext'
+import { AuthProvider } from './components/AuthProvider'
+import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
 import './App.css'
 import PoemDetailPage from './pages/PoemDetailPage'
+import ProfilePage from './pages/ProfilePage'
+import AdminUsersPage from './pages/AdminUsersPage'
 import WritePoemPage from './pages/WritePoemPage'
 
 function App() {
   return (
     <ToastProvider>
+      <AuthProvider>
       <BrowserRouter>
         <Routes>
           <Route element={<AppLayout />}>
@@ -23,13 +29,16 @@ function App() {
             <Route path="search" element={<PlaceholderPage pageKey="search" />} />
             <Route path="themes" element={<PlaceholderPage pageKey="themes" />} />
             <Route path="notifications" element={<PlaceholderPage pageKey="notifications" />} />
-            <Route path="login" element={<PlaceholderPage pageKey="login" />} />
-            <Route path="register" element={<PlaceholderPage pageKey="register" />} />
+            <Route path="profile" element={<ProfilePage />} />
+            <Route path="admin/users" element={<AdminUsersPage />} />
+            <Route path="login" element={<LoginPage />} />
+            <Route path="register" element={<RegisterPage />} />
             <Route path="moderation" element={<PlaceholderPage pageKey="moderation" />} />
             <Route path="*" element={<PlaceholderPage pageKey="notFound" />} />
           </Route>
         </Routes>
       </BrowserRouter>
+      </AuthProvider>
     </ToastProvider>
   )
 }

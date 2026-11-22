@@ -1,0 +1,19 @@
+{
+  "name": "token-service",
+  "version": "0.1.0",
+  "description": "T1.2: penerbitan JWT RS256 dan verifikasi token untuk gateway (auth_request).",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "@puisiapp/events": "file:../../libs/node",
+    "jose": "6.2.17",
+    "redis": "^5.12.2"
+  }
+}
