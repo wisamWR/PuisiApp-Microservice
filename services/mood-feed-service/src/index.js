@@ -1,0 +1,49 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import pg from 'pg';
+import { createClient } from 'redis';
+import { buatLogger, buatKonsumen, buatStorePg, hubungkan, jalankanMigrasi } from '@puisiapp/events';
+import { buatAppHttp, buatRepoPg } from './http.js';
+import { buatIndeksFeed } from './indeks-redis.js';
+import { buatHandlerEvent, EVENT_DIKONSUMSI } from './konsumen-event.js';
+
+const serviceName = process.env.SERVICE_NAME || 'mood-feed-service';
+const log = buatLogger(serviceName);
+const folderIni = path.dirname(fileURLToPath(import.meta.url));
+if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL belum diisi');
+const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 10 });
+
+await jalankanMigrasi(pool, { folder: path.join(folderIni, '../migrations'), outbox: false, log });
+
+const redisUrl =
+  process.env.REDIS_URL ||
+  `redis://:${encodeURIComponent(process.env.REDIS_PASSWORD || '')}@${process.env.REDIS_HOST}:${process.env.REDIS_PORT || 6379}`;
+const redisClient = createClient({ url: redisUrl });
+redisClient.on('error', (err) => log.warn('galat koneksi redis', { err: String(err) }));
+await redisClient.connect();
+
+const repo = buatRepoPg(pool);
+const indeks = buatIndeksFeed(redisClient);
+await indeks.bangunUlangSemua(await repo.ambilSemuaPuisiTerbit());
+
+const koneksi = await hubungkan({ log });
+const { versiTersimpan, handler } = buatHandlerEvent({ indeks, log });
+const konsumen = await buatKonsumen({ koneksi, log, antrean: `q.${serviceName}`, ikatan: EVENT_DIKONSUMSI, store: buatStorePg(pool), versiTersimpan, handler });
+
+const port = Number(process.env.PORT ?? 8080);
+const server = buatAppHttp({ repo, indeks, serviceName });
+server.listen(port, () => log.info('mood-feed-service berjalan', { port }));
+
+let berhenti = false;
+async function matikan(sinyal) {
+  if (berhenti) return;
+  berhenti = true;
+  server.close();
+  await konsumen.berhenti().catch(() => {});
+  await koneksi.close().catch(() => {});
+  await redisClient.quit().catch(() => {});
+  await pool.end().catch(() => {});
+  process.exit(0);
+}
+process.on('SIGTERM', () => matikan('SIGTERM'));
+process.on('SIGINT', () => matikan('SIGINT'));

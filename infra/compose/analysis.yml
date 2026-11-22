@@ -1,9 +1,50 @@
 # Domain analysis
 # Kelompok: 5 Mood, 6 Tema (Sabila); 7 Keaslian (Raffa)
-# Layanan: emotion-worker, mood-feed, keyword-worker, theme-worker, theme-feed, fingerprint-worker, similarity-worker, authorship-worker, authorship-query
-#
-# Tulis layanan domain ini di sini. Path relatif dihitung dari folder infra/
-# (project_directory pada include), jadi build context ditulis ../services/<nama>.
-# Pola lengkap ada di infra/README.md. Alamat dependensi diambil dari .env.
+services:
+  emotion-worker:
+    build:
+      context: ..
+      dockerfile: services/emotion-worker/Dockerfile
+    restart: unless-stopped
+    environment:
+      SERVICE_NAME: emotion-worker
+      PORT: "8080"
+      PREFETCH: "10"
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+      RABBITMQ_VHOST: ${RABBITMQ_VHOST}
+      MONGO_URL: mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASS}@${MONGO_HOST}:${MONGO_PORT}/?authSource=admin
+      MONGO_DB: emotion-db
+    networks: [app, data]
+    depends_on:
+      mongodb: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+      rabbitmq-topologi: { condition: service_completed_successfully }
 
-services: {}
+  mood-feed:
+    build:
+      context: ..
+      dockerfile: services/mood-feed-service/Dockerfile
+    restart: unless-stopped
+    environment:
+      SERVICE_NAME: mood-feed
+      PORT: "8080"
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      CACHE_TTL_SECONDS: "60"
+      DATABASE_URL: postgres://mood_feed:${MOOD_FEED_DB_PASS}@${POSTGRES_HOST}:${POSTGRES_PORT}/mood_feed_db
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+      RABBITMQ_VHOST: ${RABBITMQ_VHOST}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    networks: [app, data]
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+      rabbitmq-topologi: { condition: service_completed_successfully }
