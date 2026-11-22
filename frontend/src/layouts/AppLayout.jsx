@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import MoodIcon from '../components/MoodIcon'
+import { Button } from '../components/UI'
+import { api } from '../lib/api'
+import { useAuth } from '../lib/auth'
 import { EMOSI_LIST, bacaPreferensiMood, sudahPilihMood } from '../lib/moodData'
 
 const navigation = [
@@ -13,6 +16,7 @@ export default function AppLayout() {
   const [pref, setPref] = useState(() => bacaPreferensiMood())
   const location = useLocation()
   const navigate = useNavigate()
+  const { user, setUser } = useAuth()
 
   useEffect(() => {
     const sync = () => setPref(bacaPreferensiMood())
@@ -32,6 +36,17 @@ export default function AppLayout() {
 
   const infoEmosi = EMOSI_LIST.find((e) => e.key === pref.mood) || EMOSI_LIST[0]
 
+  async function keluar() {
+    try {
+      // Server mencabut sesi (T1.4). Kalau gagal, tetap keluar dari sisi klien.
+      await api.post('/auth/logout')
+    } catch {
+      // abaikan: sesi tetap diakhiri di klien
+    }
+    setUser(null)
+    navigate('/login', { replace: true })
+  }
+
   return (
     <div className="app-shell">
       <header className="topbar">
@@ -44,7 +59,15 @@ export default function AppLayout() {
             <MoodIcon mood={infoEmosi.key} size={15} color={infoEmosi.color} />
             <span>{infoEmosi.label} · {pref.mode === 'menghibur' ? 'Menghibur' : 'Senada'}</span>
           </NavLink>
-          <NavLink to="/login" className="button button-outline">Masuk</NavLink>
+          {user ? (
+            <>
+              <NavLink to="/profile" className="topbar-user">Halo, {user.username}</NavLink>
+              {user.role === 'admin' && <NavLink to="/admin/users" className="button button-outline">Admin</NavLink>}
+              <Button variant="outline" onClick={keluar}>Keluar</Button>
+            </>
+          ) : (
+            <NavLink to="/login" className="button button-outline">Masuk</NavLink>
+          )}
         </div>
       </header>
 
