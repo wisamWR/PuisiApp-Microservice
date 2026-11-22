@@ -38,3 +38,16 @@ export async function hapusKredensial(event, { tx }) {
   await tx.query('DELETE FROM credentials WHERE id = $1', [event.aggregate_id]);
 }
 
+
+export async function perbaruiKataSandi(event, { tx }) {
+  const p = event.payload;
+  const userId = p.id || p.user_id || event.aggregate_id;
+  if (!userId || !p.password_hash) return;
+  await tx.query(
+    `UPDATE credentials
+        SET password_hash = $2,
+            updated_at = now()
+      WHERE id = $1`,
+    [userId, p.password_hash],
+  );
+}

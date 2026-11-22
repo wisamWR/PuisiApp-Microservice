@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://puisiapp.example/schema/email.send.requested.v1.json",
+  "title": "Payload event email.send.requested v1",
+  "type": "object",
+  "required": [
+    "to",
+    "template",
+    "user_id",
+    "expires_at"
+  ],
+  "properties": {
+    "to": {
+      "type": "string",
+      "description": "Alamat email penerima"
+    },
+    "template": {
+      "type": "string",
+      "enum": [
+        "verify_email",
+        "reset_password"
+      ],
+      "description": "Jenis template email"
+    },
+    "user_id": {
+      "type": "string",
+      "description": "ID pengguna terkait"
+    },
+    "username": {
+      "type": "string",
+      "description": "Username pengguna bila tersedia"
+    },
+    "token": {
+      "type": "string",
+      "description": "Token mentah sekali pakai untuk tautan verifikasi/reset"
+    },
+    "action_url": {
+      "type": "string",
+      "description": "Tautan lengkap verifikasi atau reset kata sandi"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Waktu kedaluwarsa token (ISO-8601)"
+    }
+  },
+  "additionalProperties": true
+}

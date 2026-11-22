@@ -5,6 +5,9 @@ import { ToastProvider } from './components/ToastContext'
 import { AuthProvider } from './components/AuthProvider'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
+import ForgotPasswordPage from './pages/ForgotPasswordPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
+import VerifyEmailPage from './pages/VerifyEmailPage'
 import './App.css'
 import PoemDetailPage from './pages/PoemDetailPage'
 import ProfilePage from './pages/ProfilePage'
@@ -33,6 +36,9 @@ function App() {
             <Route path="admin/users" element={<AdminUsersPage />} />
             <Route path="login" element={<LoginPage />} />
             <Route path="register" element={<RegisterPage />} />
+            <Route path="forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="reset-password" element={<ResetPasswordPage />} />
+            <Route path="verify-email" element={<VerifyEmailPage />} />
             <Route path="moderation" element={<PlaceholderPage pageKey="moderation" />} />
             <Route path="*" element={<PlaceholderPage pageKey="notFound" />} />
           </Route>

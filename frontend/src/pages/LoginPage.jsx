@@ -74,7 +74,7 @@ export default function LoginPage() {
       </form>
 
       <p>
-        Belum punya akun? <Link to="/register">Daftar di sini</Link>
+        Belum punya akun? <Link to="/register">Daftar di sini</Link> · <Link to="/forgot-password">Lupa kata sandi?</Link>
       </p>
     </section>
   )

@@ -97,6 +97,12 @@ export default function AppLayout() {
         </aside>
 
         <main className="main-content">
+          {user && user.emailVerified === false && (
+            <div className="form-info" role="status">
+              Alamat email Anda belum terverifikasi. Silakan cek kotak masuk atau buka{' '}
+              <NavLink to="/verify-email">halaman verifikasi email</NavLink>.
+            </div>
+          )}
           <Outlet />
           <footer className="footer">
             PuisiApp · Ruang ekspresi dan apresiasi karya

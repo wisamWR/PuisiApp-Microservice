@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 import pg from 'pg';
 import { buatLogger, buatKonsumen, buatStorePg, hubungkan, jalankanMigrasi } from '@puisiapp/events';
 import { loginDenganKredensial } from './login.js';
-import { simpanKredensial, ubahPeranKredensial, hapusKredensial } from './kredensial.js';
+import { simpanKredensial, ubahPeranKredensial, hapusKredensial, perbaruiKataSandi } from './kredensial.js';
 import { cookieAkses, cookieRefresh } from './cookie.js';
 
 const log = buatLogger();
@@ -32,10 +32,15 @@ if (process.env.RABBITMQ_HOST) {
   konsumen = await buatKonsumen({
     koneksi,
     log,
-    antrean: 'q.login.user-credentials',
-    ikatan: ['user.credentials.created'],
+    antrean: 'q.login.user-registered',
+    ikatan: ['user.registered', 'user.password.reset'],
     store: buatStorePg(pool),
-    handler: simpanKredensial,
+    handler: async (event, ctx) => {
+      if (event.event_type === 'user.password.reset') {
+        return perbaruiKataSandi(event, ctx);
+      }
+      return simpanKredensial(event, ctx);
+    },
   });
   await buatKonsumen({
     koneksi,
