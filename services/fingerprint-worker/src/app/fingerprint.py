@@ -153,6 +153,12 @@ def proses_fingerprint(
         bait_normal = normalisasi_teks(bait)
         shingles_bait = buat_shingle(bait_normal, ukuran_shingle)
 
+        # Bait < ukuran_shingle kata tidak punya shingle. Signature-nya akan
+        # berupa nilai sentinel yang identik di semua puisi, sehingga setiap
+        # bait pendek "cocok 100%" dengan bait pendek lain (positif palsu).
+        if not shingles_bait:
+            continue
+
         signature_bait = buat_signature_minhash(
             shingles_bait,
             jumlah_hash,

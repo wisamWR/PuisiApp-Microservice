@@ -6,10 +6,8 @@ import psycopg2
 from psycopg2.extras import Json
 
 from app.config import load_settings
-from app.database import cari_kandidat
 from app.processor import proses_kandidat
 from app.similarity import buat_bucket_lsh
-
 
 TOTAL = 1000
 rng = random.Random(42)

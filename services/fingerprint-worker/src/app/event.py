@@ -3,7 +3,6 @@ from event_lib import buat_event, uuidv5
 
 from app.fingerprint import buat_payload_fingerprint
 
-
 # Namespace URL standar, digunakan secara tetap untuk UUIDv5.
 FINGERPRINT_NAMESPACE = "6ba7b811-9dad-11d1-80b4-00c04fd430c8"
 

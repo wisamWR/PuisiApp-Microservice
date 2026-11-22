@@ -1,9 +1,10 @@
-
 from typing import Any
 
 from event_lib import buat_event, uuidv5
-from app.config import load_settings
 from event_lib.kontrak import validasi_event
+
+from app.config import load_settings
+from app.similarity import tentukan_level
 
 EVENT_INPUT = "poem.fingerprint.created"
 EVENT_OUTPUT = "poem.similarity.scored"
@@ -44,12 +45,17 @@ def buat_event_similarity(
     """Membentuk event hasil scoring sesuai kontrak."""
     payload_sumber = event_sumber["payload"]
 
+    # Satu puisi bisa cocok lewat beberapa bucket (utuh dan per bait);
+    # simpan skor tertinggi per puisi pembanding, urut skor menurun.
+    terbaik: dict[str, float] = {}
+    for item in hasil_kandidat:
+        skor = round(item["jaccard_estimate"], 6)
+        if skor > terbaik.get(item["poem_id"], -1.0):
+            terbaik[item["poem_id"]] = skor
+
     comparisons = [
-        {
-            "compared_poem_id": item["poem_id"],
-            "score": round(item["jaccard_estimate"], 6),
-        }
-        for item in hasil_kandidat
+        {"compared_poem_id": poem_id, "score": skor}
+        for poem_id, skor in sorted(terbaik.items(), key=lambda x: x[1], reverse=True)
     ]
 
     score = max(
@@ -58,8 +64,6 @@ def buat_event_similarity(
     )
 
     # Perlindungan puisi pendek tetap mengikuti spesifikasi T7.2.
-    from app.similarity import tentukan_level
-
     settings = load_settings()
 
     level = tentukan_level(

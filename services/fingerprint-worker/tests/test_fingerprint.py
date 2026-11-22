@@ -121,3 +121,16 @@ def test_payload_fingerprint_deterministik():
 
     assert hasil_pertama == hasil_kedua
 
+
+
+def test_bait_pendek_tanpa_shingle_tidak_diberi_signature():
+    # Bait < 3 kata (setelah stopword dibuang) menghasilkan signature sentinel
+    # yang identik di semua puisi; bait seperti itu harus dilewati.
+    teks = (
+        "angin malam berbisik lirih di jendela tua\n\n"
+        "oh rindu\n\n"
+        "hujan turun membasahi kota yang sunyi sekali"
+    )
+    hasil = proses_fingerprint(teks)
+
+    assert [bait["stanza"] for bait in hasil["stanza_signatures"]] == [1, 3]

@@ -6,6 +6,7 @@ from app.processor import proses_kandidat
 def test_processor_mengurutkan_kandidat_berdasarkan_jaccard():
     payload = {
         "poem_id": "00000000-0000-0000-0000-000000000001",
+        "shingle_count": 20,
         "signature": [10] * 128,
         "stanza_signatures": [],
     }
@@ -41,6 +42,7 @@ def test_processor_mengurutkan_kandidat_berdasarkan_jaccard():
 def test_processor_mengembalikan_kosong_jika_tidak_ada_kandidat():
     payload = {
         "poem_id": "00000000-0000-0000-0000-000000000001",
+        "shingle_count": 20,
         "signature": [10] * 128,
         "stanza_signatures": [],
     }
@@ -49,3 +51,16 @@ def test_processor_mengembalikan_kosong_jika_tidak_ada_kandidat():
         hasil = proses_kandidat(None, payload)
 
     assert hasil == []
+
+
+def test_puisi_tanpa_shingle_tidak_mencari_kandidat():
+    payload = {
+        "poem_id": "00000000-0000-0000-0000-000000000001",
+        "shingle_count": 0,
+        "signature": [2**64 - 1] * 128,
+        "stanza_signatures": [],
+    }
+
+    with patch("app.processor.cari_kandidat") as cari:
+        assert proses_kandidat(None, payload) == []
+        cari.assert_not_called()

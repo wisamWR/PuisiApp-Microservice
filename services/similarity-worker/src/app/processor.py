@@ -3,6 +3,11 @@ from app.similarity import estimasi_jaccard
 
 
 def proses_kandidat(cur, payload: dict) -> list[dict]:
+    # Puisi tanpa shingle hanya punya signature sentinel; membandingkannya
+    # akan menghasilkan Jaccard 1,0 terhadap puisi kosong lain.
+    if payload["shingle_count"] == 0:
+        return []
+
     kandidat = cari_kandidat(cur, payload)
     hasil = []
 

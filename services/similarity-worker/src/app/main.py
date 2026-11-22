@@ -7,7 +7,7 @@ import pika
 from event_lib import StorePg, buat_konsumen
 
 from app.config import load_settings
-from app.database import get_connection
+from app.database import get_connection, jalankan_migrasi
 from app.handler import handle_fingerprint
 
 ANTREAN = "q.similarity-worker"
@@ -53,6 +53,9 @@ def jalankan_konsumen(settings):
             channel = connection.channel()
 
             db_connection = get_connection()
+            migrasi = jalankan_migrasi(db_connection)
+            if migrasi:
+                print(f"[SIMILARITY] Migrasi dijalankan: {', '.join(migrasi)}")
             store = StorePg(db_connection)
 
             print("[RABBITMQ] Consumer similarity-worker berjalan.")

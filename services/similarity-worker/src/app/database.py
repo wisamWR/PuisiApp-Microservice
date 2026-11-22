@@ -1,9 +1,15 @@
 import os
+from pathlib import Path
 
 import psycopg2
 from psycopg2.extras import Json, RealDictCursor
 
 from app.similarity import buat_bucket_lsh
+
+FOLDER_MIGRASI = Path(__file__).resolve().parents[2] / "migrations"
+# Kunci advisory sama dengan libs/node migrasi.js agar dua replika tidak
+# menjalankan migrasi bersamaan.
+KUNCI_ADVISORY = 734_215_001
 
 
 def get_connection():
@@ -11,9 +17,49 @@ def get_connection():
     if not database_url:
         raise ValueError("DATABASE_URL belum dikonfigurasi")
     return psycopg2.connect(database_url)
-from psycopg2.extras import Json, RealDictCursor
 
-from app.similarity import buat_bucket_lsh
+
+def jalankan_migrasi(conn, folder: Path = FOLDER_MIGRASI) -> list[str]:
+    """Menjalankan migrations/*.sql urut nama, dicatat di schema_migrasi.
+
+    Tabel outbox dan publication sudah dibuat skrip init Postgres
+    (infra/postgres/init/70-similarity.sql); folder ini berisi tabel layanan.
+    """
+    dijalankan = []
+    conn.autocommit = True
+    with conn.cursor() as cur:
+        cur.execute("SELECT pg_advisory_lock(%s)", (KUNCI_ADVISORY,))
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS schema_migrasi (
+                    nama TEXT PRIMARY KEY,
+                    dijalankan_at TIMESTAMPTZ NOT NULL DEFAULT now()
+                )
+                """
+            )
+            cur.execute("SELECT nama FROM schema_migrasi")
+            sudah = {baris[0] for baris in cur.fetchall()}
+
+        conn.autocommit = False
+        for berkas in sorted(folder.glob("*.sql")):
+            if berkas.name in sudah:
+                continue
+            with conn:
+                with conn.cursor() as cur:
+                    cur.execute(berkas.read_text(encoding="utf-8-sig"))
+                    cur.execute(
+                        "INSERT INTO schema_migrasi (nama) VALUES (%s)",
+                        (berkas.name,),
+                    )
+            dijalankan.append(berkas.name)
+    finally:
+        conn.autocommit = True
+        with conn.cursor() as cur:
+            cur.execute("SELECT pg_advisory_unlock(%s)", (KUNCI_ADVISORY,))
+        conn.autocommit = False
+    return dijalankan
 
 
 def simpan_fingerprint(cur, payload: dict) -> None:
@@ -38,6 +84,10 @@ def simpan_fingerprint(cur, payload: dict) -> None:
     )
 
     bucket_rows = []
+
+    # Puisi tanpa shingle tidak diindeks (signature sentinel, lihat processor).
+    if payload["shingle_count"] == 0:
+        return
 
     for band, bucket_hash in buat_bucket_lsh(payload["signature"]):
         bucket_rows.append((poem_id, version, None, band, bucket_hash))

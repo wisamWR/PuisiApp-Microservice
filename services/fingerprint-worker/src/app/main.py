@@ -5,11 +5,10 @@ import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import pika
+from event_lib import StoreTanpaDb, buat_konsumen, buat_publisher
 
 from app.config import load_settings
 from app.event import buat_event_fingerprint
-from event_lib import StoreTanpaDb, buat_konsumen, buat_publisher
-
 
 ANTREAN = "q.fingerprint-worker"
 
