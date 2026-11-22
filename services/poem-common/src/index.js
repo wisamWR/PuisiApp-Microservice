@@ -9,3 +9,4 @@ export {
 } from './validasi.js';
 export { buatMetrik } from './metrik.js';
 export { buatFastify, kirimGalat, idPengguna, konteksEvent, pasangDasar, POLA_UUID } from './http.js';
+export { sesiUji } from './sesi-uji.js';

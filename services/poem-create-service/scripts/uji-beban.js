@@ -8,8 +8,10 @@
  * puisi baru (jalur terberat: INSERT submission + INSERT outbox + COMMIT).
  */
 import { randomUUID } from 'node:crypto';
+import { sesiUji } from '@puisiapp/poem-common';
 
 const GATEWAY = process.env.GATEWAY_URL ?? 'http://localhost:8080';
+const sesi = await sesiUji(GATEWAY);
 const jumlah = Number(process.argv[2] ?? 500);
 const konkurensi = Number(process.argv[3] ?? 20);
 const BATAS_P95_MS = 500;
@@ -34,7 +36,7 @@ async function pekerja() {
       headers: {
         'content-type': 'application/json',
         'idempotency-key': `beban-${randomUUID()}`,
-        cookie: 'access_token=dev',
+        cookie: sesi.cookie,
       },
       body: bodyPuisi,
     });
@@ -48,7 +50,7 @@ async function pekerja() {
 for (let i = 0; i < 10; i++) {
   await fetch(`${GATEWAY}/api/poems`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json', 'idempotency-key': `hangat-${randomUUID()}`, cookie: 'access_token=dev' },
+    headers: { 'content-type': 'application/json', 'idempotency-key': `hangat-${randomUUID()}`, cookie: sesi.cookie },
     body: bodyPuisi,
   }).then((r) => r.arrayBuffer());
 }

@@ -22,8 +22,10 @@ import { readFileSync } from 'node:fs';
 import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
 import { folderKontrak, hubungkan, validasiEvent } from '@puisiapp/events';
+import { sesiUji } from '@puisiapp/poem-common';
 
 const GATEWAY = process.env.GATEWAY_URL ?? 'http://localhost:8080';
+const sesi = await sesiUji(GATEWAY, { log: (m) => console.log(`(sesi) ${m}`) });
 process.env.RABBITMQ_HOST = process.env.RABBITMQ_HOST_LOKAL ?? 'localhost';
 process.env.RABBITMQ_USER ??= 'puisiApp';
 process.env.RABBITMQ_PASS ??= 'puisiApp_dev_only';
@@ -57,7 +59,7 @@ const body = {
   template_id: 'latar1',
   keywords: ['Uji'],
 };
-const kirim = (b = body, cookie = 'access_token=dev') =>
+const kirim = (b = body, cookie = sesi.cookie) =>
   fetch(`${GATEWAY}/api/poems`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'idempotency-key': key, cookie },
@@ -74,7 +76,7 @@ cek('POST sah -> 202', r1.status === 202, `status ${r1.status}`);
 cek('Location menunjuk puisi', r1.headers.get('location') === `/api/poems/${j1.poem_id}`);
 cek('status PROCESSING, versi 1', j1.status === 'PROCESSING' && j1.version === 1);
 cek('<script> dan tag dibuang', j1.title === 'Uji Integrasi', JSON.stringify(j1.title));
-cek('author dari gateway (stub)', j1.author_id === 'stub-user', j1.author_id);
+cek('author dari sesi login (X-User-Id gateway)', j1.author_id === sesi.userId, j1.author_id);
 
 const r2 = await kirim();
 const j2 = await r2.json();

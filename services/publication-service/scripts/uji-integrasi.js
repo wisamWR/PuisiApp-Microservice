@@ -24,8 +24,10 @@ import { readFileSync } from 'node:fs';
 import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
 import { buatEvent, buatPublisher, folderKontrak, hubungkan, validasiEvent } from '@puisiapp/events';
+import { sesiUji } from '../../poem-common/src/sesi-uji.js';
 
 const GATEWAY = process.env.GATEWAY_URL ?? 'http://localhost:8080';
+const sesi = await sesiUji(GATEWAY, { log: (m) => console.log(`(sesi) ${m}`) });
 process.env.RABBITMQ_HOST = process.env.RABBITMQ_HOST_LOKAL ?? 'localhost';
 process.env.RABBITMQ_USER ??= 'puisiApp';
 process.env.RABBITMQ_PASS ??= 'puisiApp_dev_only';
@@ -86,7 +88,7 @@ function sahkan(nama, e) {
 async function ajukan(judul) {
   const r = await fetch(`${GATEWAY}/api/poems`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json', 'idempotency-key': `uji-${randomUUID()}`, cookie: 'access_token=dev' },
+    headers: { 'content-type': 'application/json', 'idempotency-key': `uji-${randomUUID()}`, cookie: sesi.cookie },
     body: JSON.stringify({ title: judul, body: 'baris satu\nbaris dua\n\nbait kedua', quote_stanza: 1, template_id: 'latar1' }),
   });
   const j = await r.json();

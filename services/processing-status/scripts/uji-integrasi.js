@@ -19,9 +19,10 @@ import { readFileSync } from 'node:fs';
 import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
 import { buatEvent, buatPublisher, folderKontrak, hubungkan, validasiEvent } from '@puisiapp/events';
+import { sesiUji } from '@puisiapp/poem-common';
 
 const GATEWAY = process.env.GATEWAY_URL ?? 'http://localhost:8080';
-const COOKIE = process.env.COOKIE ?? 'access_token=dev';
+const COOKIE = (await sesiUji(GATEWAY, { log: (m) => console.log(`(sesi) ${m}`) })).cookie;
 process.env.RABBITMQ_HOST = process.env.RABBITMQ_HOST_LOKAL ?? 'localhost';
 process.env.RABBITMQ_USER ??= 'puisiApp';
 process.env.RABBITMQ_PASS ??= 'puisiApp_dev_only';

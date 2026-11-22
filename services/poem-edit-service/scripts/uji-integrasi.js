@@ -15,8 +15,10 @@ import { readFileSync } from 'node:fs';
 import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
 import { folderKontrak, hubungkan, validasiEvent } from '@puisiapp/events';
+import { sesiUji } from '@puisiapp/poem-common';
 
 const GATEWAY = process.env.GATEWAY_URL ?? 'http://localhost:8080';
+const sesi = await sesiUji(GATEWAY, { log: (m) => console.log(`(sesi) ${m}`) });
 process.env.RABBITMQ_HOST = process.env.RABBITMQ_HOST_LOKAL ?? 'localhost';
 process.env.RABBITMQ_USER ??= 'puisiApp';
 process.env.RABBITMQ_PASS ??= 'puisiApp_dev_only';
@@ -39,7 +41,7 @@ const minta = (method, path, body, key) =>
   fetch(`${GATEWAY}${path}`, {
     method,
     headers: {
-      cookie: 'access_token=dev',
+      cookie: sesi.cookie,
       ...(body && { 'content-type': 'application/json' }),
       ...(key && { 'idempotency-key': key }),
     },
