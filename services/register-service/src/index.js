@@ -11,6 +11,8 @@ import { buatLogger, jalankanMigrasi } from '@puisiapp/events';
 import { validasiRegistrasi } from './validasi.js';
 import { daftarAkun, GalatDuplikat } from './daftar.js';
 import { ubahPeran } from './ubahPeran.js';
+import { hapusAkun } from './hapus.js';
+import { cariAkun } from './cari.js';
 import { validasiPeran } from './peran.js';
 
 const log = buatLogger();
@@ -24,11 +26,12 @@ const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 10 }
 // outbox: true -> tabel outbox + publication untuk relay (T0.3)
 await jalankanMigrasi(pool, { folder: path.join(folderIni, '../migrations'), outbox: true, log });
 
-function kirimJson(res, status, body) {
+function kirimJson(res, status, body, header = {}) {
   const teks = JSON.stringify(body);
   res.writeHead(status, {
     'Content-Type': 'application/json; charset=utf-8',
     'Content-Length': Buffer.byteLength(teks),
+    ...header,
   });
   res.end(teks);
 }
@@ -78,6 +81,39 @@ const server = http.createServer(async (req, res) => {
     const hasil = await ubahPeran(pool, cocokPeran[1], v.role, { correlationId: req.headers['x-request-id'] });
     if (hasil.status === 'tidak_ada') return kirimJson(res, 404, { error: 'akun tidak ditemukan' });
     return kirimJson(res, 200, hasil.akun);
+  }
+
+  // Hapus akun (T1.7): pemilik saja, konfirmasi kata sandi wajib.
+  if (req.method === 'DELETE' && url.pathname === '/api/me') {
+    const id = req.headers['x-user-id'];
+    if (!id) return kirimJson(res, 401, { error: 'unauthorized' });
+    let body;
+    try {
+      body = JSON.parse((await bacaBody(req)) || '{}');
+    } catch {
+      return kirimJson(res, 400, { error: 'JSON tidak valid' });
+    }
+    if (typeof body.password !== 'string' || !body.password) {
+      return kirimJson(res, 400, { error: 'kata sandi wajib diisi' });
+    }
+    const hasil = await hapusAkun(pool, id, body.password, { correlationId: req.headers['x-request-id'] });
+    if (hasil.status === 'tidak_ada') return kirimJson(res, 404, { error: 'akun tidak ditemukan' });
+    if (hasil.status === 'sudah') return kirimJson(res, 409, { error: 'akun sudah dihapus' });
+    if (hasil.status === 'salah') return kirimJson(res, 403, { error: 'kata sandi salah' });
+    return kirimJson(res, 202, { status: 'pending' }, {
+      'Set-Cookie': [
+        'access_token=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0',
+        'refresh_token=; Path=/api/auth; HttpOnly; Secure; SameSite=Lax; Max-Age=0',
+      ],
+    });
+  }
+
+  // Cari pengguna untuk admin (T1.7). Gateway sudah memeriksa peran admin; layanan memeriksa lagi.
+  if (req.method === 'GET' && url.pathname === '/api/admin/users') {
+    if (req.headers['x-user-role'] !== 'admin') return kirimJson(res, 403, { error: 'forbidden' });
+    const q = (url.searchParams.get('q') ?? '').trim();
+    if (q.length < 1 || q.length > 50) return kirimJson(res, 400, { error: 'parameter q wajib diisi (1 sampai 50 karakter)' });
+    return kirimJson(res, 200, { items: await cariAkun(pool, q) });
   }
 
   if (req.method !== 'POST' || url.pathname !== '/api/auth/register') {

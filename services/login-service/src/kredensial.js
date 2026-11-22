@@ -33,3 +33,8 @@ export async function ubahPeranKredensial(event, { tx }) {
   );
 }
 
+/** Konsumen user.deleted (T1.7): akun dihapus, kredensialnya dihapus sehingga tidak bisa masuk lagi. */
+export async function hapusKredensial(event, { tx }) {
+  await tx.query('DELETE FROM credentials WHERE id = $1', [event.aggregate_id]);
+}
+
