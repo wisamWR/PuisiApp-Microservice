@@ -353,3 +353,48 @@
     gap: 8px;
   }
 }
+
+/* Halaman Masuk dan Daftar (T1.3) */
+.auth-page {
+  max-width: 420px;
+  margin: 2rem auto;
+}
+
+.form-stack {
+  display: grid;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.field-error {
+  color: #b42318;
+  font-size: 0.85rem;
+  margin: -0.4rem 0 0;
+}
+
+.form-error {
+  color: #b42318;
+  background: #fef3f2;
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  margin: 0;
+}
+
+.form-info {
+  color: #1f6f43;
+  background: #ecfdf3;
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+}
+
+.topbar-user {
+  font-weight: 600;
+  align-self: center;
+}
+
+/* Hapus akun (T1.7) dan halaman admin */
+.danger-zone { margin-top: 2rem; border-top: 1px solid #fecdca; padding-top: 1rem; }
+.check-row { display: flex; gap: 0.5rem; align-items: center; }
+.admin-list { list-style: none; padding: 0; display: grid; gap: 0.5rem; }
+.admin-row { display: grid; grid-template-columns: 1fr 1fr auto auto; gap: 0.75rem; align-items: center; border: 1px solid #eaecf0; border-radius: 8px; padding: 0.6rem 0.8rem; }
+.admin-username { font-weight: 600; }

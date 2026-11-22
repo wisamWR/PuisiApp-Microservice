@@ -1,4 +1,7 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { Button } from '../components/UI'
+import { api } from '../lib/api'
+import { useAuth } from '../lib/auth'
 
 const navigation = [
   {
@@ -30,6 +33,20 @@ const navigation = [
 ]
 
 export default function AppLayout() {
+  const { user, setUser } = useAuth()
+  const navigate = useNavigate()
+
+  async function keluar() {
+    try {
+      // Server mencabut sesi (T1.4). Kalau gagal, tetap keluar dari sisi klien.
+      await api.post('/auth/logout')
+    } catch {
+      // abaikan: sesi tetap diakhiri di klien
+    }
+    setUser(null)
+    navigate('/login', { replace: true })
+  }
+
   return (
     <div className="app-shell">
       <header className="topbar">
@@ -39,7 +56,15 @@ export default function AppLayout() {
         </NavLink>
         <div className="topbar-actions">
           <span className="topbar-caption">Ruang ekspresi dan apresiasi</span>
-          <NavLink to="/login" className="button button-outline">Masuk</NavLink>
+          {user ? (
+            <>
+              <NavLink to="/profile" className="topbar-user">Halo, {user.username}</NavLink>
+              {user.role === 'admin' && <NavLink to="/admin/users" className="button button-outline">Admin</NavLink>}
+              <Button variant="outline" onClick={keluar}>Keluar</Button>
+            </>
+          ) : (
+            <NavLink to="/login" className="button button-outline">Masuk</NavLink>
+          )}
         </div>
       </header>
 

@@ -7,7 +7,7 @@
       "user.profile.updated",
       "user.deleted",
       "user.role.changed"
-    ],
+    , "user.credentials.created"],
     "poem.events": [
       "poem.submitted",
       "poem.revised",
