@@ -80,3 +80,19 @@
   .tulis-pratinjau-kosong { padding: 14px; }
   .tulis-heading { flex-direction: column; }
 }
+
+/* Status pemrosesan langsung (T2.7, StatusPemrosesan) */
+.status-proses { margin-top: 16px; padding: 16px; border: 1px solid #eeeae5; border-radius: 10px; background: #fdfbf8; }
+.status-proses-atas { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 14px; color: #3f352d; }
+.status-proses-persen { color: #8a7045; font-size: 12px; font-variant-numeric: tabular-nums; }
+.status-proses-bilah { height: 4px; margin: 10px 0 12px; border-radius: 2px; background: #efe8dd; overflow: hidden; }
+.status-proses-bilah span { display: block; height: 100%; background: #8a7045; transition: width 0.4s ease; }
+.status-proses-daftar { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 6px 16px; margin: 0; padding: 0; list-style: none; font-size: 13px; color: #9b8e83; }
+.status-proses-daftar li { display: flex; align-items: center; gap: 8px; }
+.status-proses-daftar li.selesai { color: #3f352d; }
+.status-proses-tanda { display: inline-grid; place-items: center; width: 16px; height: 16px; border: 1px solid #d8cfc3; border-radius: 50%; font-size: 10px; color: #fff; flex: none; }
+.status-proses-daftar li.selesai .status-proses-tanda { border-color: #8a7045; background: #8a7045; }
+.status-proses-keterangan, .status-proses-memuat, .status-proses-putus { margin: 12px 0 0; color: #7f7064; font-size: 12px; line-height: 1.7; }
+.status-proses-putus { color: #b0533c; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .status-proses-bilah span { transition: none; } }
