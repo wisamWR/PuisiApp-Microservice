@@ -8,6 +8,7 @@ import RegisterPage from './pages/RegisterPage'
 import './App.css'
 import PoemDetailPage from './pages/PoemDetailPage'
 import ProfilePage from './pages/ProfilePage'
+import AdminUsersPage from './pages/AdminUsersPage'
 import WritePoemPage from './pages/WritePoemPage'
 
 function App() {
@@ -29,6 +30,7 @@ function App() {
             <Route path="themes" element={<PlaceholderPage pageKey="themes" />} />
             <Route path="notifications" element={<PlaceholderPage pageKey="notifications" />} />
             <Route path="profile" element={<ProfilePage />} />
+            <Route path="admin/users" element={<AdminUsersPage />} />
             <Route path="login" element={<LoginPage />} />
             <Route path="register" element={<RegisterPage />} />
             <Route path="moderation" element={<PlaceholderPage pageKey="moderation" />} />

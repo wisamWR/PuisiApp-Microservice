@@ -59,6 +59,7 @@ export default function AppLayout() {
           {user ? (
             <>
               <NavLink to="/profile" className="topbar-user">Halo, {user.username}</NavLink>
+              {user.role === 'admin' && <NavLink to="/admin/users" className="button button-outline">Admin</NavLink>}
               <Button variant="outline" onClick={keluar}>Keluar</Button>
             </>
           ) : (
