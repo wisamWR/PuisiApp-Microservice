@@ -1,7 +1,58 @@
 export const EVENT_DIKONSUMSI = [
   'poem.submitted', 'poem.revised', 'poem.published',
   'poem.hidden', 'poem.deleted', 'poem.emotion.analyzed', 'poem.score.updated',
+  'user.registered', 'user.profile.updated',
 ];
+
+const EVENT_PENULIS = new Set(['user.registered', 'user.profile.updated']);
+
+// Nama tampil penulis: display_name dari profil, kalau kosong username.
+const SQL_NAMA_PENULIS = `COALESCE(NULLIF(pn.display_name, ''), NULLIF(pn.username, ''))`;
+
+const SQL_BARIS_KARTU = `SELECT poem_id, title, author_id, author_name, excerpt, status, dominant, poem_scores, wilson_score, published_at
+         FROM mood_poems`;
+
+/**
+ * Simpan nama penulis dari event user.*, lalu perbarui nama di semua puisinya.
+ * @returns {Promise<object[]>} baris puisi yang namanya berubah (untuk diindeks ulang)
+ */
+async function simpanPenulis(event, tx) {
+  const p = event.payload || {};
+  const userId = String(p.id ?? event.aggregate_id);
+  const teks = (v) => (typeof v === 'string' && v.trim() ? v.trim().slice(0, 100) : null);
+
+  if (event.event_type === 'user.registered') {
+    await tx.query(
+      `INSERT INTO mood_penulis (user_id, username, display_name) VALUES ($1, $2, $3)
+       ON CONFLICT (user_id) DO UPDATE SET
+         username = COALESCE(EXCLUDED.username, mood_penulis.username),
+         display_name = CASE WHEN mood_penulis.profil_at IS NULL
+                             THEN COALESCE(EXCLUDED.display_name, mood_penulis.display_name)
+                             ELSE mood_penulis.display_name END,
+         diubah_at = now()`,
+      [userId, teks(p.username), teks(p.display_name)],
+    );
+  } else {
+    // Profil bisa datang tidak berurutan: yang lebih lama tidak menimpa yang baru.
+    await tx.query(
+      `INSERT INTO mood_penulis (user_id, display_name, profil_at) VALUES ($1, $2, $3)
+       ON CONFLICT (user_id) DO UPDATE SET
+         display_name = EXCLUDED.display_name, profil_at = EXCLUDED.profil_at, diubah_at = now()
+       WHERE mood_penulis.profil_at IS NULL OR mood_penulis.profil_at <= EXCLUDED.profil_at`,
+      [userId, teks(p.display_name), event.occurred_at || new Date().toISOString()],
+    );
+  }
+
+  const { rows } = await tx.query(
+    `UPDATE mood_poems m SET author_name = ${SQL_NAMA_PENULIS}, updated_at = now()
+       FROM mood_penulis pn
+      WHERE pn.user_id = $1 AND m.author_id = pn.user_id AND ${SQL_NAMA_PENULIS} IS NOT NULL
+      RETURNING m.poem_id, m.title, m.author_id, m.author_name, m.excerpt, m.status, m.dominant,
+                m.poem_scores, m.wilson_score, m.published_at`,
+    [userId],
+  );
+  return rows;
+}
 
 const EVENT_VERSI_KONTEN = new Set(['poem.submitted', 'poem.revised', 'poem.emotion.analyzed']);
 
@@ -55,6 +106,13 @@ export function buatHandlerEvent({ indeks, log } = {}) {
       return rows[0]?.version ?? null;
     },
     handler: async (event, { tx }) => {
+      if (EVENT_PENULIS.has(event.event_type)) {
+        const diubah = await simpanPenulis(event, tx);
+        for (const baris of diubah) await indeks?.indeksPuisi?.(baris);
+        log?.info?.('nama penulis diperbarui', { event_type: event.event_type, puisi: diubah.length });
+        return;
+      }
+
       const p = event.payload || {};
       const poemId = String(p.poem_id || event.aggregate_id);
       const versi = Number(p.version ?? event.aggregate_version ?? 1);
@@ -123,11 +181,15 @@ export function buatHandlerEvent({ indeks, log } = {}) {
         );
       }
 
-      const { rows } = await tx.query(
-        `SELECT poem_id, title, author_id, author_name, excerpt, status, dominant, poem_scores, wilson_score, published_at
-         FROM mood_poems WHERE poem_id = $1`,
+      // Isi nama penulis dari mood_penulis bila sudah diketahui (event poem.* hanya membawa author_id).
+      await tx.query(
+        `UPDATE mood_poems m SET author_name = ${SQL_NAMA_PENULIS}
+           FROM mood_penulis pn
+          WHERE m.poem_id = $1 AND pn.user_id = m.author_id AND ${SQL_NAMA_PENULIS} IS NOT NULL
+            AND m.author_name IS DISTINCT FROM ${SQL_NAMA_PENULIS}`,
         [poemId],
       );
+      const { rows } = await tx.query(`${SQL_BARIS_KARTU} WHERE poem_id = $1`, [poemId]);
       await indeks?.indeksPuisi?.(rows[0] || { poem_id: poemId, status: 'hidden' });
       log?.info?.('indeks mood diperbarui', { event_type: event.event_type, poem_id: poemId });
     },
