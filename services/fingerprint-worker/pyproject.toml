@@ -10,7 +10,8 @@ description = "Worker untuk menghasilkan fingerprint puisi menggunakan shingling
 requires-python = ">=3.11"
 dependencies = [
     "pika==1.3.2",
-    "jsonschema==4.23.0"
+    "jsonschema==4.23.0",
+    "prometheus-client==0.20.0"
 ]
 
 [project.optional-dependencies]
