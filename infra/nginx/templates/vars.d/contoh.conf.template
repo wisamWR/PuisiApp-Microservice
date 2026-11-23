@@ -1,0 +1,2 @@
+# Layanan contoh untuk uji deploy (T0.9, routes/contoh.conf); kosong = rute 404.
+set $up_contoh    "${CONTOH_HOST}";

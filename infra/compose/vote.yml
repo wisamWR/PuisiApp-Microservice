@@ -1,0 +1,9 @@
+# Domain vote
+# Kelompok: 9 Suara dan peringkat (Raffa)
+# Layanan: vote, vote-persist-worker, ranking-worker
+#
+# Tulis layanan domain ini di sini. Path relatif dihitung dari folder infra/
+# (project_directory pada include), jadi build context ditulis ../services/<nama>.
+# Pola lengkap ada di infra/README.md. Alamat dependensi diambil dari .env.
+
+services: {}

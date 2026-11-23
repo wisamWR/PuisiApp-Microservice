@@ -1,0 +1,6 @@
+# Domain identity (kelompok 1 Akun, routes/identity.conf).
+set $up_register  "${REGISTER_HOST}";
+set $up_login     "${LOGIN_HOST}";
+set $up_profile   "${PROFILE_HOST}";
+set $up_recovery  "${RECOVERY_HOST}";
+set $up_token     "${TOKEN_HOST}";

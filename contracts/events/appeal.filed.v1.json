@@ -1,0 +1,45 @@
+{
+    "$schema":  "https://json-schema.org/draft/2020-12/schema",
+    "$id":  "https://puisiapp.example/schema/events/appeal.filed.v1.json",
+    "title":  "Appeal Filed Event",
+    "type":  "object",
+    "additionalProperties":  false,
+    "required":  [
+                     "appeal_id",
+                     "case_id",
+                     "user_id",
+                     "reason",
+                     "filed_at"
+                 ],
+    "properties":  {
+                       "appeal_id":  {
+                                         "type":  "string",
+                                         "format":  "uuid"
+                                     },
+                       "case_id":  {
+                                       "type":  "string",
+                                       "format":  "uuid"
+                                   },
+                       "user_id":  {
+                                       "type":  "string",
+                                       "minLength":  1
+                                   },
+                       "reason":  {
+                                      "type":  "string",
+                                      "minLength":  1
+                                  },
+                       "filed_at":  {
+                                        "type":  "string",
+                                        "format":  "date-time"
+                                    }
+                   },
+    "examples":  [
+                     {
+                         "appeal_id":  "550e8400-e29b-41d4-a716-446655440001",
+                         "case_id":  "550e8400-e29b-41d4-a716-446655440001",
+                         "user_id":  "sample-value",
+                         "reason":  "sample-value",
+                         "filed_at":  "2026-11-19T08:30:00Z"
+                     }
+                 ]
+}

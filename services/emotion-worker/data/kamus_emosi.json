@@ -1,0 +1,47 @@
+{
+  "senang": [
+    "bahagia", "gembira", "ceria", "tawa", "tertawa", "senyum", "tersenyum", "riang",
+    "sukacita", "lega", "syukur", "bersyukur", "nikmat", "indah", "cerah", "mentari",
+    "pagi", "pelangi", "bunga", "mekar", "harapan", "optimis", "semangat", "bangga",
+    "menang", "kemenangan", "merdeka", "bebas", "terbang", "menari", "nyanyi", "lagu",
+    "harmoni", "damai", "tenang", "sejuk", "hangat", "cahaya", "sinar", "gemilang",
+    "berkilau", "bersemi", "tumbuh", "subur", "segar", "manis", "ceria", "girang",
+    "takjub", "kagum", "puas", "beruntung", "rahmat", "berkah", "pesta", "sorak"
+  ],
+  "sedih": [
+    "sedih", "duka", "berduka", "tangis", "menangis", "airmata", "luka", "perih",
+    "pilu", "lara", "sendu", "murung", "kelabu", "hujan", "gerimis", "mendung",
+    "sepi", "sunyi", "kesepian", "sendiri", "hampa", "kosong", "hilang", "kehilangan",
+    "pergi", "berpisah", "perpisahan", "patah", "hancur", "rapuh", "gugur", "layu",
+    "kering", "retak", "sesal", "menyesal", "kecewa", "merana", "derita", "menderita",
+    "sengsara", "nelangsa", "risau", "galau", "gundah", "suram", "gelap", "redup",
+    "kenangan", "silam", "karam", "tenggelam", "pedih", "nestapa", "ratap", "meratap"
+  ],
+  "cinta": [
+    "cinta", "mencintai", "kasih", "sayang", "menyayangi", "rindu", "merindu", "kangen",
+    "peluk", "memeluk", "dekap", "mendekap", "genggam", "menggenggam", "hati", "kalbu",
+    "jiwa", "asmara", "romantis", "mesra", "setia", "kesetiaan", "janji", "ikrar",
+    "kekasih", "pujaan", "dambaan", "belahan", "jodoh", "takdir", "tatap", "menatap",
+    "bisik", "membisik", "belai", "membelai", "kecup", "mengecup", "restu", "doa",
+    "tulus", "ikhlas", "suci", "abadi", "selamanya", "lembut", "anggun", "pesona",
+    "terpikat", "jatuh", "paut", "terpaut", "hangatnya", "syahdu", "puja", "memuja"
+  ],
+  "marah": [
+    "marah", "murka", "amarah", "benci", "membenci", "dendam", "geram", "kesal",
+    "jengkel", "berang", "amuk", "mengamuk", "teriak", "berteriak", "bentak", "membentak",
+    "hantam", "menghantam", "hancurkan", "bakar", "membakar", "api", "bara", "membara",
+    "panas", "mendidih", "ledak", "meledak", "badai", "petir", "guntur", "halilintar",
+    "khianat", "berkhianat", "dusta", "bohong", "tipu", "curang", "zalim", "kejam",
+    "bengis", "sadis", "angkuh", "sombong", "hina", "menghina", "caci", "maki",
+    "muak", "jijik", "berontak", "lawan", "melawan", "perang", "tampar", "robek"
+  ],
+  "takut": [
+    "takut", "ketakutan", "cemas", "kecemasan", "khawatir", "gelisah", "panik", "ngeri",
+    "mengerikan", "seram", "horor", "gentar", "gemetar", "menggigil", "dingin", "beku",
+    "pucat", "lemas", "lumpuh", "terjebak", "kurung", "terkurung", "sesak", "tercekik",
+    "ancam", "ancaman", "terancam", "bahaya", "berbahaya", "maut", "kematian", "kubur",
+    "bayang", "bayangan", "hantu", "mimpi", "buruk", "malam", "kelam", "gulita",
+    "buta", "tersesat", "jurang", "tepi", "jatuh", "runtuh", "gempa", "kabur",
+    "lari", "berlari", "sembunyi", "bersembunyi", "waswas", "ragu", "bimbang", "goyah"
+  ]
+}

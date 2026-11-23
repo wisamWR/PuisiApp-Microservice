@@ -1,0 +1,71 @@
+openapi: 3.1.0
+info:
+  title: image-preview-service
+  version: 1.0.0
+  description: |
+    Pratinjau gambar kutipan saat penulis mengetik (T2.5, kelompok 2).
+    Sinkron dan stateless: template dimuat sekali ke memori, tanpa basis
+    data. Hasil identik untuk masukan yang sama, sehingga aman di-cache
+    CloudFront dan browser (Tier-0/1). Gambar final dibuat terpisah oleh
+    image-render-worker setelah puisi diajukan.
+servers:
+  - url: http://localhost:8080
+    description: api-gateway lokal
+paths:
+  /api/images/preview:
+    get:
+      operationId: pratinjauGambar
+      summary: Pratinjau JPEG bait kutipan pada template
+      parameters:
+        - name: template
+          in: query
+          required: true
+          schema: { type: string, example: latar2 }
+          description: Salah satu template sah (latar1, latar2, latar3)
+        - name: text
+          in: query
+          required: true
+          schema: { type: string, maxLength: 280 }
+          description: Isi bait kutipan; baris dipisah newline (%0A)
+      responses:
+        '200':
+          description: Gambar JPEG 540 x 540
+          headers:
+            Cache-Control:
+              schema: { type: string, example: 'public, max-age=86400, immutable' }
+            ETag:
+              schema: { type: string }
+          content:
+            image/jpeg:
+              schema: { type: string, format: binary }
+        '304':
+          description: Tidak berubah (If-None-Match cocok)
+        '400':
+          description: Template tidak dikenal, teks kosong, atau lebih dari 280 karakter
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [error, message]
+                properties:
+                  error: { type: string, example: validasi }
+                  message: { type: string }
+        '429':
+          description: Terlalu banyak permintaan (rate limit gateway per IP)
+  /api/images/templates:
+    get:
+      operationId: daftarTemplate
+      summary: Daftar template untuk pilihan di halaman tulis puisi
+      responses:
+        '200':
+          description: Daftar template
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  required: [id, nama]
+                  properties:
+                    id: { type: string, example: latar2 }
+                    nama: { type: string, example: Kertas Senja }

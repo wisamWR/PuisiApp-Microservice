@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://puisiapp.example/schema/events/poem.image.rendered.v1.json",
+  "title": "Payload poem.image.rendered v1",
+  "description": "Gambar kutipan final satu versi puisi sudah tersimpan di S3. Produsen: image-render-worker (T2.5). Exchange: analysis.events. aggregate_id = poem_id, aggregate_version = versi puisi. Konsumen: poem-query (URL gambar kartu), processing-tracker (langkah 'gambar').",
+  "type": "object",
+  "required": ["poem_id", "version", "template_id", "image_key", "image_url", "width", "height", "rendered_at"],
+  "properties": {
+    "poem_id": { "type": "string", "format": "uuid" },
+    "version": { "type": "integer", "minimum": 1 },
+    "template_id": { "type": "string", "minLength": 1, "maxLength": 20 },
+    "image_key": {
+      "type": "string",
+      "pattern": "^poems/[0-9a-f-]{36}/v[0-9]+\\.jpg$",
+      "description": "Kunci objek di bucket S3. Berversi: versi lama tidak pernah ditimpa, sehingga bisa di-cache immutable di CloudFront."
+    },
+    "image_url": {
+      "type": "string",
+      "format": "uri",
+      "description": "URL publik = S3_PUBLIC_BASE_URL + '/' + image_key"
+    },
+    "width": { "type": "integer", "minimum": 1 },
+    "height": { "type": "integer", "minimum": 1 },
+    "rendered_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "poem_id": "0b7d6f0e-4a8b-4a52-9d0b-3f4f0e9b2a10",
+      "version": 1,
+      "template_id": "latar2",
+      "image_key": "poems/0b7d6f0e-4a8b-4a52-9d0b-3f4f0e9b2a10/v1.jpg",
+      "image_url": "http://localhost:9000/puisi-images/poems/0b7d6f0e-4a8b-4a52-9d0b-3f4f0e9b2a10/v1.jpg",
+      "width": 1080,
+      "height": 1080,
+      "rendered_at": "2026-11-17T03:00:01.850Z"
+    }
+  ]
+}
