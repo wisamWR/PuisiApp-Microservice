@@ -1,0 +1,13 @@
+﻿{
+    "name":  "@puisiapp/tools",
+    "private":  true,
+    "type":  "module",
+    "dependencies":  {
+                         "@puisiapp/events":  "file:../libs/node",
+                         "ajv":  "8.20.0",
+                         "ajv-formats":  "3.0.1"
+                     },
+    "bin":  {
+                "publish-sample":  "./publish-sample/index.js"
+            }
+}
