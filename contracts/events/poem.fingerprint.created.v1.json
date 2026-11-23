@@ -39,10 +39,15 @@
         "type": "object",
         "required": [
           "stanza",
+          "shingle_count",
           "signature"
         ],
         "properties": {
           "stanza": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "shingle_count": {
             "type": "integer",
             "minimum": 1
           },

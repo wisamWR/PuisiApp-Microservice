@@ -49,7 +49,7 @@ def buat_event_similarity(
     # simpan skor tertinggi per puisi pembanding, urut skor menurun.
     terbaik: dict[str, float] = {}
     for item in hasil_kandidat:
-        skor = round(item["jaccard_estimate"], 6)
+        skor = round(item["score"], 6)
         if skor > terbaik.get(item["poem_id"], -1.0):
             terbaik[item["poem_id"]] = skor
 

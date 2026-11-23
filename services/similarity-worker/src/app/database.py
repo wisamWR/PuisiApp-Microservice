@@ -61,6 +61,16 @@ def jalankan_migrasi(conn, folder: Path = FOLDER_MIGRASI) -> list[str]:
         conn.autocommit = False
     return dijalankan
 
+def catat_first_seen(cur, poem_id: str) -> None:
+    """Mencatat waktu pertama puisi ditemukan tanpa mengubah catatan lama."""
+    cur.execute(
+        """
+        INSERT INTO poem_first_seen (poem_id)
+        VALUES (%s)
+        ON CONFLICT (poem_id) DO NOTHING
+        """,
+        (poem_id,),
+    )
 
 def simpan_fingerprint(cur, payload: dict) -> None:
     poem_id = payload["poem_id"]
@@ -130,7 +140,7 @@ def cari_kandidat(cur, payload: dict) -> list[dict]:
     for kind, band, bucket_hash in input_buckets:
         params.extend([kind, band, bucket_hash])
 
-    params.append(poem_id)
+    params.extend([poem_id, poem_id])
 
     query = f"""
         WITH input_buckets(kind, band, bucket_hash) AS (
@@ -157,7 +167,13 @@ def cari_kandidat(cur, payload: dict) -> list[dict]:
         JOIN poem_signatures p
           ON p.poem_id = b.poem_id
          AND p.version = b.version
+        JOIN poem_first_seen candidate_first_seen
+          ON candidate_first_seen.poem_id = p.poem_id
+        JOIN poem_first_seen source_first_seen
+          ON source_first_seen.poem_id = %s
         WHERE b.poem_id <> %s
+          AND candidate_first_seen.first_seen_at
+              < source_first_seen.first_seen_at
         GROUP BY
             p.poem_id,
             p.version,

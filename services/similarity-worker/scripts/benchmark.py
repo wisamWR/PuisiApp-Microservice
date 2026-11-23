@@ -1,4 +1,5 @@
-﻿import random
+﻿
+import random
 import time
 import uuid
 
@@ -25,6 +26,7 @@ def main():
 
         records = []
         bucket_rows = []
+        first_seen_rows = []
 
         for i in range(TOTAL):
             poem_id = str(uuid.uuid4())
@@ -37,21 +39,21 @@ def main():
                 ]
 
             records.append((
+                poem_id, 1, 100,
+                Json(signature), Json([]),
+            ))
+
+            first_seen_rows.append((
                 poem_id,
-                1,
-                100,
-                Json(signature),
-                Json([]),
+                "2026-01-01 10:00:00+00",
             ))
 
             for band, bucket_hash in buat_bucket_lsh(signature):
                 bucket_rows.append((
-                    poem_id,
-                    1,
-                    None,
-                    band,
-                    bucket_hash,
+                    poem_id, 1, None, band, bucket_hash,
                 ))
+
+        source_id = str(uuid.uuid4())
 
         start_seed = time.perf_counter()
 
@@ -66,6 +68,14 @@ def main():
 
         cur.executemany(
             """
+            INSERT INTO poem_first_seen (poem_id, first_seen_at)
+            VALUES (%s, %s)
+            """,
+            first_seen_rows,
+        )
+
+        cur.executemany(
+            """
             INSERT INTO lsh_buckets
             (poem_id, version, stanza, band, bucket_hash)
             VALUES (%s, %s, %s, %s, %s)
@@ -73,10 +83,18 @@ def main():
             bucket_rows,
         )
 
+        cur.execute(
+            """
+            INSERT INTO poem_first_seen (poem_id, first_seen_at)
+            VALUES (%s, '2026-01-01 10:05:00+00')
+            """,
+            (source_id,),
+        )
+
         seed_time = time.perf_counter() - start_seed
 
         payload = {
-            "poem_id": str(uuid.uuid4()),
+            "poem_id": source_id,
             "version": 1,
             "shingle_count": 100,
             "signature": target_signature,
@@ -94,9 +112,15 @@ def main():
         print("TOTAL FINGERPRINT:", TOTAL)
         print("TOTAL BUCKETS:", len(bucket_rows))
         print("CANDIDATES FOUND:", len(result))
-        print("BEST SCORE:", result[0]["jaccard_estimate"] if result else None)
+        print(
+            "BEST SCORE:",
+            result[0]["jaccard_estimate"] if result else None,
+        )
         print("SEED TIME (ms):", round(seed_time * 1000, 3))
-        print("QUERY + SCORING AVG (ms):", round(sum(times) / len(times), 3))
+        print(
+            "QUERY + SCORING AVG (ms):",
+            round(sum(times) / len(times), 3),
+        )
         print("QUERY + SCORING MIN (ms):", round(min(times), 3))
         print("QUERY + SCORING MAX (ms):", round(max(times), 3))
 

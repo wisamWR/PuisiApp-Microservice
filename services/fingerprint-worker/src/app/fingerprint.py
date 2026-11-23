@@ -1,4 +1,3 @@
-
 import hashlib
 import re
 import unicodedata
@@ -146,16 +145,15 @@ def proses_fingerprint(
         seed,
     )
 
-    # Hitung signature untuk setiap bait.
+    # Hitung signature dan jumlah shingle unik untuk setiap bait.
     stanza_signatures = []
 
     for indeks, bait in enumerate(bait_asli, start=1):
         bait_normal = normalisasi_teks(bait)
         shingles_bait = buat_shingle(bait_normal, ukuran_shingle)
 
-        # Bait < ukuran_shingle kata tidak punya shingle. Signature-nya akan
-        # berupa nilai sentinel yang identik di semua puisi, sehingga setiap
-        # bait pendek "cocok 100%" dengan bait pendek lain (positif palsu).
+        # Bait tanpa shingle tidak diindeks untuk menghindari
+        # false positive akibat signature sentinel yang identik.
         if not shingles_bait:
             continue
 
@@ -168,15 +166,18 @@ def proses_fingerprint(
         stanza_signatures.append(
             {
                 "stanza": indeks,
+                "shingle_count": len(shingles_bait),
                 "signature": signature_bait,
             }
         )
 
     return {
-        "shingle_count": sum(shingles_puisi.values()),
+        # Menggunakan jumlah shingle unik agar konsisten dengan MinHash.
+        "shingle_count": len(shingles_puisi),
         "signature": signature_puisi,
         "stanza_signatures": stanza_signatures,
     }
+
 
 def buat_payload_fingerprint(
     poem_id: str,
@@ -207,4 +208,3 @@ def buat_payload_fingerprint(
         "signature": hasil["signature"],
         "stanza_signatures": hasil["stanza_signatures"],
     }
-
