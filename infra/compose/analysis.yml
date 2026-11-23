@@ -1,5 +1,7 @@
+
 # Domain analysis
 # Kelompok: 5 Mood, 6 Tema (Sabila); 7 Keaslian (Raffa)
+
 services:
   emotion-worker:
     build:
@@ -48,3 +50,61 @@ services:
       redis: { condition: service_healthy }
       rabbitmq: { condition: service_healthy }
       rabbitmq-topologi: { condition: service_completed_successfully }
+
+  # T7.1 - Fingerprint Worker
+  fingerprint-worker:
+    build:
+      context: ..
+      dockerfile: services/fingerprint-worker/Dockerfile
+    restart: unless-stopped
+    environment:
+      SERVICE_NAME: fingerprint-worker
+      HOST: 0.0.0.0
+      PORT: "8080"
+      AMQP_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@${RABBITMQ_HOST}:${RABBITMQ_PORT}/${RABBITMQ_VHOST}
+      MINHASH_SEED: "42"
+      MINHASH_NUM_HASHES: "128"
+      SHINGLE_SIZE: "3"
+    networks: [app, data]
+    depends_on:
+      rabbitmq: { condition: service_healthy }
+      rabbitmq-topologi: { condition: service_completed_successfully }
+
+  # T7.2 - Similarity Worker
+  similarity-worker:
+    build:
+      context: ..
+      dockerfile: services/similarity-worker/Dockerfile
+    restart: unless-stopped
+    environment:
+      SERVICE_NAME: similarity-worker
+      HOST: 0.0.0.0
+      PORT: "8080"
+      AMQP_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@${RABBITMQ_HOST}:${RABBITMQ_PORT}/${RABBITMQ_VHOST}
+      DATABASE_URL: postgresql://similarity:${SIMILARITY_DB_PASS}@${POSTGRES_HOST}:${POSTGRES_PORT}/similarity_db
+      MINHASH_NUM_HASHES: "128"
+      LSH_BANDS: "32"
+      LSH_ROWS: "4"
+      THRESHOLD_INSPIRED: "0.20"
+      THRESHOLD_SIMILAR: "0.50"
+      THRESHOLD_PLAGIARISM: "0.80"
+    networks: [app, data]
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq-topologi: { condition: service_completed_successfully }
+
+  outbox-relay-similarity:
+    extends:
+      file: debezium/relay.yml
+      service: outbox-relay
+    environment:
+      RELAY_DB: similarity_db
+      RELAY_SLOT: outbox_similarity
+    volumes:
+      - relay-similarity-data:/debezium/data
+    depends_on:
+      rabbitmq-topologi: { condition: service_completed_successfully }
+      similarity-worker: { condition: service_healthy }
+
+volumes:
+  relay-similarity-data: {}
