@@ -47,4 +47,4 @@ T0.2, T0.6, T2.1 dan T2.2 (salinan kepemilikan dan status; uji awal memakai cont
 
 ## Alur Git
 
-Kerjakan langsung di `k9-suara`, awali commit dengan kode task (`T9.1: skrip lua vote`). Gabungkan `main` ke branch ini setiap hari kerja dan buat PR ke `main` minimal tiap Jumat.
+Kerjakan langsung di `k9-vote`, awali commit dengan kode task (`T9.1: skrip lua vote`). Gabungkan `main` ke branch ini setiap hari kerja dan buat PR ke `main` minimal tiap Jumat.
