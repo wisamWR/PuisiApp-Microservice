@@ -1,0 +1,104 @@
+openapi: 3.1.0
+info:
+  title: vote-service (T9.1, kelompok 9 Suara dan peringkat)
+  version: 0.1.0
+  description: >
+    Upvote/downvote puisi. Suara diterima di Redis secara atomik (skrip Lua),
+    lalu disimpan permanen belakangan oleh vote-persist-worker (write-behind).
+    Semua rute butuh login; X-User-Id diisi gateway dari auth_request.
+servers:
+  - url: /api
+paths:
+  /poems/{id}/vote:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      summary: Skor tampil dan suara saya
+      responses:
+        "200":
+          description: Skor gabungan. Rincian naik/turun hanya untuk penulis puisi.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Skor" }
+              examples:
+                publik:
+                  value: { poem_id: 0193b1a8-7f4e-4c2a-9d3e-5a6b7c8d9e0f, nilai: 1, skor: 12, jumlah_suara: 20, pemilik: false, dapat_memilih: true }
+                penulis:
+                  value: { poem_id: 0193b1a8-7f4e-4c2a-9d3e-5a6b7c8d9e0f, nilai: 0, skor: 12, jumlah_suara: 20, pemilik: true, dapat_memilih: false, naik: 16, turun: 4 }
+        "401": { $ref: "#/components/responses/Galat" }
+        "404": { $ref: "#/components/responses/Galat" }
+    put:
+      summary: Beri, ubah, atau tarik suara
+      description: >
+        nilai 1 = upvote, -1 = downvote, 0 = tarik suara. Mengirim nilai yang
+        sama dengan suara saat ini tidak mengubah apa pun (idempoten).
+        Rate limit 30 suara per menit per pengguna.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [nilai]
+              properties:
+                nilai: { type: integer, enum: [-1, 0, 1] }
+            example: { nilai: 1 }
+      responses:
+        "200":
+          description: Suara diterima; skor tampil terkini.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Skor" }
+              example: { poem_id: 0193b1a8-7f4e-4c2a-9d3e-5a6b7c8d9e0f, nilai: 1, skor: 13, jumlah_suara: 21, pemilik: false, dapat_memilih: true }
+        "400": { $ref: "#/components/responses/Galat" }
+        "401": { $ref: "#/components/responses/Galat" }
+        "403":
+          description: Penulis tidak dapat memberi suara pada puisinya sendiri (pemilik_puisi).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Galat" }
+        "404": { $ref: "#/components/responses/Galat" }
+        "409":
+          description: Puisi belum terbit atau disembunyikan (belum_terbit).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Galat" }
+        "429":
+          description: Terlalu banyak suara (terlalu_sering); lihat header Retry-After.
+          headers:
+            Retry-After: { schema: { type: integer } }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Galat" }
+        "503": { $ref: "#/components/responses/Galat" }
+components:
+  responses:
+    Galat:
+      description: Galat
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Galat" }
+  schemas:
+    Skor:
+      type: object
+      additionalProperties: false
+      required: [poem_id, nilai, skor, jumlah_suara, pemilik, dapat_memilih]
+      properties:
+        poem_id: { type: string, format: uuid }
+        nilai: { type: integer, enum: [-1, 0, 1], description: Suara pengguna saat ini }
+        skor: { type: integer, description: Upvote dikurangi downvote }
+        jumlah_suara: { type: integer, minimum: 0 }
+        pemilik: { type: boolean }
+        dapat_memilih: { type: boolean }
+        naik: { type: integer, minimum: 0, description: Hanya untuk penulis }
+        turun: { type: integer, minimum: 0, description: Hanya untuk penulis }
+    Galat:
+      type: object
+      required: [error, message]
+      properties:
+        error: { type: string }
+        message: { type: string }

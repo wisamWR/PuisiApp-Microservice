@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import EmotionFlowPanel from '../components/EmotionFlowPanel'
 import PuisiDiproses from '../components/PuisiDiproses'
+import VoteButtons from '../components/VoteButtons'
 import { EmotionLabel, Loader } from '../components/UI'
 import { api } from '../lib/api'
 import { SAMPLE_MOOD_POEMS } from '../lib/moodData'
@@ -77,6 +78,11 @@ export default function PoemDetailPage() {
             </svg>
             <span>Kembali ke Mood Feed</span>
           </Link>
+        </div>
+
+        {/* T9.3: upvote/downvote. Tampil bila puisi dikenal vote-service (sudah diajukan). */}
+        <div className="poem-detail-vote">
+          <VoteButtons poemId={id} />
         </div>
 
         {demoPoem ? (

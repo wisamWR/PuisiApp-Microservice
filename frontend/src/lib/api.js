@@ -79,7 +79,9 @@ export async function apiRequest(path, options = {}) {
     throw new TypeError('API path harus berupa string yang valid.')
   }
 
-  const { sudahCobaRefresh = false, ...fetchOptions } = options
+  // tanpaAlihLogin: 401 cukup dilempar sebagai ApiError tanpa pindah ke /login
+  // (mis. skor vote di kartu publik saat pengguna belum masuk).
+  const { sudahCobaRefresh = false, tanpaAlihLogin = false, ...fetchOptions } = options
   const normalizedPath = path.startsWith('/') ? path : `/${path}`
   const url = `${API_BASE_URL}${normalizedPath}`
 
@@ -116,7 +118,7 @@ export async function apiRequest(path, options = {}) {
   if (response.status === 401 && !sudahCobaRefresh && !JALUR_AUTH.includes(normalizedPath)) {
     const diperbarui = await refreshSesi()
     if (diperbarui) {
-      return apiRequest(path, { ...fetchOptions, sudahCobaRefresh: true })
+      return apiRequest(path, { ...fetchOptions, sudahCobaRefresh: true, tanpaAlihLogin })
     }
   }
 
@@ -124,7 +126,7 @@ export async function apiRequest(path, options = {}) {
     const currentPath = window.location.pathname
     const publicPages = ['/login', '/register']
 
-    if (!publicPages.includes(currentPath)) {
+    if (!tanpaAlihLogin && !publicPages.includes(currentPath)) {
       // Simpan tujuan awal agar halaman Masuk bisa kembali ke sini setelah login.
       const next = encodeURIComponent(currentPath + window.location.search)
       window.location.assign(`/login?next=${next}`)

@@ -1,0 +1,2 @@
+# Domain vote (kelompok 9 Suara dan peringkat, routes/vote.conf).
+set $up_vote "${VOTE_HOST}";
