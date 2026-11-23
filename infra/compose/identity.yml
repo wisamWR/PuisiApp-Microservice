@@ -195,5 +195,50 @@ services:
       rabbitmq-topologi: { condition: service_completed_successfully }
       account-recovery-service: { condition: service_healthy }
 
+  # profile-service (T1.5): profil publik. Konsumsi user.registered, ubah profil lewat /api/profiles/me.
+  profile-service:
+    build:
+      context: ..
+      dockerfile: services/profile-service/Dockerfile
+    restart: unless-stopped
+    environment:
+      SERVICE_NAME: profile-service
+      PORT: "8080"
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      DATABASE_URL: postgres://profile_svc:${PROFILE_DB_PASS}@${POSTGRES_HOST}:${POSTGRES_PORT}/profile_db
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+      RABBITMQ_VHOST: ${RABBITMQ_VHOST}
+    networks: [app, data]
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+      rabbitmq-topologi: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
+
+  # Relay outbox profile_db (T0.3): user.profile.updated ke RabbitMQ.
+  outbox-relay-profile:
+    extends:
+      file: debezium/relay.yml
+      service: outbox-relay
+    environment:
+      RELAY_DB: profile_db
+      RELAY_SLOT: outbox_profile
+    volumes:
+      - ./debezium/application.properties:/debezium/config/application.properties:ro
+      - relay-profile-data:/debezium/data
+    depends_on:
+      rabbitmq-topologi: { condition: service_completed_successfully }
+      profile-service: { condition: service_healthy }   # yang membuat tabel outbox
+
 volumes:
   relay-account-data: {}
+  relay-profile-data: {}
+  relay-recovery-data: {}
