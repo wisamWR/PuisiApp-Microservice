@@ -4,7 +4,6 @@ import { readFileSync, writeFileSync, existsSync, renameSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buatPembatasLaju } from './rate-limit.js';
-import crypto from 'node:crypto';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const DATA_DIR = path.join(ROOT, 'tools', 'seed-data');
@@ -270,7 +269,7 @@ function ambilIdPuisi(body, location, createUrl) {
   throw new Error('ID puisi tidak ditemukan pada respons API.');
 }
 
-async function kirimPuisi(poem, account, identity, createUrl, limiter) {
+async function kirimPuisi(poem, index, account, identity, createUrl, limiter) {
   const payload = {
     title: poem.title,
     body: poem.body,
@@ -288,7 +287,8 @@ async function kirimPuisi(poem, account, identity, createUrl, limiter) {
         headers: {
           'content-type': 'application/json',
           'x-user-id': identity.userId,
-          'Idempotency-Key': `seed-${crypto.randomUUID()}`,
+          // Kunci tetap per puisi: seed yang diulang mendapat puisi yang sama, bukan duplikat.
+          'Idempotency-Key': `seed-t010-${String(index + 1).padStart(3, '0')}`,
         },
         body: JSON.stringify(payload),
       });
@@ -363,7 +363,7 @@ async function main() {
   const emotionCounts = validasiData(accounts, poems, options.count);
 
   if (options.dryRun) {
-    console.log('DRY RUN BERHASIL ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â tidak ada request API yang dikirim.');
+    console.log('DRY RUN BERHASIL: tidak ada request API yang dikirim.');
     console.log(`Akun valid: ${accounts.length}`);
     console.log(`Puisi valid: ${selectedPoems.length}`);
     for (const [emotion, count] of Object.entries(emotionCounts)) {
@@ -417,19 +417,21 @@ async function main() {
 
     const id = await kirimPuisi(
       poem,
+      i,
       account,
       identity,
       options.create,
       limiter,
     );
 
-    state.poems.push({
-      id,
-      username: account.username,
-      title: poem.title,
-    });
-
-    simpanState(state);
+    if (!state.poems.some((item) => item.id === id)) {
+      state.poems.push({
+        id,
+        username: account.username,
+        title: poem.title,
+      });
+      simpanState(state);
+    }
   }
 
   console.log(`Seed selesai: ${selectedPoems.length} puisi berhasil dikirim melalui API.`);

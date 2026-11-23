@@ -1,65 +1,61 @@
 # Seed Data Puisi App (T0.10)
 
-Seed digunakan untuk menghasilkan data demo akun dan puisi melalui RabbitMQ.
+Seed membuat akun dan puisi demo lewat API layanan (register, login, poem-create),
+sehingga akun seed bisa dipakai login dan puisinya diproses seperti puisi biasa.
 
 ## Data bawaan
-- 5 akun demo
-- 50 puisi
-- 5 kategori emosi
-- 10 kategori tema
+- `tools/seed-data/accounts.json`: 5 akun demo (`penyair01` sampai `penyair05`)
+- `tools/seed-data/poems.json`: 50 puisi, 10 per emosi (senang, sedih, cinta, marah, takut)
+- `tools/seed-data/validate_emotions.py`: cek emosi dominan tiap puisi dengan leksikon emotion-worker
 
-## Prasyarat
-- Node.js dan dependensi proyek sudah terpasang.
-- RabbitMQ berjalan untuk pengiriman event.
-- File .env sudah dikonfigurasi.
+## Cara menjalankan
+Seed memanggil layanan langsung lewat nama host di jaringan Docker
+(`register-service`, `login-service`, `poem-create-service`, `poem-delete-service`),
+jadi jalankan di dalam jaringan compose. Dari root repository:
 
-## Penggunaan
-Semua perintah dijalankan dari root repository.
-
-### Melihat bantuan
 ```powershell
-node tools/seed/index.js --help
+docker run --rm --network puisiapp_app -v ${PWD}:/app -w /app node:22-alpine node tools/seed/index.js
 ```
 
-### Validasi tanpa mengirim event
-```powershell
-node tools/seed/index.js --dry-run
-```
+Nama jaringan = `<COMPOSE_PROJECT_NAME>_app`. URL layanan bisa diganti dengan
+`--register-url`, `--login-url`, `--poem-create-url`, dan `--poem-delete-url`.
 
-### Menjalankan seed dengan konfigurasi default
-```powershell
-node --env-file=.env tools/seed/index.js
-```
+### Opsi
+| Opsi | Keterangan |
+|---|---|
+| `--count <n>` | Jumlah puisi (default 50, maksimal sebanyak isi `poems.json`) |
+| `--rate <n>` | Request per detik (default 10) |
+| `--dry-run` | Validasi data lokal tanpa request API |
+| `--reset` | Hapus puisi yang tercatat di `state.json` |
+| `--help` | Tampilkan bantuan |
 
-Konfigurasi default: 50 puisi dan 10 event per detik.
-
-### Mengatur jumlah puisi
-```powershell
-node --env-file=.env tools/seed/index.js --count 100
-```
-
-### Mengatur laju publikasi
-```powershell
-node --env-file=.env tools/seed/index.js --rate 5
-```
-
-### Menggabungkan opsi
-```powershell
-node --env-file=.env tools/seed/index.js --count 100 --rate 5
-```
+### Mengulang seed
+- Setiap puisi memakai `Idempotency-Key` tetap (`seed-t010-001` dan seterusnya),
+  jadi menjalankan seed dua kali tidak membuat puisi ganda.
+- Kalau isi `poems.json` diubah setelah seed dijalankan, poem-create menolak dengan 409.
+  Jalankan `--reset` lebih dulu.
+- ID puisi yang dibuat dicatat di `tools/seed-data/state.json` (tidak di-commit).
+  `--reset` menghapus puisi tersebut lewat `DELETE /api/poems/{id}`.
 
 ## Pengujian
 ```powershell
-node --check tools/seed/index.js
-node --check tools/seed/rate-limit.js
 node --test tools/seed/rate-limit.test.js
 node tools/seed/index.js --dry-run
+python tools/seed-data/validate_emotions.py
 ```
 
-## Catatan
-- --count harus berupa bilangan bulat positif.
-- --rate harus berupa angka positif.
-- --dry-run tidak mengirim event ke RabbitMQ.
-- Periksa integrasi consumer dan deduplikasi sebelum menjalankan seed normal kembali.
-- Opsi --reset belum tersedia.
-- Jangan menghapus database layanan lain untuk mereset seed.
+# publish-sample
+
+Menerbitkan contoh event ke RabbitMQ dari `examples` di `contracts/events/`.
+
+```powershell
+cd tools; npm ci; cd ..
+$env:RABBITMQ_HOST = '127.0.0.1'
+node --env-file=.env tools/publish-sample/index.js poem.submitted --count 20 --rate 5
+```
+
+Dari host, `RABBITMQ_HOST` harus diarahkan ke `127.0.0.1` (dan `RABBITMQ_PORT` ke
+`RABBITMQ_HOST_PORT` kalau diubah), karena nilai di `.env` adalah nama host di jaringan Docker.
+
+Tanpa `event_type`, semua event di katalog diterbitkan. Event yang skemanya belum
+punya `examples` membuat perintah berhenti dengan pesan galat.
