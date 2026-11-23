@@ -1,0 +1,12 @@
+# Alamat layanan dirender docker-entrypoint.sh saat container start; semua
+# berkas vars.d/*.conf.template digabung menjadi /etc/nginx/vars.conf.
+# Alamat hanya dari variabel lingkungan dan dibaca saat request (bukan saat
+# start), sehingga gateway tetap jalan walau layanan tujuan belum ada.
+#
+# Satu berkas per domain: <domain>.conf.template, berisi baris
+#   set $up_<layanan> "${<LAYANAN>_HOST}";
+# Nama variabel lingkungan wajib berakhiran _HOST (hanya pola itu yang dirender).
+
+# Bersama: frontend dan verifikasi sesi (auth_request).
+set $up_frontend  "${FRONTEND_HOST}";
+set $up_auth      "${AUTH_HOST}";

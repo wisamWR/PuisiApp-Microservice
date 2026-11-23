@@ -353,3 +353,166 @@
     gap: 8px;
   }
 }
+
+/* === Kelompok 5: Mood Entry, Mood Feed & Alur Emosi === */
+.mood-entry-panel, .poem-detail-card {
+  padding: 28px; background: #fff; border: 1px solid #eeeae5; border-radius: 15px;
+}
+.mood-choice-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(175px, 1fr)); gap: 12px;
+}
+.mood-choice-card {
+  text-align: left; padding: 16px; border: 1px solid #e7e1da; border-radius: 12px;
+  background: #fcfaf7; cursor: pointer; display: flex; flex-direction: column; gap: 6px; transition: .18s ease;
+}
+.mood-choice-card:hover { border-color: #b49a86; background: #f8f3ed; }
+.mood-choice-card.active { border-color: #705747; background: #f2ece5; box-shadow: 0 0 0 2px #70574724; }
+.mood-choice-card strong { font-family: 'Playfair Display', serif; font-size: 17px; color: #4a3b31; }
+.mood-choice-card span { font-size: 11px; color: #7f766e; line-height: 1.5; }
+.mood-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.mood-mode-box { margin-top: 24px; padding-top: 20px; border-top: 1px solid #f0ece6; }
+.mood-mode-toggle { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 10px; }
+.mode-pill {
+  text-align: left; padding: 14px 16px; border: 1px solid #e7e1da; border-radius: 10px;
+  background: #fff; cursor: pointer; display: flex; flex-direction: column; gap: 4px;
+}
+.mode-pill.active { border-color: #705747; background: #f5efe8; }
+.mode-pill strong { font-size: 13px; color: #4e3e33; }
+.mode-pill span { font-size: 11px; color: #847b73; }
+.mood-entry-footer {
+  margin-top: 22px; padding-top: 16px; border-top: 1px solid #f0ece6;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;
+}
+.mood-toolbar {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px;
+}
+.mood-chip-row, .mood-mode-switch { display: flex; flex-wrap: wrap; gap: 8px; }
+.mood-filter-chip {
+  display: inline-flex; align-items: center; gap: 7px; padding: 8px 13px; border-radius: 20px;
+  border: 1px solid #e2dbd2; background: #fff; color: #675d55; font-size: 11px; font-weight: 600; cursor: pointer;
+}
+.mood-filter-chip.active { background: #705747; border-color: #705747; color: #fff; }
+.mood-demo-banner {
+  margin-bottom: 16px; padding: 11px 15px; border-radius: 10px; background: #f6efe7;
+  border: 1px solid #e5d8ca; color: #6c5849; font-size: 11px; display: flex; justify-content: space-between; gap: 10px;
+}
+.mood-poem-excerpt { margin: 10px 0 0; color: #6d655e; font-size: 12px; line-height: 1.6; }
+.poem-verse-body {
+  margin: 20px 0; padding: 20px; background: #faf7f3; border-radius: 12px;
+  font-family: 'Playfair Display', serif; font-size: 17px; line-height: 1.9; color: #3f332b;
+}
+.poem-verse-body p { margin: 0 0 6px; }
+.emotion-flow-box { margin-top: 24px; padding-top: 22px; border-top: 1px solid #eeeae5; }
+.emotion-flow-header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 16px; }
+.emotion-flow-header h3 { margin: 4px 0 0; font-family: 'Playfair Display', serif; font-size: 20px; }
+.emotion-flow-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+.emotion-summary-bars { display: flex; flex-direction: column; gap: 9px; margin-bottom: 20px; }
+.emotion-bar-row { display: grid; grid-template-columns: 70px 1fr 42px; align-items: center; gap: 10px; font-size: 11px; }
+.emotion-bar-track { height: 8px; background: #f0ece6; border-radius: 99px; overflow: hidden; }
+.emotion-bar-fill { height: 100%; border-radius: 99px; }
+.emotion-bar-pct { text-align: right; color: #7c736b; font-weight: 600; }
+.emotion-lines-list { display: flex; flex-direction: column; gap: 10px; }
+.emotion-line-item { padding: 12px 14px; border: 1px solid #eeeae5; border-radius: 10px; background: #fcfbf9; }
+.emotion-line-top { display: flex; justify-content: space-between; align-items: center; }
+.emotion-line-verse { margin: 6px 0 8px; font-style: italic; font-size: 13px; color: #4d423a; }
+.emotion-stacked-bar { display: flex; height: 7px; border-radius: 99px; overflow: hidden; background: #eee9e2; }
+.emotion-disclaimer { margin: 16px 0 0; font-size: 11px; color: #8c8279; line-height: 1.6; }
+.mood-header-pill {
+  display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px;
+  background: #f5efe8; border: 1px solid #dfd3c5; color: #594639; font-size: 11px; font-weight: 600; text-decoration: none;
+}
+.mood-header-pill:hover { background: #ede3d8; }
+.mood-choice-top { display: flex; align-items: center; justify-content: space-between; }
+.mood-emoji { font-size: 22px; line-height: 1; }
+.mood-scroll-sentinel { margin-top: 18px; text-align: center; font-size: 11px; color: #8c8279; padding: 10px; }
+
+.mood-icon-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mood-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  transition: border-color 0.18s ease, background-color 0.18s ease, transform 0.18s ease;
+}
+
+.mood-header-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.poem-detail-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.back-link-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #6b5844;
+  line-height: 1;
+  transition: color 0.16s ease, transform 0.16s ease;
+}
+
+.back-link-inline:hover {
+  color: #282522;
+  transform: translateX(-2px);
+}
+
+/* Halaman Masuk dan Daftar (T1.3) */
+.auth-page {
+  max-width: 420px;
+  margin: 2rem auto;
+}
+
+.form-stack {
+  display: grid;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.field-error {
+  color: #b42318;
+  font-size: 0.85rem;
+  margin: -0.4rem 0 0;
+}
+
+.form-error {
+  color: #b42318;
+  background: #fef3f2;
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  margin: 0;
+}
+
+.form-info {
+  color: #1f6f43;
+  background: #ecfdf3;
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+}
+
+.topbar-user {
+  font-weight: 600;
+  align-self: center;
+}
+
+/* Hapus akun (T1.7) dan halaman admin */
+.danger-zone { margin-top: 2rem; border-top: 1px solid #fecdca; padding-top: 1rem; }
+.check-row { display: flex; gap: 0.5rem; align-items: center; }
+.admin-list { list-style: none; padding: 0; display: grid; gap: 0.5rem; }
+.admin-row { display: grid; grid-template-columns: 1fr 1fr auto auto; gap: 0.75rem; align-items: center; border: 1px solid #eaecf0; border-radius: 8px; padding: 0.6rem 0.8rem; }
+.admin-username { font-weight: 600; }
