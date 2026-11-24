@@ -1,0 +1,41 @@
+﻿{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://puisiapp.example/schema/comment.reported.v1.json",
+  "title": "Event komentar dilaporkan",
+  "description": "Diterbitkan ketika pengguna melaporkan komentar untuk ditinjau moderator.",
+  "type": "object",
+  "required": [
+    "report_id",
+    "comment_id",
+    "poem_id",
+    "reporter_id",
+    "reported_at"
+  ],
+  "properties": {
+    "report_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "comment_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "poem_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reporter_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reason": {
+      "type": "string",
+      "maxLength": 500
+    },
+    "reported_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

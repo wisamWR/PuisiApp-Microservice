@@ -43,7 +43,7 @@
     ],
     "community.events": [
       "comment.created",
-      "comment.deleted"
-    ]
-  }
+      "comment.deleted",
+      "comment.reported"
+    ]  }
 }
