@@ -4,3 +4,5 @@ set $up_poem_query    "${POEM_QUERY_HOST}";
 set $up_poem_edit     "${POEM_EDIT_HOST}";
 set $up_poem_delete   "${POEM_DELETE_HOST}";
 set $up_image_preview "${IMAGE_PREVIEW_HOST}";
+set $up_status_stream "${STATUS_STREAM_HOST}";
+set $up_notification  "${NOTIFICATION_HOST}";

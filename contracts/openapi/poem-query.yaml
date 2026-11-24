@@ -174,8 +174,91 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Galat' }
 
+  /api/me/poems:
+    get:
+      operationId: puisiSaya
+      summary: Semua puisi milik pengguna yang login (halaman Puisi Saya, T2.8)
+      description: |
+        Termasuk PROCESSING, REPROCESSING, HELD, dan HIDDEN (tanpa DELETED),
+        beserta alasan untuk HELD / HIDDEN dan level originalitas. `counts`
+        berisi jumlah per status untuk tombol filter.
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/Status' }
+        - { name: page, in: query, required: false, schema: { type: integer, minimum: 1, default: 1 } }
+        - { name: size, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
+      responses:
+        '200':
+          description: Satu halaman puisi milik sendiri
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/HalamanPuisiSaya' }
+              example:
+                items:
+                  - poem_id: 0b7d6f0e-4a8b-4a52-9d0b-3f4f0e9b2a10
+                    version: 2
+                    latest_version: 2
+                    published_version: 1
+                    status: HELD
+                    status_reason: Skor kemiripan 0.91 dengan puisi 5f3e...
+                    title: Jendela yang Basah
+                    quote_text: "sore turun tanpa permisi\nhujan mengetuk kaca"
+                    image_url: null
+                    themes: [rindu]
+                    originality_level: suspected_plagiarism
+                    score: { value: 0, vote_count: 0 }
+                    submitted_at: '2026-12-05T03:00:00.000Z'
+                    published_at: '2026-11-17T03:00:21.400Z'
+                page: 1
+                size: 20
+                total: 1
+                counts: { PROCESSING: 0, REPROCESSING: 0, PUBLISHED: 0, HELD: 1, HIDDEN: 0 }
+        '400':
+          description: status / page / size tidak valid
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Galat' }
+        '401':
+          description: Belum login (dari gateway)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Galat' }
+
 components:
   schemas:
+    PuisiSaya:
+      allOf:
+        - $ref: '#/components/schemas/RingkasanPuisi'
+        - type: object
+          required: [latest_version, published_version, status_reason]
+          properties:
+            latest_version: { type: integer, minimum: 1 }
+            published_version: { type: [integer, 'null'], description: Versi yang tampil untuk pembaca lain }
+            status_reason:
+              type: [string, 'null']
+              description: Alasan dari poem.held / poem.hidden; null untuk status lain
+    HalamanPuisiSaya:
+      type: object
+      required: [items, page, size, total, counts]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/PuisiSaya' }
+        page: { type: integer, minimum: 1 }
+        size: { type: integer, minimum: 1 }
+        total: { type: integer, minimum: 0 }
+        counts:
+          type: object
+          required: [PROCESSING, REPROCESSING, PUBLISHED, HELD, HIDDEN]
+          additionalProperties: false
+          properties:
+            PROCESSING: { type: integer, minimum: 0 }
+            REPROCESSING: { type: integer, minimum: 0 }
+            PUBLISHED: { type: integer, minimum: 0 }
+            HELD: { type: integer, minimum: 0 }
+            HIDDEN: { type: integer, minimum: 0 }
     Status:
       type: string
       enum: [PROCESSING, REPROCESSING, PUBLISHED, HELD, HIDDEN]

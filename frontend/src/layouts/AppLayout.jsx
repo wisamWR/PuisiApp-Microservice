@@ -4,6 +4,7 @@ import MoodIcon from '../components/MoodIcon'
 import { Button } from '../components/UI'
 import { api } from '../lib/api'
 import { useAuth } from '../lib/auth'
+import NotifBadge from '../components/NotifBadge'
 import { EMOSI_LIST, bacaPreferensiMood, sudahPilihMood } from '../lib/moodData'
 
 const navigation = [
@@ -61,6 +62,7 @@ export default function AppLayout() {
           </NavLink>
           {user ? (
             <>
+              <NotifBadge />
               <NavLink to="/profile" className="topbar-user">Halo, {user.username}</NavLink>
               {user.role === 'admin' && <NavLink to="/admin/users" className="button button-outline">Admin</NavLink>}
               <Button variant="outline" onClick={keluar}>Keluar</Button>

@@ -13,7 +13,7 @@ import { buatMetrik } from '@puisiapp/poem-common';
 import { buatApp } from './app.js';
 import { buatCache, denganInvalidasi } from './cache.js';
 import { IKATAN, proyeksikan, targetDari } from './proyeksi.js';
-import { ambilBundel, daftarPenulis, poemIdPenulis } from './repo.js';
+import { ambilBundel, daftarMilik, daftarPenulis, poemIdPenulis } from './repo.js';
 
 const namaLayanan = (process.env.SERVICE_NAME ??= 'poem-query-service');
 const log = buatLogger(namaLayanan);
@@ -53,6 +53,7 @@ const konsumen = await buatKonsumen({
 const app = buatApp({
   ambilBundel: (id) => ambilBundel(pool, id),
   daftarPenulis: (q) => daftarPenulis(pool, q),
+  daftarMilik: (q) => daftarMilik(pool, q),
   cache,
   cekSiap: async () => {
     await pool.query('SELECT 1');

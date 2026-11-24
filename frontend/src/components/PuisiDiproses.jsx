@@ -2,9 +2,10 @@
  * Tampilan optimistik puisi yang baru dikirim (T2.6, laporan 9.3
  * "read-your-writes"): data diambil dari respons 202, bukan dari poem-query,
  * karena read model belum tentu sudah diperbarui. Status langkah pemrosesan
- * secara langsung (SSE) ditambahkan di T2.7.
+ * tampil langsung lewat SSE (T2.7, StatusPemrosesan).
  */
 import { Link } from 'react-router-dom'
+import StatusPemrosesan from './StatusPemrosesan'
 import '../pages/WritePoemPage.css'
 
 export default function PuisiDiproses({ puisi }) {
@@ -20,9 +21,9 @@ export default function PuisiDiproses({ puisi }) {
       <p className="puisi-diproses-isi">{puisi.body}</p>
       <p className="puisi-diproses-info">
         {revisi ? 'Revisimu sudah diterima.' : 'Puisimu sudah diterima.'} Analisis emosi, tema, kata kunci, gambar
-        kutipan, dan pemeriksaan keaslian berjalan di latar belakang. Puisi tampil untuk pembaca lain setelah pemeriksaan
-        keaslian selesai{revisi ? '; sampai saat itu versi sebelumnya tetap tampil' : ''}.
+        kutipan, dan pemeriksaan keaslian berjalan di latar belakang.
       </p>
+      <StatusPemrosesan poemId={puisi.poem_id} />
       <p className="tulis-petunjuk" style={{ marginTop: 12 }}>
         <Link className="text-link" to="/write">Tulis puisi lain</Link>
       </p>

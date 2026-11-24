@@ -217,6 +217,100 @@ services:
         limits:
           memory: 192M
 
+  # ---------------------------------------------------------------- T2.7
+  # Satu image (services/processing-status), dua entrypoint. Status disimpan di
+  # Redis; perubahan disebar lewat Redis pub/sub ke semua replika SSE.
+  processing-tracker:
+    build:
+      context: ..
+      dockerfile: services/processing-status/Dockerfile
+    image: puisiapp/processing-status:dev
+    command: ["node", "src/tracker.js"]
+    restart: unless-stopped
+    environment: &env-status
+      SERVICE_NAME: processing-tracker
+      PORT: "8080"
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      # Langkah yang ditunggu sebelum COMPLETED. Keluarkan langkah yang
+      # workernya belum ada (mis. authorship di tahap Demo).
+      PROCESSING_LANGKAH: ${PROCESSING_LANGKAH:-emotion,themes,keywords,image,similarity,authorship}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+      RABBITMQ_VHOST: ${RABBITMQ_VHOST}
+    networks: [app, data]
+    depends_on:
+      redis: { condition: service_healthy }
+      rabbitmq-topologi: { condition: service_completed_successfully }
+    healthcheck: &cek-redis
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+  # SSE GET /api/poems/{id}/status/stream. Dua replika: memenuhi kriteria T2.7
+  # dan membuktikan pub/sub antar-replika; gateway membagi koneksi lewat DNS Docker.
+  status-stream-service:
+    image: puisiapp/processing-status:dev
+    command: ["node", "src/stream.js"]
+    restart: unless-stopped
+    environment:
+      <<: *env-status
+      SERVICE_NAME: status-stream-service
+    networks: [app, data]
+    depends_on:
+      redis: { condition: service_healthy }
+      processing-tracker: { condition: service_started } # membangun image bersama lebih dulu
+    healthcheck: *cek-redis
+    deploy:
+      replicas: ${STATUS_STREAM_REPLIKA:-2}
+      resources:
+        limits:
+          memory: 128M
+
+  # ---------------------------------------------------------------- T2.8
+  # Notifikasi penulis dan pelapor dari event status, laporan, keputusan, banding.
+  # Hanya konsumen + API, tanpa outbox dan relay. Tahap "Lengkap".
+  notification-service:
+    profiles: [lengkap]
+    build:
+      context: ..
+      dockerfile: services/notification-service/Dockerfile
+    restart: unless-stopped
+    environment:
+      SERVICE_NAME: notification-service
+      PORT: "8080"
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      DATABASE_URL: postgres://notification:${NOTIFICATION_DB_PASS}@${POSTGRES_HOST}:${POSTGRES_PORT}/notif_db
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+      RABBITMQ_VHOST: ${RABBITMQ_VHOST}
+    networks: [app, data]
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq-topologi: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          memory: 160M
+
   # ---------------------------------------------------------------- T2.5
   # Satu image (services/image-service), dua entrypoint.
   # Pratinjau: sinkron, stateless, tanpa basis data; template di memori.

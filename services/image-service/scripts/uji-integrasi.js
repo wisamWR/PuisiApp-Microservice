@@ -18,8 +18,10 @@ import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
 import sharp from 'sharp';
 import { folderKontrak, hubungkan, validasiEvent } from '@puisiapp/events';
+import { sesiUji } from '../../poem-common/src/sesi-uji.js';
 
 const GATEWAY = process.env.GATEWAY_URL ?? 'http://localhost:8080';
+const sesi = await sesiUji(GATEWAY, { log: (m) => console.log(`(sesi) ${m}`) });
 process.env.RABBITMQ_HOST = process.env.RABBITMQ_HOST_LOKAL ?? 'localhost';
 process.env.RABBITMQ_USER ??= 'puisiApp';
 process.env.RABBITMQ_PASS ??= 'puisiApp_dev_only';
@@ -94,7 +96,7 @@ await ch.consume(queue, (m) => { tiba.push({ e: JSON.parse(m.content), t: perfor
 const t0 = performance.now();
 const kirim = await fetch(`${GATEWAY}/api/poems`, {
   method: 'POST',
-  headers: { 'content-type': 'application/json', 'idempotency-key': `uji-gambar-${randomUUID()}`, cookie: 'access_token=dev' },
+  headers: { 'content-type': 'application/json', 'idempotency-key': `uji-gambar-${randomUUID()}`, cookie: sesi.cookie },
   body: JSON.stringify({
     title: 'Uji gambar kutipan',
     body: 'baris pembuka\n\nhujan mengetuk kaca\nseperti nama yang tak jadi kupanggil',
