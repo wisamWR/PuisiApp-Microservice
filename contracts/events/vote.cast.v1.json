@@ -1,48 +1,70 @@
 {
-    "$schema":  "https://json-schema.org/draft/2020-12/schema",
-    "$id":  "https://puisiapp.example/schema/events/vote.cast.v1.json",
-    "title":  "Vote Cast Event",
-    "type":  "object",
-    "additionalProperties":  false,
-    "required":  [
-                     "vote_id",
-                     "poem_id",
-                     "user_id",
-                     "vote_value",
-                     "cast_at"
-                 ],
-    "properties":  {
-                       "vote_id":  {
-                                       "type":  "string",
-                                       "format":  "uuid"
-                                   },
-                       "poem_id":  {
-                                       "type":  "string",
-                                       "minLength":  1
-                                   },
-                       "user_id":  {
-                                       "type":  "string",
-                                       "minLength":  1
-                                   },
-                       "vote_value":  {
-                                          "type":  "integer",
-                                          "enum":  [
-                                                       -1,
-                                                       1
-                                                   ]
-                                      },
-                       "cast_at":  {
-                                       "type":  "string",
-                                       "format":  "date-time"
-                                   }
-                   },
-    "examples":  [
-                     {
-                         "vote_id":  "550e8400-e29b-41d4-a716-446655440001",
-                         "poem_id":  "sample-value",
-                         "user_id":  "sample-value",
-                         "vote_value":  -1,
-                         "cast_at":  "2026-11-19T08:30:00Z"
-                     }
-                 ]
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://puisiapp.example/schema/events/vote.cast.v1.json",
+  "title": "Vote Cast Event",
+  "description": "Suara pengguna pada satu puisi diterima vote-service (T9.1). Diterbitkan langsung ke RabbitMQ; dikonsumsi vote-persist-worker (T9.2) dan ranking-worker (T9.3). aggregate_id = poem_id, aggregate_version = sequence.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "vote_id",
+    "poem_id",
+    "user_id",
+    "vote_value",
+    "previous_value",
+    "weight",
+    "sequence",
+    "cast_at"
+  ],
+  "properties": {
+    "vote_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Sama dengan event_id: UUIDv5 deterministik dari poem_id dan sequence."
+    },
+    "poem_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "user_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "vote_value": {
+      "type": "integer",
+      "enum": [-1, 0, 1],
+      "description": "Nilai baru: 1 upvote, -1 downvote, 0 suara ditarik."
+    },
+    "previous_value": {
+      "type": "integer",
+      "enum": [-1, 0, 1],
+      "description": "Nilai sebelum suara ini (0 bila belum pernah memberi suara)."
+    },
+    "weight": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "maximum": 1,
+      "description": "Bobot suara untuk peringkat: 1 normal, lebih kecil untuk akun berumur kurang dari 24 jam."
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Nomor urut suara per puisi (naik monoton). Konsumen mengabaikan suara dengan sequence lebih kecil dari yang tersimpan."
+    },
+    "cast_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "examples": [
+    {
+      "vote_id": "2f1c5b8a-6f3e-5d2a-9c41-7b8e0d6a1f22",
+      "poem_id": "0193b1a8-7f4e-4c2a-9d3e-5a6b7c8d9e0f",
+      "user_id": "u-001",
+      "vote_value": 1,
+      "previous_value": 0,
+      "weight": 1,
+      "sequence": 1,
+      "cast_at": "2026-11-23T10:00:00.000Z"
+    }
+  ]
 }

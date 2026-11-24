@@ -6,6 +6,8 @@ import { AuthProvider } from './components/AuthProvider'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import './App.css'
+import MoodEntryPage from './pages/MoodEntryPage'
+import MoodFeedPage from './pages/MoodFeedPage'
 import PoemDetailPage from './pages/PoemDetailPage'
 import ProfilePage from './pages/ProfilePage'
 import AdminUsersPage from './pages/AdminUsersPage'
@@ -21,8 +23,8 @@ function App() {
         <Routes>
           <Route element={<AppLayout />}>
             <Route index element={<PlaceholderPage pageKey="home" />} />
-            <Route path="mood-entry" element={<PlaceholderPage pageKey="moodEntry" />} />
-            <Route path="mood-feed" element={<PlaceholderPage pageKey="moodFeed" />} />
+            <Route path="mood-entry" element={<MoodEntryPage />} />
+            <Route path="mood-feed" element={<MoodFeedPage />} />
             <Route path="poems/:id" element={<PoemDetailPage />} />
             <Route path="poems/:id/edit" element={<WritePoemPage />} />
             <Route path="write" element={<WritePoemPage />} />

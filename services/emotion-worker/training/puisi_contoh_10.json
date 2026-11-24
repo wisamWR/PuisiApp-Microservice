@@ -1,0 +1,12 @@
+[
+  {"id": "P01", "title": "Pagi di Beranda", "expected": "senang", "content": "Mentari pagi bersinar cerah\nBunga mekar indah penuh tawa bahagia\nHati bersyukur menyambut hari"},
+  {"id": "P02", "title": "Hujan November", "expected": "sedih", "content": "Hujan gerimis jatuh bersama sunyi\nAir mata menetes mengenang luka lama\nSepi menyelimuti ruang kosong"},
+  {"id": "P03", "title": "Janji Senja", "expected": "cinta", "content": "Rindu ini memeluk kalbu\nKasih sayang tulus setia menjagamu\nCinta tumbuh hangat di setiap doa"},
+  {"id": "P04", "title": "Gugat Dusta", "expected": "marah", "content": "Amarah membara menentang dusta\nMuak melihat pengkhianatan keji\nTeriakan perlawanan menggema lantang"},
+  {"id": "P05", "title": "Lorong Gulita", "expected": "takut", "content": "Malam gulita mencekam langkah\nJantung gemetar cemas dalam gelap\nBayangan ngeri menghantui jiwa"},
+  {"id": "P06", "title": "Syukur Panen", "expected": "senang", "content": "Sorak gembira menyambut cahaya fajar\nSenyum ceria menghangatkan desa\nNikmat damai mengalir di hati"},
+  {"id": "P07", "title": "Surat Perpisahan", "expected": "sedih", "content": "Langkah pergi meninggalkan kenangan silam\nDuka pilu mengendap di dada\nTangis lirih melepas kepergian"},
+  {"id": "P08", "title": "Rumah Pulang", "expected": "cinta", "content": "Genggam jemariku dalam kasih\nTatap lembutmu menenangkan gelisah\nAsmara suci berlabuh abadi"},
+  {"id": "P09", "title": "Bara Penindasan", "expected": "marah", "content": "Murka meledak melihat ketidakadilan\nDarah mendidih mendengar penghinaan\nKepalan tangan melawan penindasan"},
+  {"id": "P10", "title": "Badai Malam", "expected": "takut", "content": "Petir menggelegar memicu panik\nKeringat dingin dan khawatir mendalam\nGentar menatap badai ganas"}
+]

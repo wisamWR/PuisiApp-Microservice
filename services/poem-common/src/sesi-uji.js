@@ -46,7 +46,9 @@ export async function sesiUji(gateway, opsi = {}) {
   }
   if (daftar.status >= 400) throw new Error(`registrasi akun uji gagal: ${daftar.status} ${await daftar.text()}`);
 
-  const akhir = Date.now() + (opsi.batasMs ?? 20_000);
+  // 75 detik: cukup untuk menunggu satu jendela batas laju login gateway
+  // (10 per menit per IP) saat beberapa skrip uji dijalankan berurutan.
+  const akhir = Date.now() + (opsi.batasMs ?? 75_000);
   for (;;) {
     const r = await fetch(`${gateway}/api/auth/login`, {
       method: 'POST',

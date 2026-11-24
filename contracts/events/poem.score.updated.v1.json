@@ -1,38 +1,58 @@
 {
-    "$schema":  "https://json-schema.org/draft/2020-12/schema",
-    "$id":  "https://puisiapp.example/schema/events/poem.score.updated.v1.json",
-    "title":  "Poem Score Updated Event",
-    "type":  "object",
-    "additionalProperties":  false,
-    "required":  [
-                     "poem_id",
-                     "score",
-                     "vote_count",
-                     "updated_at"
-                 ],
-    "properties":  {
-                       "poem_id":  {
-                                       "type":  "string",
-                                       "minLength":  1
-                                   },
-                       "score":  {
-                                     "type":  "integer"
-                                 },
-                       "vote_count":  {
-                                          "type":  "integer",
-                                          "minimum":  0
-                                      },
-                       "updated_at":  {
-                                          "type":  "string",
-                                          "format":  "date-time"
-                                      }
-                   },
-    "examples":  [
-                     {
-                         "poem_id":  "sample-value",
-                         "score":  1,
-                         "vote_count":  1,
-                         "updated_at":  "2026-11-19T08:30:00Z"
-                     }
-                 ]
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://puisiapp.example/schema/events/poem.score.updated.v1.json",
+  "title": "Poem Score Updated Event",
+  "description": "Skor peringkat puisi dari ranking-worker (T9.3). Diterbitkan hanya bila skor Wilson berubah berarti. Konsumen: poem-query-service (score, vote_count), mood-feed-service (wilson_score). up, down, dan wilson_score ditambahkan T9.3 dan opsional agar kompatibel dengan versi awal.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "poem_id",
+    "score",
+    "vote_count",
+    "updated_at"
+  ],
+  "properties": {
+    "poem_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "score": {
+      "type": "integer",
+      "description": "Skor tampil: jumlah upvote dikurangi downvote."
+    },
+    "vote_count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Jumlah suara aktif (upvote + downvote)."
+    },
+    "up": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "down": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "wilson_score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Batas bawah interval Wilson (z = 1,96) dari suara berbobot."
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "examples": [
+    {
+      "poem_id": "0193b1a8-7f4e-4c2a-9d3e-5a6b7c8d9e0f",
+      "score": 80,
+      "vote_count": 100,
+      "up": 90,
+      "down": 10,
+      "wilson_score": 0.8256,
+      "updated_at": "2026-11-23T10:00:00.000Z"
+    }
+  ]
 }

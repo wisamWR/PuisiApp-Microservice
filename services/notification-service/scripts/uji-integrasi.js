@@ -1,9 +1,12 @@
 /**
  * Uji integrasi T2.8 lewat gateway dengan layanan asli: poem-create (T2.1),
  * publication-service (T2.2), poem-query (T2.3), image-render-worker (T2.5),
- * processing-tracker (T2.7). Hasil worker kelompok lain dikirim palsu.
+ * processing-tracker (T2.7). Hasil worker kelompok lain dikirim palsu, jadi
+ * similarity-worker asli (T7.2) harus dimatikan selama uji:
  *
+ *   docker compose stop similarity-worker
  *   GATEWAY_URL=http://localhost:8080 node scripts/uji-integrasi.js
+ *   docker compose start similarity-worker
  *
  * Memeriksa:
  *   1. puisi terbit -> notifikasi "sudah terbit" untuk penulisnya
@@ -14,7 +17,9 @@
  */
 import { randomUUID } from 'node:crypto';
 import { buatEvent, buatPublisher, hubungkan } from '@puisiapp/events';
-import { sesiUji } from '@puisiapp/poem-common';
+import { pastikanTanpaKonsumen, sesiUji } from '@puisiapp/poem-common';
+
+await pastikanTanpaKonsumen('q.similarity-worker');
 
 const GATEWAY = process.env.GATEWAY_URL ?? 'http://localhost:8080';
 process.env.RABBITMQ_HOST = process.env.RABBITMQ_HOST_LOKAL ?? 'localhost';
