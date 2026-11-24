@@ -69,3 +69,28 @@ test('indeks Redis sorted set, header Cache-Control, dan penghapusan instan poem
     server.close();
   }
 });
+
+test('user.profile.updated memperbarui nama penulis di kartu feed tanpa menyentuh puisi lain', async () => {
+  const query = [];
+  const baris = { poem_id: 'p1', title: 'Hujan', author_id: 'u1', author_name: 'Ana Baru', status: 'published', dominant: 'sedih' };
+  const diindeks = [];
+  const { handler } = buatHandlerEvent({ indeks: { indeksPuisi: async (b) => diindeks.push(b) } });
+  await handler(
+    { event_type: 'user.profile.updated', aggregate_id: 'u1', occurred_at: '2026-11-23T00:00:00Z', payload: { display_name: 'Ana Baru' } },
+    { tx: { query: async (sql, params) => { query.push({ sql, params }); return { rows: sql.trim().startsWith('UPDATE') ? [baris] : [] }; } } },
+  );
+  assert.match(query[0].sql, /INSERT INTO mood_penulis/);
+  assert.deepEqual(query[0].params.slice(0, 2), ['u1', 'Ana Baru']);
+  assert.match(query[1].sql, /UPDATE mood_poems/);
+  assert.deepEqual(diindeks, [baris]);
+});
+
+test('user.registered menyimpan username sebagai nama awal', async () => {
+  const query = [];
+  const { handler } = buatHandlerEvent({ indeks: { indeksPuisi: async () => {} } });
+  await handler(
+    { event_type: 'user.registered', aggregate_id: 'u2', payload: { username: 'budi', email: 'b@contoh.test' } },
+    { tx: { query: async (sql, params) => { query.push({ sql, params }); return { rows: [] }; } } },
+  );
+  assert.deepEqual(query[0].params, ['u2', 'budi', null]);
+});

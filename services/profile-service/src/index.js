@@ -79,7 +79,10 @@ const server = http.createServer(async (req, res) => {
 
       if (req.method === 'GET') {
         const profil = await ambilProfil(pool, idPengguna);
-        return profil ? kirimJson(res, 200, profil) : kirimJson(res, 404, { error: 'profil tidak ditemukan' });
+        // role diambil dari X-User-Role (hasil verifikasi token di gateway), bukan dari
+        // tabel profil: frontend memakainya untuk memulihkan sesi setelah halaman di-reload.
+        const role = req.headers['x-user-role'] || 'writer';
+        return profil ? kirimJson(res, 200, { ...profil, role }) : kirimJson(res, 404, { error: 'profil tidak ditemukan' });
       }
 
       if (req.method === 'PUT') {
