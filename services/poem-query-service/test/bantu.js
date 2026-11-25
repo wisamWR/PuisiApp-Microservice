@@ -22,10 +22,10 @@ export function amplop(eventType, aggregateId, aggregateVersion, payload, occurr
   };
 }
 
-const isi = (poemId, versi) => ({
+const isi = (poemId, versi, authorId = PENULIS) => ({
   poem_id: poemId,
   version: versi,
-  author_id: PENULIS,
+  author_id: authorId,
   title: `Jendela yang Basah v${versi}`,
   body: `sore turun tanpa permisi v${versi}\nhujan mengetuk kaca\n\nseperti nama yang tak jadi kupanggil`,
   quote_stanza: 0,
@@ -36,7 +36,8 @@ const isi = (poemId, versi) => ({
 });
 
 export const e = {
-  diajukan: (poemId) => amplop('poem.submitted', poemId, 1, { ...isi(poemId, 1), submitted_at: waktu() }),
+  diajukan: (poemId, authorId = PENULIS) =>
+    amplop('poem.submitted', poemId, 1, { ...isi(poemId, 1, authorId), submitted_at: waktu() }),
   direvisi: (poemId, v) => amplop('poem.revised', poemId, v, { ...isi(poemId, v), revised_at: waktu() }),
   terbit: (poemId, v = 1, t) => amplop('poem.published', poemId, v, { published_at: t ?? waktu() }, t),
   ditahan: (poemId, v = 1, t) =>

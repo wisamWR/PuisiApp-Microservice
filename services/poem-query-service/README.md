@@ -4,7 +4,7 @@ Sisi baca puisi (CQRS). Read model dibangun dari 14 jenis event, sehingga detail
 
 | | |
 | --- | --- |
-| API | `GET /api/poems/{id}`, `GET /api/poems?author=&page=&size=`, `GET /api/me/poems?status=&page=&size=` (Puisi Saya, T2.8). Kontrak: [`contracts/openapi/poem-query.yaml`](../../contracts/openapi/poem-query.yaml) |
+| API | `GET /api/poems/{id}`, `GET /api/poems?author=&page=&size=` (`author` opsional; tanpa `author` mengembalikan semua puisi PUBLISHED), `GET /api/me/poems?status=&page=&size=` (Puisi Saya, T2.8). Kontrak: [`contracts/openapi/poem-query.yaml`](../../contracts/openapi/poem-query.yaml) |
 | Queue | `q.poem-query` (+ `q.poem-query.dlq`) |
 | Basis data | `poem_read_db`: `poem` (per puisi), `poem_versi` (per versi), `penulis`, `processed_event` |
 | Cache | Redis, cache-aside untuk detail, kunci `poem-query:detail:<poem_id>`, TTL `CACHE_TTL_DETIK` (bawaan 30) |
