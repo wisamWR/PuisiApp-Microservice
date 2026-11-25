@@ -32,15 +32,18 @@ if (process.env.RABBITMQ_HOST) {
   konsumen = await buatKonsumen({
     koneksi,
     log,
-    antrean: 'q.login.user-registered',
-    ikatan: ['user.registered', 'user.password.reset'],
+    antrean: 'q.login.user-credentials',
+    ikatan: ['user.credentials.created'],
     store: buatStorePg(pool),
-    handler: async (event, ctx) => {
-      if (event.event_type === 'user.password.reset') {
-        return perbaruiKataSandi(event, ctx);
-      }
-      return simpanKredensial(event, ctx);
-    },
+    handler: simpanKredensial,
+  });
+  await buatKonsumen({
+    koneksi,
+    log,
+    antrean: 'q.login.user-password-reset',
+    ikatan: ['user.password.reset'],
+    store: buatStorePg(pool),
+    handler: perbaruiKataSandi,
   });
   await buatKonsumen({
     koneksi,

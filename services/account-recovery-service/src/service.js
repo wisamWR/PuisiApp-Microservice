@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { hash, Algorithm } from '@node-rs/argon2';
-import { buatEvent, simpanDenganOutbox } from '@puisiapp/events';
+import { buatEvent, simpanDenganOutbox, tulisOutbox } from '@puisiapp/events';
 import { buatTokenMentah, hashToken, hitungKedaluwarsa, TOKEN_TTL_MENIT } from './token.js';
 
 export class RecoveryError extends Error {
@@ -74,7 +74,7 @@ export async function tanganiUserRegistered(event, { tx }, appBaseUrl = '') {
     },
   );
 
-  await simpanDenganOutbox(tx, async () => ({ hasil: null, event: emailEvent }));
+  await tulisOutbox(tx, emailEvent);
 }
 
 export async function verifikasiEmail(pool, token) {

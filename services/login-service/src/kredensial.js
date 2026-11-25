@@ -1,5 +1,5 @@
 /**
- * Handler event user.registered: simpan salinan kredensial ke tabel credentials.
+ * Handler event user.credentials.created: simpan salinan kredensial ke tabel credentials.
  * Dijalankan di dalam transaksi konsumen (store.proses), jadi idempoten lewat event_id.
  * Versi basi (aggregate_version lebih lama) diabaikan oleh pustaka lewat versiTersimpan.
  */
