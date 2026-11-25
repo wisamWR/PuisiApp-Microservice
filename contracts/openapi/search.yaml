@@ -1,0 +1,68 @@
+openapi: 3.0.3
+info:
+  title: search-service (T3.2, Kelompok 3)
+  version: 0.1.0
+  description: |
+    Pencarian puisi PUBLISHED berdasarkan judul, nama penulis, atau kata kunci.
+    Membaca dari read model poem-query (poem_read_db), tanpa event baru.
+    Respons memakai bentuk HalamanPuisi dari poem-query.yaml agar frontend
+    tidak perlu bentuk data baru.
+    Hanya pengguna yang sudah login yang bisa mencari (sama dengan GET /api/poems).
+servers:
+  - url: /api
+paths:
+  /search:
+    get:
+      operationId: cariPuisi
+      summary: Cari puisi PUBLISHED
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: Kata yang dicari (judul, nama penulis, atau kata kunci)
+          schema: { type: string, minLength: 1, maxLength: 100 }
+        - name: by
+          in: query
+          required: false
+          description: Ruang pencarian. Kosong berarti semua.
+          schema: { type: string, enum: [judul, penulis, kata_kunci] }
+        - name: page
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: size
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+      responses:
+        '200':
+          description: Satu halaman hasil pencarian
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, page, size, total]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: 'poem-query.yaml#/components/schemas/RingkasanPuisi'
+                  page: { type: integer, minimum: 1 }
+                  size: { type: integer, minimum: 1 }
+                  total: { type: integer, minimum: 0 }
+        '400':
+          description: Parameter tidak valid (q kosong, by tidak dikenal)
+          content:
+            application/json:
+              schema:
+                $ref: 'poem-query.yaml#/components/schemas/Galat'
+        '401':
+          description: Belum login
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: access_token
