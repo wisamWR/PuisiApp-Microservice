@@ -1,4 +1,4 @@
-﻿# k4-komunitas: Komentar
+# k4-komunitas: Komentar
 
 Branch: `k4-komunitas` | Penanggung jawab: Zoya | Task: T4.1 | Frontend: bagian komentar di halaman Detail Puisi
 
@@ -33,9 +33,9 @@ Diskusi pembaca pada puisi dengan pengaman terhadap spam dan komentar kasar.
 
 - Komentar hanya boleh dibuat pada puisi berstatus PUBLISHED. Komentar disembunyikan saat puisi HIDDEN atau DELETED, tanpa memanggil layanan lain secara sinkron.
 - Sanitasi input di layanan penerima (buang HTML, batas 1.000 karakter) dan batas ukuran body di gateway.
-- Rate limit komentar menggunakan Redis, dengan batas 10 permintaan per menit per pengguna. Jika batas terlampaui, layanan mengembalikan HTTP 429.
+- Rate limit komentar diterapkan di API Gateway menggunakan Nginx `limit_req`, dengan batas 10 permintaan POST per menit berdasarkan access token. Jika batas terlampaui, gateway mengembalikan HTTP 429.
 - Otorisasi hapus diperiksa di layanan: pengguna lain tidak dapat menghapus komentar orang lain. Peran moderator dibaca dari header `X-User-Role` yang diisi gateway.
-- Daftarkan skema event dan layanan baru di `/contracts/events` dan katalog layanan.
+- Skema event didaftarkan di `contracts/events/`, routing event di `contracts/routing.json`, dan konfigurasi layanan di `infra/compose/community.yml`.
 
 ## Kriteria Selesai
 
