@@ -121,18 +121,20 @@ paths:
   /api/poems:
     get:
       operationId: daftarPuisiPenulis
-      summary: Daftar puisi satu penulis
+      summary: Daftar puisi publik atau milik satu penulis
       description: |
-        Penulis yang melihat daftarnya sendiri mendapat semua puisi (kecuali
-        DELETED) beserta statusnya. Pengguna lain hanya mendapat puisi
-        PUBLISHED. Urut dari yang terbaru. Halaman "Puisi Saya" (T2.8) memakai
-        endpoint terpisah `GET /api/me/poems`.
+        Bila parameter `author` tidak diisi (beranda T3.1), mengembalikan semua
+        puisi PUBLISHED dari seluruh penulis. Bila `author` diisi, penulis yang
+        melihat daftarnya sendiri mendapat semua puisi (kecuali DELETED) beserta
+        statusnya, sedangkan pengguna lain hanya mendapat puisi PUBLISHED. Urut
+        dari yang terbaru. Halaman "Puisi Saya" (T2.8) memakai endpoint terpisah
+        `GET /api/me/poems`.
       parameters:
         - name: author
           in: query
-          required: true
-          description: ID penulis (klaim `sub` token, sama dengan `author.id`)
-          schema: { type: string, minLength: 1, maxLength: 64 }
+          required: false
+          description: ID penulis (klaim `sub` token, sama dengan `author.id`). Kosongkan untuk daftar publik semua penulis.
+          schema: { type: string, maxLength: 64 }
         - name: page
           in: query
           required: false
@@ -164,7 +166,7 @@ paths:
                 size: 20
                 total: 1
         '400':
-          description: Parameter author kosong atau page / size tidak valid
+          description: Parameter author melebihi 64 karakter atau page / size tidak valid
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Galat' }

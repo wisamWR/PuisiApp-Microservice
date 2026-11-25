@@ -75,7 +75,7 @@ describe('GET /api/poems/{id}', () => {
   });
 });
 
-describe('GET /api/poems?author=', () => {
+describe('GET /api/poems', () => {
   test('penulis sendiri: semua status; orang lain: hanya terbit', async () => {
     const { app, panggilan } = siapkan();
     await get(app, `/api/poems?author=${PENULIS}`, PENULIS);
@@ -86,15 +86,30 @@ describe('GET /api/poems?author=', () => {
     ]);
   });
 
+  test('tanpa author (daftar publik beranda): authorId null, semua false', async () => {
+    const { app, panggilan } = siapkan();
+    for (const q of ['', '?page=2&size=12', '?author=']) {
+      const r = await get(app, `/api/poems${q}`, PENULIS);
+      assert.equal(r.statusCode, 200, q);
+    }
+    assert.deepEqual(panggilan.daftar, [
+      { authorId: null, semua: false, page: 1, size: 20 },
+      { authorId: null, semua: false, page: 2, size: 12 },
+      { authorId: null, semua: false, page: 1, size: 20 },
+    ]);
+  });
+
   test('parameter tidak valid: 400', async () => {
     const { app } = siapkan();
-    for (const q of ['', '?author=', '?author=a&page=0', '?author=a&size=51', '?author=a&size=x']) {
+    const terlaluPanjang = `?author=${'a'.repeat(65)}`;
+    for (const q of [terlaluPanjang, '?author=a&author=b', '?page=0', '?size=51', '?author=a&page=0', '?author=a&size=51', '?author=a&size=x']) {
       assert.equal((await get(app, `/api/poems${q}`)).statusCode, 400, q);
     }
   });
 
   test('bentuk halaman', async () => {
     const { app } = siapkan();
+    assert.deepEqual((await get(app, '/api/poems')).json(), { items: [], page: 1, size: 20, total: 0 });
     assert.deepEqual((await get(app, '/api/poems?author=a')).json(), { items: [], page: 1, size: 20, total: 0 });
   });
 });

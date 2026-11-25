@@ -61,12 +61,13 @@ export async function ambilBundel(pool, poemId) {
 }
 
 /**
- * Satu halaman puisi seorang penulis. semua = true untuk penulisnya sendiri
- * (semua status kecuali DELETED, versi terbaru); selain itu hanya PUBLISHED
- * dengan versi yang terbit. Versi yang belum punya teks (event isi belum tiba)
- * diganti versi terakhir sebelumnya yang sudah punya teks.
+ * Satu halaman puisi publik (authorId kosong: hanya PUBLISHED dari semua penulis)
+ * atau milik seorang penulis. Bila authorId ada dan semua = true (penulisnya
+ * sendiri), tampilkan semua status kecuali DELETED pada versi terbaru; selain
+ * itu hanya PUBLISHED dengan versi yang terbit. Versi yang belum punya teks
+ * (event isi belum tiba) diganti versi terakhir sebelumnya yang sudah punya teks.
  */
-export async function daftarPenulis(pool, { authorId, semua, page, size }) {
+export async function daftarPenulis(pool, { authorId = null, semua = false, page, size }) {
   const { rows } = await pool.query(
     `SELECT p.poem_id, p.status, p.versi_terbaru, p.versi_tampil, p.dikirim_at, p.published_at,
             p.skor, p.jumlah_suara, v.versi, v.judul, v.bait_kutipan, v.gambar_url, v.tema,
@@ -76,15 +77,17 @@ export async function daftarPenulis(pool, { authorId, semua, page, size }) {
        JOIN LATERAL (
          SELECT * FROM poem_versi pv
           WHERE pv.poem_id = p.poem_id AND pv.judul IS NOT NULL
-            AND pv.versi <= CASE WHEN $2::boolean THEN p.versi_terbaru ELSE p.versi_tampil END
+            AND pv.versi <= CASE WHEN ($1::text IS NOT NULL AND $2::boolean)
+                                 THEN p.versi_terbaru ELSE p.versi_tampil END
           ORDER BY pv.versi DESC LIMIT 1
        ) v ON true
-      WHERE p.author_id = $1
-        AND (CASE WHEN $2::boolean THEN p.status IN ('PROCESSING', 'PUBLISHED', 'HELD', 'HIDDEN')
+      WHERE ($1::text IS NULL OR p.author_id = $1)
+        AND (CASE WHEN ($1::text IS NOT NULL AND $2::boolean)
+                  THEN p.status IN ('PROCESSING', 'PUBLISHED', 'HELD', 'HIDDEN')
                   ELSE p.status = 'PUBLISHED' END)
       ORDER BY COALESCE(p.published_at, p.dikirim_at) DESC NULLS LAST, p.poem_id
       LIMIT $3 OFFSET $4`,
-    [authorId, semua, size, (page - 1) * size],
+    [authorId ?? null, Boolean(semua), size, (page - 1) * size],
   );
   return {
     total: rows[0] ? Number(rows[0].total) : 0,
