@@ -1,4 +1,4 @@
-﻿import json
+import json
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -20,10 +20,12 @@ class HealthHandler(BaseHTTPRequestHandler):
             self.send_error(404)
             return
 
-        body = json.dumps({
-            "status": "ok",
-            "service": "authorship-worker",
-        }).encode("utf-8")
+        body = json.dumps(
+            {
+                "status": "ok",
+                "service": "authorship-worker",
+            }
+        ).encode("utf-8")
 
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
@@ -45,9 +47,7 @@ def jalankan_konsumen(settings):
                 raise ValueError("AMQP_URL belum dikonfigurasi")
 
             db = get_connection()
-            connection = pika.BlockingConnection(
-                pika.URLParameters(settings.amqp_url)
-            )
+            connection = pika.BlockingConnection(pika.URLParameters(settings.amqp_url))
             channel = connection.channel()
 
             publisher = buat_publisher(channel)
@@ -55,9 +55,7 @@ def jalankan_konsumen(settings):
 
             def handler(event, cur):
                 catatan = simpan_catatan(event, cur)
-                event_hasil = buat_event_authorship(
-                    event, catatan, settings
-                )
+                event_hasil = buat_event_authorship(event, catatan, settings)
                 publisher.terbitkan(event_hasil)
 
                 print(
@@ -105,10 +103,7 @@ def main():
         HealthHandler,
     )
 
-    print(
-        f"{settings.service_name} berjalan "
-        f"pada {settings.host}:{settings.port}"
-    )
+    print(f"{settings.service_name} berjalan pada {settings.host}:{settings.port}")
 
     try:
         server.serve_forever()

@@ -21,10 +21,12 @@ class HealthHandler(BaseHTTPRequestHandler):
             return
 
         settings = load_settings()
-        body = json.dumps({
-            "status": "ok",
-            "service": settings.service_name,
-        }).encode("utf-8")
+        body = json.dumps(
+            {
+                "status": "ok",
+                "service": settings.service_name,
+            }
+        ).encode("utf-8")
 
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
@@ -96,10 +98,7 @@ def main():
         HealthHandler,
     )
 
-    print(
-        f"{settings.service_name} berjalan "
-        f"pada {settings.host}:{settings.port}"
-    )
+    print(f"{settings.service_name} berjalan pada {settings.host}:{settings.port}")
 
     try:
         server.serve_forever()

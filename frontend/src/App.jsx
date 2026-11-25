@@ -12,6 +12,8 @@ import PoemDetailPage from './pages/PoemDetailPage'
 import ProfilePage from './pages/ProfilePage'
 import AdminUsersPage from './pages/AdminUsersPage'
 import WritePoemPage from './pages/WritePoemPage'
+import MyPoemsPage from './pages/MyPoemsPage'
+import NotificationsPage from './pages/NotificationsPage'
 
 function App() {
   return (
@@ -26,11 +28,11 @@ function App() {
             <Route path="poems/:id" element={<PoemDetailPage />} />
             <Route path="poems/:id/edit" element={<WritePoemPage />} />
             <Route path="write" element={<WritePoemPage />} />
-            <Route path="my-poems" element={<PlaceholderPage pageKey="myPoems" />} />
+            <Route path="my-poems" element={<MyPoemsPage />} />
             <Route path="authors/:id" element={<PlaceholderPage pageKey="authorProfile" />} />
             <Route path="search" element={<PlaceholderPage pageKey="search" />} />
             <Route path="themes" element={<PlaceholderPage pageKey="themes" />} />
-            <Route path="notifications" element={<PlaceholderPage pageKey="notifications" />} />
+            <Route path="notifications" element={<NotificationsPage />} />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="admin/users" element={<AdminUsersPage />} />
             <Route path="login" element={<LoginPage />} />

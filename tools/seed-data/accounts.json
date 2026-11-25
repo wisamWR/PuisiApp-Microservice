@@ -1,0 +1,32 @@
+[
+  {
+    "username": "penyair01",
+    "email": "penyair01@example.test",
+    "display_name": "Penyair Satu",
+    "password": "SeedPuisi2026_01"
+  },
+  {
+    "username": "penyair02",
+    "email": "penyair02@example.test",
+    "display_name": "Penyair Dua",
+    "password": "SeedPuisi2026_02"
+  },
+  {
+    "username": "penyair03",
+    "email": "penyair03@example.test",
+    "display_name": "Penyair Tiga",
+    "password": "SeedPuisi2026_03"
+  },
+  {
+    "username": "penyair04",
+    "email": "penyair04@example.test",
+    "display_name": "Penyair Empat",
+    "password": "SeedPuisi2026_04"
+  },
+  {
+    "username": "penyair05",
+    "email": "penyair05@example.test",
+    "display_name": "Penyair Lima",
+    "password": "SeedPuisi2026_05"
+  }
+]

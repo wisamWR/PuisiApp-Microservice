@@ -104,3 +104,23 @@ export function ringkasan(r, semua) {
     published_at: r.published_at,
   };
 }
+
+/** Satu baris repo.daftarMilik ke PuisiSaya (status sudah dihitung di SQL). */
+export function puisiSaya(r) {
+  return {
+    poem_id: r.poem_id,
+    version: r.versi,
+    latest_version: r.versi_terbaru,
+    published_version: r.versi_tampil ?? null,
+    status: r.status,
+    status_reason: r.status === 'HELD' || r.status === 'HIDDEN' ? r.alasan_status ?? null : null,
+    title: r.judul,
+    quote_text: r.bait_kutipan,
+    image_url: r.gambar_url ?? null,
+    themes: r.tema ?? [],
+    originality_level: r.level_kemiripan ?? null,
+    score: { value: r.skor ?? 0, vote_count: r.jumlah_suara ?? 0 },
+    submitted_at: r.dikirim_at,
+    published_at: r.published_at,
+  };
+}

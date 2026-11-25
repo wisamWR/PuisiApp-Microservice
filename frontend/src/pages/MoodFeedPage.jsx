@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import MoodIcon from '../components/MoodIcon'
+import VoteButtons from '../components/VoteButtons'
 import { EmotionLabel, Loader } from '../components/UI'
 import { api } from '../lib/api'
 import {
@@ -143,6 +144,7 @@ export default function MoodFeedPage() {
                 {poem.excerpt && <blockquote className="mood-poem-excerpt">“{poem.excerpt}”</blockquote>}
                 <div className="poem-card-footer">
                   <span className="poem-score">Nuansa {poem.target_emotion}</span>
+                  <VoteButtons poemId={poem.poem_id} ringkas />
                   <Link to={`/poems/${poem.poem_id}`} className="text-link">Lihat alur emosi</Link>
                 </div>
               </article>

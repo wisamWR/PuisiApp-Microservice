@@ -1,6 +1,6 @@
-﻿import hashlib
+import hashlib
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 HASH_NOL = "0" * 64
 
@@ -18,8 +18,8 @@ def normalisasi_waktu(waktu: str) -> str:
     """Menormalkan timestamp ke UTC ISO-8601."""
     dt = datetime.fromisoformat(waktu.replace("Z", "+00:00"))
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
-    return dt.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+        dt = dt.replace(tzinfo=UTC)
+    return dt.astimezone(UTC).isoformat().replace("+00:00", "Z")
 
 
 def hitung_chain_hash(
@@ -49,8 +49,9 @@ def hitung_chain_hash(
     return sha256(kanonis)
 
 
-def buat_catatan(poem_id: str, version: int, body: str,
-                 recorded_at: str, previous_hash: str) -> dict:
+def buat_catatan(
+    poem_id: str, version: int, body: str, recorded_at: str, previous_hash: str
+) -> dict:
     """Membentuk satu catatan keaslian."""
     content_hash = hitung_content_hash(body)
 

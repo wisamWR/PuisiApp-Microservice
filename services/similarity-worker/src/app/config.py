@@ -1,4 +1,3 @@
-
 import os
 from dataclasses import dataclass
 
@@ -26,14 +25,10 @@ def load_settings() -> Settings:
     if bands * rows != 128:
         raise ValueError("LSH_BANDS x LSH_ROWS harus sama dengan 128")
 
-    min_whole_jaccard = float(
-        os.getenv("MIN_WHOLE_JACCARD_FOR_PLAGIARISM", "0.80")
-    )
+    min_whole_jaccard = float(os.getenv("MIN_WHOLE_JACCARD_FOR_PLAGIARISM", "0.80"))
 
     if not 0.0 <= min_whole_jaccard <= 1.0:
-        raise ValueError(
-            "MIN_WHOLE_JACCARD_FOR_PLAGIARISM harus antara 0 dan 1"
-        )
+        raise ValueError("MIN_WHOLE_JACCARD_FOR_PLAGIARISM harus antara 0 dan 1")
 
     return Settings(
         service_name=os.getenv("SERVICE_NAME", "similarity-worker"),

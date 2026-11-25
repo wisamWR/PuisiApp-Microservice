@@ -1,4 +1,3 @@
-
 import csv
 import importlib.util
 import json
@@ -6,19 +5,14 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-
 # ============================================================
 # PATH DAN KONFIGURASI
 # ============================================================
 
 ROOT = Path(__file__).resolve().parents[3]
 
-DATASET_PATH = (
-    ROOT / "services/similarity-worker/eval/sources/evaluation_pairs.json"
-)
-POEMS_PATH = (
-    ROOT / "services/similarity-worker/eval/sources/selected_poems.json"
-)
+DATASET_PATH = ROOT / "services/similarity-worker/eval/sources/evaluation_pairs.json"
+POEMS_PATH = ROOT / "services/similarity-worker/eval/sources/selected_poems.json"
 RESULTS_DIR = ROOT / "services/similarity-worker/eval/results"
 
 BANDS = 32
@@ -44,10 +38,9 @@ LEVELS = [
 # LOAD MODUL PRODUKSI
 # ============================================================
 
+
 def load_module(module_name, file_path):
-    spec = importlib.util.spec_from_file_location(
-        module_name, file_path
-    )
+    spec = importlib.util.spec_from_file_location(module_name, file_path)
 
     if spec is None or spec.loader is None:
         raise ImportError(f"Tidak dapat memuat modul: {file_path}")
@@ -74,13 +67,12 @@ similarity = load_module(
 # PERHITUNGAN SKOR SESUAI PROCESSOR PRODUKSI
 # ============================================================
 
+
 def estimasi_containment(jaccard, jumlah_a, jumlah_b):
     if jumlah_a <= 0 or jumlah_b <= 0:
         return 0.0
 
-    intersection = (
-        jaccard * (jumlah_a + jumlah_b) / (1 + jaccard)
-    )
+    intersection = jaccard * (jumlah_a + jumlah_b) / (1 + jaccard)
 
     intersection = min(
         intersection,
@@ -129,6 +121,7 @@ def tentukan_level(score, shingle_count):
 # LSH SESUAI DATABASE PRODUKSI
 # ============================================================
 
+
 def get_buckets(signature):
     return set(
         similarity.buat_bucket_lsh(
@@ -140,15 +133,13 @@ def get_buckets(signature):
 
 
 def lsh_match(signature_a, signature_b):
-    return bool(
-        get_buckets(signature_a)
-        & get_buckets(signature_b)
-    )
+    return bool(get_buckets(signature_a) & get_buckets(signature_b))
 
 
 # ============================================================
 # ATURAN KLASIFIKASI PLAGIARISME
 # ============================================================
+
 
 def apply_plagiarism_validation(
     prediction,
@@ -183,6 +174,7 @@ def apply_plagiarism_validation(
 # SIMULASI PROSES KANDIDAT SESUAI PROCESSOR
 # ============================================================
 
+
 def evaluate_pair(source_fp, candidate_fp):
 
     # --------------------------------------------------------
@@ -216,33 +208,22 @@ def evaluate_pair(source_fp, candidate_fp):
     candidate_stanzas = candidate_fp["stanza_signatures"]
     source_stanzas = source_fp["stanza_signatures"]
 
-    candidate_buckets = [
-        get_buckets(stanza["signature"])
-        for stanza in candidate_stanzas
-    ]
+    candidate_buckets = [get_buckets(stanza["signature"]) for stanza in candidate_stanzas]
 
     for source_stanza in source_stanzas:
-
-        source_buckets = get_buckets(
-            source_stanza["signature"]
-        )
+        source_buckets = get_buckets(source_stanza["signature"])
 
         if not source_buckets:
             continue
 
         # Cari apakah stanza source cocok dengan salah satu
         # stanza candidate melalui LSH.
-        matched = any(
-            bool(source_buckets & buckets)
-            for buckets in candidate_buckets
-        )
+        matched = any(bool(source_buckets & buckets) for buckets in candidate_buckets)
 
         if not matched:
             continue
 
-        matched_source_stanzas.append(
-            source_stanza["stanza"]
-        )
+        matched_source_stanzas.append(source_stanza["stanza"])
 
         # Sesuai processor.py:
         # bandingkan stanza source yang ditemukan dengan
@@ -250,7 +231,6 @@ def evaluate_pair(source_fp, candidate_fp):
         comparisons = []
 
         for candidate_stanza in candidate_stanzas:
-
             if candidate_stanza["shingle_count"] <= 0:
                 continue
 
@@ -301,13 +281,8 @@ def evaluate_pair(source_fp, candidate_fp):
     oracle_comparisons = [whole_comparison]
 
     for candidate_stanza in candidate_stanzas:
-
         for source_stanza in source_stanzas:
-
-            if (
-                candidate_stanza["shingle_count"] <= 0
-                or source_stanza["shingle_count"] <= 0
-            ):
+            if candidate_stanza["shingle_count"] <= 0 or source_stanza["shingle_count"] <= 0:
                 continue
 
             oracle_comparisons.append(
@@ -328,9 +303,7 @@ def evaluate_pair(source_fp, candidate_fp):
 
     candidate_shingles = candidate_fp["shingle_count"]
 
-    detected_by_lsh = (
-        whole_match or bool(matched_source_stanzas)
-    )
+    detected_by_lsh = whole_match or bool(matched_source_stanzas)
 
     oracle_prediction = tentukan_level(
         oracle_best["score"],
@@ -350,34 +323,21 @@ def evaluate_pair(source_fp, candidate_fp):
 
     return {
         "whole_lsh_match": whole_match,
-
         "matched_source_stanzas": matched_source_stanzas,
-
         "stanza_lsh_match": bool(matched_source_stanzas),
-
         "detected_by_lsh": detected_by_lsh,
-
         "jaccard_whole": whole_comparison["jaccard"],
         "containment_whole": whole_comparison["containment"],
         "score_whole": whole_comparison["score"],
-
         "oracle_score": oracle_best["score"],
-
         "pipeline_score": pipeline_best["score"],
         "pipeline_jaccard": pipeline_best["jaccard"],
         "pipeline_containment": pipeline_best["containment"],
-
         "oracle_prediction": oracle_prediction,
-
-        "pipeline_prediction_before_gate": (
-            pipeline_prediction_before_gate
-        ),
-
+        "pipeline_prediction_before_gate": (pipeline_prediction_before_gate),
         "pipeline_prediction": pipeline_prediction,
-
         "plagiarism_jaccard_pass": (
-            whole_comparison["jaccard"]
-            >= MIN_WHOLE_JACCARD_FOR_PLAGIARISM
+            whole_comparison["jaccard"] >= MIN_WHOLE_JACCARD_FOR_PLAGIARISM
         ),
     }
 
@@ -386,12 +346,10 @@ def evaluate_pair(source_fp, candidate_fp):
 # METRIK EVALUASI
 # ============================================================
 
+
 def hitung_metrics(records, prediction_key):
 
-    matrix = {
-        actual: {predicted: 0 for predicted in LEVELS}
-        for actual in LEVELS
-    }
+    matrix = {actual: {predicted: 0 for predicted in LEVELS} for actual in LEVELS}
 
     for record in records:
         actual = record["expected_level"]
@@ -402,29 +360,16 @@ def hitung_metrics(records, prediction_key):
     metrics = {}
 
     for level in LEVELS:
-
         tp = matrix[level][level]
 
-        fp = sum(
-            matrix[actual][level]
-            for actual in LEVELS
-            if actual != level
-        )
+        fp = sum(matrix[actual][level] for actual in LEVELS if actual != level)
 
-        fn = sum(
-            matrix[level][predicted]
-            for predicted in LEVELS
-            if predicted != level
-        )
+        fn = sum(matrix[level][predicted] for predicted in LEVELS if predicted != level)
 
         precision = tp / (tp + fp) if tp + fp else 0.0
         recall = tp / (tp + fn) if tp + fn else 0.0
 
-        f1 = (
-            2 * precision * recall / (precision + recall)
-            if precision + recall
-            else 0.0
-        )
+        f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
 
         metrics[level] = {
             "precision": round(precision, 4),
@@ -433,12 +378,7 @@ def hitung_metrics(records, prediction_key):
             "support": sum(matrix[level].values()),
         }
 
-    accuracy = (
-        sum(matrix[level][level] for level in LEVELS)
-        / len(records)
-        if records
-        else 0.0
-    )
+    accuracy = sum(matrix[level][level] for level in LEVELS) / len(records) if records else 0.0
 
     return {
         "accuracy": round(accuracy, 4),
@@ -451,6 +391,7 @@ def hitung_metrics(records, prediction_key):
 # LOAD JSON
 # ============================================================
 
+
 def load_json(path):
     with path.open("r", encoding="utf-8") as file:
         return json.load(file)
@@ -459,6 +400,7 @@ def load_json(path):
 # ============================================================
 # MAIN EVALUATION
 # ============================================================
+
 
 def main():
 
@@ -470,24 +412,18 @@ def main():
     if not pairs:
         raise ValueError("Dataset evaluasi kosong.")
 
-    poem_map = {
-        poem["poem_id"]: poem
-        for poem in poems
-    }
+    poem_map = {poem["poem_id"]: poem for poem in poems}
 
     fingerprint_cache = {}
 
     def get_fingerprint(text):
 
         if text not in fingerprint_cache:
-
-            fingerprint_cache[text] = (
-                fingerprint.proses_fingerprint(
-                    text,
-                    jumlah_hash=NUM_HASHES,
-                    seed=42,
-                    ukuran_shingle=3,
-                )
+            fingerprint_cache[text] = fingerprint.proses_fingerprint(
+                text,
+                jumlah_hash=NUM_HASHES,
+                seed=42,
+                ukuran_shingle=3,
             )
 
         return fingerprint_cache[text]
@@ -499,13 +435,10 @@ def main():
     # --------------------------------------------------------
 
     for pair in pairs:
-
         source_id = pair["source_id"]
 
         if source_id not in poem_map:
-            raise ValueError(
-                f"Source tidak ditemukan: {source_id}"
-            )
+            raise ValueError(f"Source tidak ditemukan: {source_id}")
 
         source_text = poem_map[source_id]["text"]
         candidate_text = pair["candidate_text"]
@@ -518,70 +451,31 @@ def main():
             candidate_fp,
         )
 
-        results.append({
-
-            "pair_id": pair["pair_id"],
-            "source_id": source_id,
-            "category": pair["category"],
-            "expected_level": pair["expected_level"],
-
-            "source_shingle_count": source_fp["shingle_count"],
-            "candidate_shingle_count": candidate_fp["shingle_count"],
-
-            "jaccard_whole": round(
-                evaluation["jaccard_whole"], 4
-            ),
-
-            "containment_whole": round(
-                evaluation["containment_whole"], 4
-            ),
-
-            "score_whole": round(
-                evaluation["score_whole"], 4
-            ),
-
-            "whole_lsh_match": evaluation["whole_lsh_match"],
-
-            "stanza_lsh_match": evaluation["stanza_lsh_match"],
-
-            "matched_source_stanzas": json.dumps(
-                evaluation["matched_source_stanzas"]
-            ),
-
-            "detected_by_lsh": evaluation["detected_by_lsh"],
-
-            "oracle_score": round(
-                evaluation["oracle_score"], 4
-            ),
-
-            "pipeline_score": round(
-                evaluation["pipeline_score"], 4
-            ),
-
-            "pipeline_jaccard": round(
-                evaluation["pipeline_jaccard"], 4
-            ),
-
-            "pipeline_containment": round(
-                evaluation["pipeline_containment"], 4
-            ),
-
-            "plagiarism_jaccard_pass": (
-                evaluation["plagiarism_jaccard_pass"]
-            ),
-
-            "oracle_prediction": (
-                evaluation["oracle_prediction"]
-            ),
-
-            "pipeline_prediction_before_gate": (
-                evaluation["pipeline_prediction_before_gate"]
-            ),
-
-            "pipeline_prediction": (
-                evaluation["pipeline_prediction"]
-            ),
-        })
+        results.append(
+            {
+                "pair_id": pair["pair_id"],
+                "source_id": source_id,
+                "category": pair["category"],
+                "expected_level": pair["expected_level"],
+                "source_shingle_count": source_fp["shingle_count"],
+                "candidate_shingle_count": candidate_fp["shingle_count"],
+                "jaccard_whole": round(evaluation["jaccard_whole"], 4),
+                "containment_whole": round(evaluation["containment_whole"], 4),
+                "score_whole": round(evaluation["score_whole"], 4),
+                "whole_lsh_match": evaluation["whole_lsh_match"],
+                "stanza_lsh_match": evaluation["stanza_lsh_match"],
+                "matched_source_stanzas": json.dumps(evaluation["matched_source_stanzas"]),
+                "detected_by_lsh": evaluation["detected_by_lsh"],
+                "oracle_score": round(evaluation["oracle_score"], 4),
+                "pipeline_score": round(evaluation["pipeline_score"], 4),
+                "pipeline_jaccard": round(evaluation["pipeline_jaccard"], 4),
+                "pipeline_containment": round(evaluation["pipeline_containment"], 4),
+                "plagiarism_jaccard_pass": (evaluation["plagiarism_jaccard_pass"]),
+                "oracle_prediction": (evaluation["oracle_prediction"]),
+                "pipeline_prediction_before_gate": (evaluation["pipeline_prediction_before_gate"]),
+                "pipeline_prediction": (evaluation["pipeline_prediction"]),
+            }
+        )
 
     # --------------------------------------------------------
     # METRIK
@@ -602,10 +496,7 @@ def main():
         "pipeline_prediction",
     )
 
-    lsh_detection_rate = (
-        sum(item["detected_by_lsh"] for item in results)
-        / len(results)
-    )
+    lsh_detection_rate = sum(item["detected_by_lsh"] for item in results) / len(results)
 
     # --------------------------------------------------------
     # SIMPAN CSV
@@ -618,7 +509,6 @@ def main():
         newline="",
         encoding="utf-8-sig",
     ) as file:
-
         writer = csv.DictWriter(
             file,
             fieldnames=list(results[0].keys()),
@@ -632,48 +522,27 @@ def main():
     # --------------------------------------------------------
 
     summary = {
-
         "total_pairs": len(results),
-
         "evaluation_assumption": (
-            "Each source poem is assumed to be registered "
-            "before its candidate poem."
+            "Each source poem is assumed to be registered before its candidate poem."
         ),
-
         "thresholds": {
             "inspired": THRESHOLD_INSPIRED,
             "similar": THRESHOLD_SIMILAR,
             "suspected_plagiarism": THRESHOLD_PLAGIARISM,
             "minimum_shingles": MIN_SHINGLE_FOR_PLAGIARISM,
-            "minimum_whole_jaccard_for_plagiarism": (
-                MIN_WHOLE_JACCARD_FOR_PLAGIARISM
-            ),
+            "minimum_whole_jaccard_for_plagiarism": (MIN_WHOLE_JACCARD_FOR_PLAGIARISM),
         },
-
-        "lsh_detection_rate": round(
-            lsh_detection_rate, 4
-        ),
-
+        "lsh_detection_rate": round(lsh_detection_rate, 4),
         "oracle_metrics": oracle_metrics,
-
-        "pipeline_metrics_before_gate": (
-            pipeline_metrics_before_gate
-        ),
-
+        "pipeline_metrics_before_gate": (pipeline_metrics_before_gate),
         "pipeline_metrics": pipeline_metrics,
-
-        "category_counts": dict(
-            Counter(
-                item["category"]
-                for item in results
-            )
-        ),
+        "category_counts": dict(Counter(item["category"] for item in results)),
     }
 
     json_path = RESULTS_DIR / "evaluation_summary.json"
 
     with json_path.open("w", encoding="utf-8") as file:
-
         json.dump(
             summary,
             file,
@@ -695,12 +564,10 @@ def main():
         ("PIPELINE BEFORE GATE", pipeline_metrics_before_gate),
         ("PIPELINE AFTER GATE", pipeline_metrics),
     ]:
-
         print(f"\n--- {name} ---")
         print(f"Accuracy: {metrics['accuracy']:.4f}")
 
         for level, values in metrics["per_class"].items():
-
             print(
                 f"{level:24} "
                 f"P={values['precision']:.4f} "
@@ -709,24 +576,16 @@ def main():
                 f"N={values['support']}"
             )
 
-    plagiarism = pipeline_metrics["per_class"][
-        "suspected_plagiarism"
-    ]
+    plagiarism = pipeline_metrics["per_class"]["suspected_plagiarism"]
 
     print("\n--- PLAGIARISM VALIDATION ---")
 
     print(f"Precision : {plagiarism['precision']:.4f}")
     print(f"Recall    : {plagiarism['recall']:.4f}")
 
-    print(
-        "Target precision >= 0.90: "
-        f"{plagiarism['precision'] >= 0.90}"
-    )
+    print(f"Target precision >= 0.90: {plagiarism['precision'] >= 0.90}")
 
-    print(
-        "Minimum whole Jaccard: "
-        f"{MIN_WHOLE_JACCARD_FOR_PLAGIARISM:.2f}"
-    )
+    print(f"Minimum whole Jaccard: {MIN_WHOLE_JACCARD_FOR_PLAGIARISM:.2f}")
 
     print("\nFile hasil:")
     print(csv_path)

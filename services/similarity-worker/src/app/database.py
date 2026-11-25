@@ -61,6 +61,7 @@ def jalankan_migrasi(conn, folder: Path = FOLDER_MIGRASI) -> list[str]:
         conn.autocommit = False
     return dijalankan
 
+
 def catat_first_seen(cur, poem_id: str) -> None:
     """Mencatat waktu pertama puisi ditemukan tanpa mengubah catatan lama."""
     cur.execute(
@@ -71,6 +72,7 @@ def catat_first_seen(cur, poem_id: str) -> None:
         """,
         (poem_id,),
     )
+
 
 def simpan_fingerprint(cur, payload: dict) -> None:
     poem_id = payload["poem_id"]
@@ -104,9 +106,7 @@ def simpan_fingerprint(cur, payload: dict) -> None:
 
     for stanza_data in payload["stanza_signatures"]:
         for band, bucket_hash in buat_bucket_lsh(stanza_data["signature"]):
-            bucket_rows.append(
-                (poem_id, version, stanza_data["stanza"], band, bucket_hash)
-            )
+            bucket_rows.append((poem_id, version, stanza_data["stanza"], band, bucket_hash))
 
     cur.executemany(
         """

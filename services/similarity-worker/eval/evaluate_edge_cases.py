@@ -1,4 +1,3 @@
-
 import csv
 import importlib.util
 import json
@@ -6,12 +5,9 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[3]
 
-SOURCE_FILE = (
-    ROOT / "services/similarity-worker/eval/sources/edge_cases.json"
-)
+SOURCE_FILE = ROOT / "services/similarity-worker/eval/sources/edge_cases.json"
 RESULT_DIR = ROOT / "services/similarity-worker/eval/results"
 
 BANDS = 32
@@ -36,6 +32,7 @@ LEVELS = [
 # ============================================================
 # LOAD MODUL PRODUKSI
 # ============================================================
+
 
 def load_module(name, path):
     spec = importlib.util.spec_from_file_location(name, path)
@@ -65,13 +62,12 @@ similarity = load_module(
 # CONTAINMENT SESUAI PROCESSOR PRODUKSI
 # ============================================================
 
+
 def estimasi_containment(jaccard, jumlah_a, jumlah_b):
     if jumlah_a <= 0 or jumlah_b <= 0:
         return 0.0
 
-    intersection = (
-        jaccard * (jumlah_a + jumlah_b) / (1 + jaccard)
-    )
+    intersection = jaccard * (jumlah_a + jumlah_b) / (1 + jaccard)
 
     intersection = min(intersection, jumlah_a, jumlah_b)
 
@@ -98,6 +94,7 @@ def compare(candidate, source):
 # ============================================================
 # LSH DETECTION
 # ============================================================
+
 
 def lsh_match(signature_a, signature_b):
     buckets_a = set(
@@ -135,6 +132,7 @@ def stanza_lsh_match(candidate, source):
 # VALIDASI PLAGIARISME
 # ============================================================
 
+
 def apply_plagiarism_validation(
     prediction,
     whole_jaccard,
@@ -156,21 +154,16 @@ def apply_plagiarism_validation(
 # METRICS
 # ============================================================
 
+
 def calculate_metrics(results, prediction_key):
-    matrix = {
-        actual: {predicted: 0 for predicted in LEVELS}
-        for actual in LEVELS
-    }
+    matrix = {actual: {predicted: 0 for predicted in LEVELS} for actual in LEVELS}
 
     for row in results:
         actual = row["expected_level"]
         predicted = row[prediction_key]
         matrix[actual][predicted] += 1
 
-    correct = sum(
-        matrix[level][level]
-        for level in LEVELS
-    )
+    correct = sum(matrix[level][level] for level in LEVELS)
 
     total = len(results)
     per_class = {}
@@ -178,26 +171,14 @@ def calculate_metrics(results, prediction_key):
     for level in LEVELS:
         tp = matrix[level][level]
 
-        fp = sum(
-            matrix[actual][level]
-            for actual in LEVELS
-            if actual != level
-        )
+        fp = sum(matrix[actual][level] for actual in LEVELS if actual != level)
 
-        fn = sum(
-            matrix[level][predicted]
-            for predicted in LEVELS
-            if predicted != level
-        )
+        fn = sum(matrix[level][predicted] for predicted in LEVELS if predicted != level)
 
         precision = tp / (tp + fp) if tp + fp else 0.0
         recall = tp / (tp + fn) if tp + fn else 0.0
 
-        f1 = (
-            2 * precision * recall / (precision + recall)
-            if precision + recall
-            else 0.0
-        )
+        f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
 
         per_class[level] = {
             "precision": round(precision, 4),
@@ -216,6 +197,7 @@ def calculate_metrics(results, prediction_key):
 # ============================================================
 # MAIN EVALUATION
 # ============================================================
+
 
 def main():
     RESULT_DIR.mkdir(parents=True, exist_ok=True)
@@ -300,30 +282,18 @@ def main():
             "case_id": case["case_id"],
             "category": case["category"],
             "expected_level": case["expected_level"],
-
             "oracle_prediction": oracle_prediction,
-
-            "pipeline_prediction_before_gate": (
-                pipeline_prediction_before_gate
-            ),
-
+            "pipeline_prediction_before_gate": (pipeline_prediction_before_gate),
             "pipeline_prediction": pipeline_prediction,
-
             "source_shingle_count": source["shingle_count"],
             "candidate_shingle_count": candidate_shingles,
-
             "jaccard": round(jaccard, 4),
             "containment": round(containment, 4),
             "score": round(score, 4),
-
             "whole_lsh_match": whole_match,
             "stanza_lsh_match": stanza_match,
             "detected_by_lsh": detected_by_lsh,
-
-            "plagiarism_jaccard_pass": (
-                jaccard >= MIN_WHOLE_JACCARD_FOR_PLAGIARISM
-            ),
-
+            "plagiarism_jaccard_pass": (jaccard >= MIN_WHOLE_JACCARD_FOR_PLAGIARISM),
             "purpose": case["purpose"],
         }
 
@@ -359,43 +329,27 @@ def main():
     )
 
     short_cases = [
-        row for row in results
-        if row["candidate_shingle_count"] < MIN_SHINGLE_FOR_PLAGIARISM
+        row for row in results if row["candidate_shingle_count"] < MIN_SHINGLE_FOR_PLAGIARISM
     ]
 
-    category_counts = Counter(
-        row["category"] for row in results
-    )
+    category_counts = Counter(row["category"] for row in results)
 
     summary = {
         "total_cases": len(results),
-
         "thresholds": {
             "inspired": THRESHOLD_INSPIRED,
             "similar": THRESHOLD_SIMILAR,
             "suspected_plagiarism": THRESHOLD_PLAGIARISM,
             "minimum_shingles": MIN_SHINGLE_FOR_PLAGIARISM,
-            "minimum_whole_jaccard": (
-                MIN_WHOLE_JACCARD_FOR_PLAGIARISM
-            ),
+            "minimum_whole_jaccard": (MIN_WHOLE_JACCARD_FOR_PLAGIARISM),
         },
-
         "category_counts": dict(category_counts),
-
         "short_cases_below_15": len(short_cases),
-
-        "short_case_ids": [
-            row["case_id"] for row in short_cases
-        ],
-
-        "lsh_detected": sum(
-            row["detected_by_lsh"] for row in results
-        ),
-
+        "short_case_ids": [row["case_id"] for row in short_cases],
+        "lsh_detected": sum(row["detected_by_lsh"] for row in results),
         "oracle_metrics": oracle_metrics,
         "pipeline_metrics_before_gate": before_metrics,
         "pipeline_metrics": pipeline_metrics,
-
         "results": results,
     }
 
@@ -458,18 +412,13 @@ def main():
                 f"N={values['support']}"
             )
 
-    plagiarism = pipeline_metrics["per_class"][
-        "suspected_plagiarism"
-    ]
+    plagiarism = pipeline_metrics["per_class"]["suspected_plagiarism"]
 
     print("\n--- PLAGIARISM VALIDATION ---")
     print(f"Precision : {plagiarism['precision']:.4f}")
     print(f"Recall    : {plagiarism['recall']:.4f}")
 
-    print(
-        "Target precision >= 0.90: "
-        f"{plagiarism['precision'] >= 0.90}"
-    )
+    print(f"Target precision >= 0.90: {plagiarism['precision'] >= 0.90}")
 
     print("\nFile hasil:")
     print(csv_path)

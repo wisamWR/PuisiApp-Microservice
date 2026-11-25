@@ -1,4 +1,3 @@
-
 from app.database import cari_kandidat
 from app.similarity import estimasi_jaccard, hitung_skor
 
@@ -12,9 +11,7 @@ def estimasi_containment(
     if jumlah_a <= 0 or jumlah_b <= 0:
         return 0.0
 
-    intersection = (
-        jaccard * (jumlah_a + jumlah_b) / (1 + jaccard)
-    )
+    intersection = jaccard * (jumlah_a + jumlah_b) / (1 + jaccard)
 
     intersection = min(intersection, jumlah_a, jumlah_b)
 
@@ -101,9 +98,7 @@ def proses_kandidat(cur, payload: dict) -> list[dict]:
                     jumlah_kandidat,
                 )
 
-                perbandingan.append(
-                    (s, j, c, stanza["stanza"])
-                )
+                perbandingan.append((s, j, c, stanza["stanza"]))
 
             if not perbandingan:
                 continue

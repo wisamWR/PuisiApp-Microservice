@@ -1,5 +1,5 @@
-﻿import os
-from datetime import datetime, timezone
+import os
+from datetime import UTC, datetime
 from pathlib import Path
 
 import psycopg2
@@ -84,8 +84,7 @@ def simpan_catatan(event: dict, cur) -> dict:
 
     if terakhir != version - 1:
         raise RuntimeError(
-            f"Urutan versi belum lengkap: versi terakhir={terakhir}, "
-            f"versi masuk={version}"
+            f"Urutan versi belum lengkap: versi terakhir={terakhir}, versi masuk={version}"
         )
 
     previous_hash = HASH_NOL
@@ -104,7 +103,7 @@ def simpan_catatan(event: dict, cur) -> dict:
             raise RuntimeError("Catatan versi sebelumnya belum ditemukan")
         previous_hash = sebelumnya[0]
 
-    recorded_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    recorded_at = datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
     catatan = buat_catatan(
         poem_id=poem_id,

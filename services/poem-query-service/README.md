@@ -4,7 +4,7 @@ Sisi baca puisi (CQRS). Read model dibangun dari 14 jenis event, sehingga detail
 
 | | |
 | --- | --- |
-| API | `GET /api/poems/{id}`, `GET /api/poems?author=&page=&size=`. Kontrak: [`contracts/openapi/poem-query.yaml`](../../contracts/openapi/poem-query.yaml) |
+| API | `GET /api/poems/{id}`, `GET /api/poems?author=&page=&size=`, `GET /api/me/poems?status=&page=&size=` (Puisi Saya, T2.8). Kontrak: [`contracts/openapi/poem-query.yaml`](../../contracts/openapi/poem-query.yaml) |
 | Queue | `q.poem-query` (+ `q.poem-query.dlq`) |
 | Basis data | `poem_read_db`: `poem` (per puisi), `poem_versi` (per versi), `penulis`, `processed_event` |
 | Cache | Redis, cache-aside untuk detail, kunci `poem-query:detail:<poem_id>`, TTL `CACHE_TTL_DETIK` (bawaan 30) |
@@ -37,6 +37,10 @@ Asumsi kontrak:
 | DELETED | 404 | 404 |
 
 Cache menyimpan bundel mentah yang sama untuk semua pembaca, lalu aturan visibilitas diterapkan setiap permintaan, jadi cache tidak pernah membocorkan puisi orang lain. Setelah transaksi proyeksi commit, cache puisi yang berubah dihapus; `user.*` menghapus cache semua puisi penulis itu. Bila Redis mati, layanan tetap membaca dari basis data (header `X-Cache: MISS`).
+
+## Puisi Saya (T2.8)
+
+`GET /api/me/poems` mengembalikan semua puisi milik pengguna yang login (identitas dari gateway, bukan parameter), kecuali DELETED. Setiap item memuat status tampil (REPROCESSING bila revisi sedang dinilai), `status_reason` untuk HELD / HIDDEN (dari `poem.held` / `poem.hidden`, kolom `alasan_status`), level originalitas, dan `counts` per status untuk tombol filter. Filter: `?status=HELD`.
 
 ## Menjalankan
 

@@ -516,3 +516,23 @@
 .admin-list { list-style: none; padding: 0; display: grid; gap: 0.5rem; }
 .admin-row { display: grid; grid-template-columns: 1fr 1fr auto auto; gap: 0.75rem; align-items: center; border: 1px solid #eaecf0; border-radius: 8px; padding: 0.6rem 0.8rem; }
 .admin-username { font-weight: 600; }
+
+/* ---------------------------------------------------------------- tombol vote (T9.3, kelompok 9) */
+.vote-buttons { display: inline-flex; align-items: center; gap: 4px; }
+.vote-button {
+  display: grid; place-items: center; width: 28px; height: 28px; padding: 0;
+  color: #8b7f74; background: #f6f3ef; border: 1px solid #ece6df; border-radius: 8px;
+  cursor: pointer; transition: background .15s, color .15s, border-color .15s;
+}
+.vote-button:hover:not(:disabled) { color: #6b5443; background: #efe8e0; }
+.vote-button:focus-visible { outline: none; box-shadow: 0 0 0 3px #a78a7533; }
+.vote-button:disabled { cursor: not-allowed; opacity: .45; }
+.vote-aktif-naik { color: #fff; background: #5d966d; border-color: #5d966d; }
+.vote-aktif-naik:hover:not(:disabled) { color: #fff; background: #4f845e; }
+.vote-aktif-turun { color: #fff; background: #c36d60; border-color: #c36d60; }
+.vote-aktif-turun:hover:not(:disabled) { color: #fff; background: #b05f53; }
+.vote-skor { min-width: 30px; text-align: center; color: #5e554d; font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.vote-rincian { margin-left: 6px; color: #9a9189; font-size: 10px; }
+.vote-buttons-ringkas .vote-button { width: 24px; height: 24px; border-radius: 7px; }
+.vote-buttons-ringkas .vote-skor { min-width: 26px; font-size: 11px; }
+.poem-detail-vote { display: flex; align-items: center; justify-content: flex-end; margin: 4px 0 14px; }

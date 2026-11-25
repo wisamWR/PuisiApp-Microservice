@@ -1,4 +1,3 @@
-
 from typing import Any
 
 from event_lib import buat_event, uuidv5
@@ -53,10 +52,7 @@ def buat_event_similarity(
         poem_id = item["poem_id"]
         skor = round(item["score"], 6)
 
-        if (
-            poem_id not in terbaik
-            or skor > terbaik[poem_id]["score"]
-        ):
+        if poem_id not in terbaik or skor > terbaik[poem_id]["score"]:
             terbaik[poem_id] = {
                 "score": skor,
                 "whole_jaccard": item["whole_jaccard_estimate"],
@@ -81,17 +77,9 @@ def buat_event_similarity(
         default=None,
     )
 
-    score = (
-        kandidat_terbaik["score"]
-        if kandidat_terbaik is not None
-        else 0.0
-    )
+    score = kandidat_terbaik["score"] if kandidat_terbaik is not None else 0.0
 
-    whole_jaccard = (
-        kandidat_terbaik["whole_jaccard"]
-        if kandidat_terbaik is not None
-        else 0.0
-    )
+    whole_jaccard = kandidat_terbaik["whole_jaccard"] if kandidat_terbaik is not None else 0.0
 
     settings = load_settings()
 

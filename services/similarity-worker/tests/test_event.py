@@ -1,10 +1,9 @@
-
 from types import SimpleNamespace
 
 import pytest
 
 import app.event as event_module
-from app.event import validasi_fingerprint_event, buat_event_similarity
+from app.event import buat_event_similarity, validasi_fingerprint_event
 
 
 def test_menerima_event_fingerprint_valid():

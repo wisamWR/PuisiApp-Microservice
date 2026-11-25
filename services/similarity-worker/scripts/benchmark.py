@@ -1,4 +1,3 @@
-﻿
 import random
 import time
 import uuid
@@ -20,9 +19,7 @@ def main():
     try:
         cur = conn.cursor()
 
-        target_signature = [
-            rng.getrandbits(64) for _ in range(128)
-        ]
+        target_signature = [rng.getrandbits(64) for _ in range(128)]
 
         records = []
         bucket_rows = []
@@ -34,24 +31,35 @@ def main():
             if i == 0:
                 signature = target_signature
             else:
-                signature = [
-                    rng.getrandbits(64) for _ in range(128)
-                ]
+                signature = [rng.getrandbits(64) for _ in range(128)]
 
-            records.append((
-                poem_id, 1, 100,
-                Json(signature), Json([]),
-            ))
+            records.append(
+                (
+                    poem_id,
+                    1,
+                    100,
+                    Json(signature),
+                    Json([]),
+                )
+            )
 
-            first_seen_rows.append((
-                poem_id,
-                "2026-01-01 10:00:00+00",
-            ))
+            first_seen_rows.append(
+                (
+                    poem_id,
+                    "2026-01-01 10:00:00+00",
+                )
+            )
 
             for band, bucket_hash in buat_bucket_lsh(signature):
-                bucket_rows.append((
-                    poem_id, 1, None, band, bucket_hash,
-                ))
+                bucket_rows.append(
+                    (
+                        poem_id,
+                        1,
+                        None,
+                        band,
+                        bucket_hash,
+                    )
+                )
 
         source_id = str(uuid.uuid4())
 

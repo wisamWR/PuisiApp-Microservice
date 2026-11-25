@@ -31,7 +31,7 @@ def buat_bucket_lsh(
 
     for band in range(bands):
         awal = band * rows
-        bagian = signature[awal:awal + rows]
+        bagian = signature[awal : awal + rows]
         isi = ",".join(str(nilai) for nilai in bagian)
         digest = hashlib.sha256(isi.encode("utf-8")).hexdigest()
         buckets.append((band, digest))
@@ -60,12 +60,7 @@ def tentukan_level(
     if not 0 <= score <= 1:
         raise ValueError("Score harus berada antara 0 dan 1")
 
-    if not (
-        0 <= threshold_inspired
-        < threshold_similar
-        < threshold_plagiarism
-        <= 1
-    ):
+    if not (0 <= threshold_inspired < threshold_similar < threshold_plagiarism <= 1):
         raise ValueError("Urutan threshold tidak valid")
 
     if score < threshold_inspired:
