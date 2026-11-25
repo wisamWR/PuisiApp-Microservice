@@ -143,6 +143,28 @@ describe('read model dengan PostgreSQL', { skip: !URL_DB && 'TEST_DATABASE_URL k
     assert.deepEqual(lain.baris.map((r) => r.poem_id), [a]);
   });
 
+  test('daftar publik tanpa author: hanya puisi PUBLISHED dari semua penulis, urut terbaru', async () => {
+    const [lama, baru, proses, tahan, sembunyi, hapus] = Array.from({ length: 6 }, () => randomUUID());
+    await jalankan([
+      e.diajukan(lama, PENULIS), e.terbit(lama, 1, '2026-11-20T09:00:00.000Z'),
+      e.diajukan(baru, 'u-penulis-2'), e.terbit(baru, 1, '2026-11-21T09:00:00.000Z'),
+      e.diajukan(proses, 'u-penulis-2'),
+      e.diajukan(tahan, PENULIS), e.ditahan(tahan),
+      e.diajukan(sembunyi, 'u-penulis-2'), e.terbit(sembunyi), e.disembunyikan(sembunyi),
+      e.diajukan(hapus, PENULIS), e.terbit(hapus), e.dihapus(hapus),
+    ]);
+    const publik = await daftarPenulis(pool, { authorId: null, semua: false, page: 1, size: 20 });
+    assert.equal(publik.total, 2);
+    assert.deepEqual(publik.baris.map((r) => r.poem_id), [baru, lama]);
+
+    const guarded = await daftarPenulis(pool, { authorId: null, semua: true, page: 1, size: 20 });
+    assert.deepEqual(guarded.baris.map((r) => r.poem_id), [baru, lama]);
+
+    const hal2 = await daftarPenulis(pool, { authorId: null, semua: false, page: 2, size: 1 });
+    assert.equal(hal2.total, 2);
+    assert.deepEqual(hal2.baris.map((r) => r.poem_id), [lama]);
+  });
+
   test('event yang sama dikirim ulang: duplikat', async () => {
     const ev = e.diajukan(randomUUID());
     assert.equal(await proses(ev), 'diproses');
