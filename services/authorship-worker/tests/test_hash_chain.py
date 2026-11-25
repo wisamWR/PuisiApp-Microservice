@@ -1,4 +1,4 @@
-﻿from app.hash_chain import (
+from app.hash_chain import (
     HASH_NOL,
     buat_catatan,
     hitung_chain_hash,
@@ -36,11 +36,14 @@ def test_buat_catatan_dan_rantai_hash():
     assert catatan_2["chain_hash"] != catatan_1["chain_hash"]
 
     assert hitung_content_hash("teks") == hitung_content_hash("teks")
-    assert hitung_chain_hash(
-        index=1,
-        poem_id="poem-1",
-        version=1,
-        content_hash=catatan_1["content_hash"],
-        recorded_at="2026-01-02T03:04:05Z",
-        previous_hash=HASH_NOL,
-    ) == catatan_1["chain_hash"]
+    assert (
+        hitung_chain_hash(
+            index=1,
+            poem_id="poem-1",
+            version=1,
+            content_hash=catatan_1["content_hash"],
+            recorded_at="2026-01-02T03:04:05Z",
+            previous_hash=HASH_NOL,
+        )
+        == catatan_1["chain_hash"]
+    )
