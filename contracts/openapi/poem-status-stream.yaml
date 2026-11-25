@@ -1,0 +1,105 @@
+openapi: 3.1.0
+info:
+  title: status-stream-service
+  version: 1.0.0
+  description: |
+    Status pemrosesan puisi secara langsung (T2.7, kelompok 2 Penulisan)
+    lewat Server-Sent Events. Hanya pemilik puisi (serta moderator / admin).
+
+    Data dari processing-tracker, yang mencatat setiap langkah worker di Redis
+    dan menyebarkan perubahan lewat Redis pub/sub ke semua replika.
+
+    Perilaku stream:
+    - `retry: 3000` lalu `event: status` berisi snapshot terkini saat tersambung
+    - `event: status` setiap ada perubahan (langkah selesai, keputusan publikasi)
+    - komentar `: ping` tiap 15 detik
+    - server menutup koneksi setelah 10 menit; EventSource menyambung ulang dan
+      langsung mendapat snapshot terkini
+    - klien sebaiknya menutup stream setelah `status = COMPLETED` dan
+      `publication` terisi, atau `publication = DELETED`
+
+    Contoh di browser (cookie sesi ikut otomatis, origin sama):
+
+        const es = new EventSource(`/api/poems/${id}/status/stream`)
+        es.addEventListener('status', (e) => tampilkan(JSON.parse(e.data)))
+servers:
+  - url: http://localhost:8080
+    description: api-gateway lokal (butuh cookie sesi)
+paths:
+  /api/poems/{id}/status/stream:
+    get:
+      operationId: streamStatusPemrosesan
+      summary: Stream status pemrosesan puisi milik sendiri (SSE)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: |
+            Stream `text/event-stream`. Setiap event bernama `status` dengan
+            `data` berupa JSON SnapshotStatus.
+          content:
+            text/event-stream:
+              schema: { type: string }
+              example: |
+                retry: 3000
+
+                id: 1
+                event: status
+                data: {"poem_id":"0b7d6f0e-4a8b-4a52-9d0b-3f4f0e9b2a10","version":1,"status":"PROCESSING","steps":[{"name":"emotion","label":"Analisis emosi","done":true,"done_at":"2026-11-22T03:00:02.100Z"},{"name":"image","label":"Gambar kutipan","done":false,"done_at":null}],"steps_done":1,"steps_total":2,"completed_at":null,"publication":null,"updated_at":"2026-11-22T03:00:02.100Z"}
+
+                : ping
+
+        '401':
+          description: Belum login (dari gateway)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Galat' }
+        '404':
+          description: |
+            Puisi tidak dikenal, bukan milik pengguna ini, atau status sudah
+            kedaluwarsa (TTL 7 hari). Layanan menunggu sampai 5 detik bila
+            puisi baru saja dikirim dan belum tercatat.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Galat' }
+components:
+  schemas:
+    SnapshotStatus:
+      description: Isi `data` setiap event `status`
+      type: object
+      required: [poem_id, version, status, steps, steps_done, steps_total, completed_at, publication, updated_at]
+      properties:
+        poem_id: { type: string, format: uuid }
+        version: { type: integer, minimum: 1, description: Versi terbaru yang sedang / sudah diproses }
+        status:
+          type: string
+          enum: [PROCESSING, REPROCESSING, COMPLETED]
+          description: REPROCESSING = revisi (versi > 1) sedang diproses
+        steps:
+          type: array
+          description: Langkah aktif (PROCESSING_LANGKAH), urutan tetap
+          items:
+            type: object
+            required: [name, label, done, done_at]
+            properties:
+              name: { type: string, enum: [emotion, themes, keywords, image, similarity, authorship] }
+              label: { type: string }
+              done: { type: boolean }
+              done_at: { type: [string, 'null'], format: date-time }
+        steps_done: { type: integer, minimum: 0 }
+        steps_total: { type: integer, minimum: 0 }
+        completed_at: { type: [string, 'null'], format: date-time }
+        publication:
+          type: [string, 'null']
+          enum: [PUBLISHED, HELD, HIDDEN, DELETED, null]
+          description: Keputusan publication-service; null bila belum ada
+        updated_at: { type: [string, 'null'], format: date-time }
+    Galat:
+      type: object
+      required: [error, message]
+      properties:
+        error: { type: string }
+        message: { type: string }

@@ -117,7 +117,9 @@ services:
       - ./postgres/init:/docker-entrypoint-initdb.d:ro
     networks: [data]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d postgres"]
+      # -h 127.0.0.1: server sementara saat init hanya membuka Unix socket, jadi lewat
+      # TCP baru dianggap siap setelah semua skrip init selesai (bukan di tengahnya).
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U \"$${POSTGRES_USER}\" -d postgres"]
       interval: 5s
       timeout: 5s
       retries: 10

@@ -4,7 +4,9 @@
  *   GET /api/poems?author=&page=&size=  daftar puisi penulis
  */
 import { buatFastify, idPengguna, kirimGalat, pasangDasar, POLA_UUID } from '@puisiapp/poem-common';
-import { lihatDetail, ringkasan } from './tampilan.js';
+import { lihatDetail, puisiSaya, ringkasan } from './tampilan.js';
+
+const STATUS_SAYA = new Set(['PROCESSING', 'REPROCESSING', 'PUBLISHED', 'HELD', 'HIDDEN']);
 
 const tidakAda = (reply) => kirimGalat(reply, 404, 'tidak_ditemukan', 'Puisi tidak ditemukan');
 
@@ -18,6 +20,7 @@ function bilanganBulat(nilai, bawaan, min, maks) {
  * @param {object} d
  * @param {(poemId: string) => Promise<object|null>} d.ambilBundel
  * @param {(q: object) => Promise<{ total: number, baris: object[] }>} d.daftarPenulis
+ * @param {(q: object) => Promise<{ total: number, counts: object, baris: object[] }>} [d.daftarMilik]  GET /api/me/poems (T2.8)
  * @param {{ ambil: Function, simpan: Function }} d.cache
  * @param {() => Promise<void>} d.cekSiap
  * @param {{ info: Function, error: Function }} d.log
@@ -64,6 +67,22 @@ export function buatApp(d) {
     const { total, baris } = await d.daftarPenulis({ authorId: author, semua, page, size });
     reply.header('cache-control', 'private, no-cache');
     return { items: baris.map((r) => ringkasan(r, semua)), page, size, total };
+  });
+
+
+  // T2.8: Puisi Saya. Semua puisi milik sendiri termasuk PROCESSING, HELD, HIDDEN.
+  app.get('/api/me/poems', async (req, reply) => {
+    const userId = idPengguna(req);
+    if (!userId) return kirimGalat(reply, 401, 'unauthorized', 'Silakan masuk terlebih dahulu');
+    const page = bilanganBulat(req.query.page, 1, 1, 10_000);
+    const size = bilanganBulat(req.query.size, 20, 1, 50);
+    const status = typeof req.query.status === 'string' && req.query.status !== '' ? req.query.status.toUpperCase() : null;
+    if (page == null || size == null || (status && !STATUS_SAYA.has(status))) {
+      return kirimGalat(reply, 400, 'parameter_tidak_valid', 'status tidak dikenal, page minimal 1, size 1 sampai 50');
+    }
+    const { total, counts, baris } = await d.daftarMilik({ authorId: userId, status, page, size });
+    reply.header('cache-control', 'private, no-cache');
+    return { items: baris.map(puisiSaya), page, size, total, counts };
   });
 
   return app;

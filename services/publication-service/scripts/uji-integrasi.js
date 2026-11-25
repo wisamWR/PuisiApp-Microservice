@@ -2,11 +2,12 @@
  * Uji integrasi T2.2 dengan layanan asli: gateway (T0.4), poem-create-service
  * (T2.1, poem.submitted asli), outbox relay Debezium (T0.3), dan
  * publication-service. Skor kemiripan dan keputusan moderator dikirim palsu
- * karena T7.2 dan kelompok 8 belum siap.
+ * supaya setiap skenario bisa diatur. similarity-worker asli (T7.2) harus
+ * dimatikan selama uji, karena skornya akan mendahului skor palsu:
  *
- * Dijalankan dari laptop setelah `docker compose up -d`:
- *
+ *   docker compose stop similarity-worker
  *   node scripts/uji-integrasi.js
+ *   docker compose start similarity-worker
  *
  * Variabel (bawaan untuk laptop): GATEWAY_URL=http://localhost:8080,
  * RABBITMQ_* dari .env dengan host localhost.
@@ -24,8 +25,12 @@ import { readFileSync } from 'node:fs';
 import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
 import { buatEvent, buatPublisher, folderKontrak, hubungkan, validasiEvent } from '@puisiapp/events';
+import { sesiUji } from '../../poem-common/src/sesi-uji.js';
+import { pastikanTanpaKonsumen } from '../../poem-common/src/uji-antrean.js';
 
+await pastikanTanpaKonsumen('q.similarity-worker');
 const GATEWAY = process.env.GATEWAY_URL ?? 'http://localhost:8080';
+const sesi = await sesiUji(GATEWAY, { log: (m) => console.log(`(sesi) ${m}`) });
 process.env.RABBITMQ_HOST = process.env.RABBITMQ_HOST_LOKAL ?? 'localhost';
 process.env.RABBITMQ_USER ??= 'puisiApp';
 process.env.RABBITMQ_PASS ??= 'puisiApp_dev_only';
@@ -86,7 +91,7 @@ function sahkan(nama, e) {
 async function ajukan(judul) {
   const r = await fetch(`${GATEWAY}/api/poems`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json', 'idempotency-key': `uji-${randomUUID()}`, cookie: 'access_token=dev' },
+    headers: { 'content-type': 'application/json', 'idempotency-key': `uji-${randomUUID()}`, cookie: sesi.cookie },
     body: JSON.stringify({ title: judul, body: 'baris satu\nbaris dua\n\nbait kedua', quote_stanza: 1, template_id: 'latar1' }),
   });
   const j = await r.json();

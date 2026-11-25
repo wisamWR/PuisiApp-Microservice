@@ -1,0 +1,21 @@
+{
+  "name": "vote-persist-worker",
+  "version": "0.1.0",
+  "description": "T9.2: penyimpanan suara write-behind, vote.cast batch (200 pesan atau 1 detik) -> UPSERT vote_db",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test \"test/**/*.test.js\"",
+    "rekonsiliasi": "node scripts/rekonsiliasi.js"
+  },
+  "dependencies": {
+    "@puisiapp/events": "file:../../libs/node",
+    "@puisiapp/poem-common": "file:../poem-common",
+    "pg": "8.23.1",
+    "redis": "5.12.2"
+  }
+}

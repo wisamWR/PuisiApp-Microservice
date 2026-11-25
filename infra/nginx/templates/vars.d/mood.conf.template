@@ -1,0 +1,2 @@
+# Domain mood (kelompok 5 Mood, routes/mood.conf).
+set $up_mood_feed "${MOOD_FEED_HOST}";

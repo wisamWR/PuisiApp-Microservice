@@ -1,0 +1,44 @@
+/* Puisi Saya dan Notifikasi (T2.8). Warna mengikuti WritePoemPage.css. */
+.saya-filter { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.saya-filter button { padding: 6px 14px; border: 1px solid #e4ddd3; border-radius: 999px; background: #fff; color: #7f7064; font-size: 13px; cursor: pointer; }
+.saya-filter button.aktif { border-color: #8a7045; background: #8a7045; color: #fff; }
+.saya-filter button:focus-visible, .notif-item:focus-visible, .saya-hapus:focus-visible { outline: 2px solid #8a7045; outline-offset: 2px; }
+
+.saya-daftar, .notif-daftar { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.saya-item { padding: 18px 20px; border: 1px solid #eeeae5; border-radius: 12px; background: #fff; }
+.saya-item-atas { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 12px; color: #9b8e83; }
+.saya-item h2 { margin: 10px 0 4px; font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 600; }
+.saya-item h2 a { color: #3f352d; text-decoration: none; }
+.saya-item h2 a:hover { text-decoration: underline; }
+.saya-kutipan { margin: 0; color: #7f7064; font-family: 'Playfair Display', Georgia, serif; font-size: 14px; line-height: 1.7; white-space: pre-line; }
+.saya-waktu { margin-left: auto; }
+
+.saya-status { padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+.nada-proses { color: #8a7045; background: #f7f0e2; }
+.nada-terbit { color: #2f6b4f; background: #e6f2ea; }
+.nada-tahan { color: #9a5b12; background: #fbeedd; }
+.nada-sembunyi { color: #a4432f; background: #f8e5e0; }
+.saya-level, .saya-versi { padding: 2px 8px; border: 1px solid #e4ddd3; border-radius: 999px; }
+
+.saya-alasan { margin: 12px 0 0; padding: 10px 12px; border-radius: 8px; font-size: 13px; line-height: 1.6; }
+.saya-aksi { display: flex; gap: 16px; align-items: center; margin-top: 14px; font-size: 13px; }
+.saya-hapus { padding: 0; border: 0; background: none; color: #a4432f; font-size: 13px; cursor: pointer; }
+.saya-hapus:disabled { opacity: 0.6; cursor: progress; }
+
+.saya-kosong { padding: 32px; border: 1px dashed #e4ddd3; border-radius: 12px; text-align: center; color: #7f7064; }
+.saya-galat { padding: 12px 14px; border-radius: 8px; background: #f8e5e0; color: #a4432f; }
+.saya-memuat { color: #9b8e83; font-size: 13px; }
+.saya-lagi { margin-top: 16px; }
+
+.notif-judul { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+.notif-item { display: flex; gap: 12px; width: 100%; padding: 14px 16px; border: 1px solid #eeeae5; border-radius: 12px; background: #fff; text-align: left; cursor: pointer; font: inherit; color: inherit; }
+.notif-item.belum { border-color: #e4d3b4; background: #fdfaf4; }
+.notif-titik { width: 8px; height: 8px; margin-top: 6px; border-radius: 50%; flex: none; }
+.notif-item.belum .notif-titik { background: #8a7045; }
+.notif-isi { display: grid; gap: 4px; font-size: 14px; color: #3f352d; }
+.notif-isi span { color: #7f7064; line-height: 1.6; }
+.notif-isi small { color: #9b8e83; font-size: 12px; }
+
+.notif-badge { position: relative; display: inline-grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; color: #3f352d; }
+.notif-badge:hover { background: #f8f5f1; }
+.notif-badge-angka { position: absolute; top: 2px; right: 0; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px; background: #a4432f; color: #fff; font-size: 10px; font-weight: 700; line-height: 16px; text-align: center; }

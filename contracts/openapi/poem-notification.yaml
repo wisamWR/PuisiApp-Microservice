@@ -1,0 +1,165 @@
+openapi: 3.1.0
+info:
+  title: notification-service
+  version: 1.0.0
+  description: |
+    Notifikasi berbahasa Indonesia untuk penulis dan pelapor (T2.8, kelompok 2
+    Penulisan). Dibangun dari event: puisi terbit / ditahan / disembunyikan,
+    pemrosesan selesai, laporan, keputusan moderator, dan banding. Setiap event
+    menghasilkan paling banyak satu notifikasi per penerima, walaupun event
+    dikirim ulang.
+
+    Mock server:
+
+        npx @stoplight/prism-cli mock contracts/openapi/poem-notification.yaml --port 4012
+servers:
+  - url: http://localhost:8080
+    description: api-gateway lokal (butuh cookie sesi)
+paths:
+  /api/notifications:
+    get:
+      operationId: daftarNotifikasi
+      summary: Notifikasi milik pengguna, terbaru dulu
+      parameters:
+        - { name: page, in: query, required: false, schema: { type: integer, minimum: 1, default: 1 } }
+        - { name: size, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
+        - name: unread
+          in: query
+          required: false
+          description: true = hanya yang belum dibaca
+          schema: { type: boolean, default: false }
+      responses:
+        '200':
+          description: Satu halaman notifikasi beserta jumlah belum dibaca (untuk badge)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/HalamanNotifikasi' }
+              example:
+                items:
+                  - id: 7c1e1d1a-7c58-5f27-9a51-1f2b8f0e4a31
+                    type: poem_held
+                    title: Puisimu ditahan sementara
+                    message: '"Jendela yang Basah" mirip karya lain (skor 0,91) dan sedang ditinjau moderator.'
+                    poem_id: 0b7d6f0e-4a8b-4a52-9d0b-3f4f0e9b2a10
+                    link: /poems/0b7d6f0e-4a8b-4a52-9d0b-3f4f0e9b2a10
+                    read: false
+                    created_at: '2026-12-05T03:00:21.400Z'
+                page: 1
+                size: 20
+                total: 1
+                unread: 1
+        '400':
+          description: page / size tidak valid
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Galat' }
+        '401':
+          description: Belum login (dari gateway)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Galat' }
+
+  /api/notifications/unread-count:
+    get:
+      operationId: jumlahBelumDibaca
+      summary: Jumlah notifikasi belum dibaca (badge di header)
+      responses:
+        '200':
+          description: Jumlah
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [unread]
+                properties:
+                  unread: { type: integer, minimum: 0 }
+              example: { unread: 3 }
+        '401':
+          description: Belum login
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Galat' }
+
+  /api/notifications/{id}/read:
+    post:
+      operationId: tandaiDibaca
+      summary: Tandai satu notifikasi sudah dibaca (idempoten)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Notifikasi sesudah ditandai, beserta sisa belum dibaca
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [notification, unread]
+                properties:
+                  notification: { $ref: '#/components/schemas/Notifikasi' }
+                  unread: { type: integer, minimum: 0 }
+        '401':
+          description: Belum login
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Galat' }
+        '404':
+          description: Tidak ada atau bukan milik pengguna ini
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Galat' }
+
+  /api/notifications/read-all:
+    post:
+      operationId: tandaiSemuaDibaca
+      summary: Tandai semua notifikasi pengguna sudah dibaca
+      responses:
+        '200':
+          description: Jumlah yang baru ditandai
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [marked, unread]
+                properties:
+                  marked: { type: integer, minimum: 0 }
+                  unread: { type: integer, const: 0 }
+        '401':
+          description: Belum login
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Galat' }
+
+components:
+  schemas:
+    Notifikasi:
+      type: object
+      required: [id, type, title, message, poem_id, link, read, created_at]
+      properties:
+        id: { type: string, format: uuid }
+        type:
+          type: string
+          enum: [poem_published, poem_held, poem_hidden, processing_completed, poem_reported, report_received,
+            case_decided_author, case_decided_reporter, appeal_filed]
+        title: { type: string }
+        message: { type: string }
+        poem_id: { type: [string, 'null'] }
+        link: { type: [string, 'null'], description: Rute frontend yang dibuka saat notifikasi diklik }
+        read: { type: boolean }
+        created_at: { type: string, format: date-time }
+    HalamanNotifikasi:
+      type: object
+      required: [items, page, size, total, unread]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/Notifikasi' }
+        page: { type: integer, minimum: 1 }
+        size: { type: integer, minimum: 1 }
+        total: { type: integer, minimum: 0 }
+        unread: { type: integer, minimum: 0 }
+    Galat:
+      type: object
+      required: [error, message]
+      properties:
+        error: { type: string }
+        message: { type: string }
