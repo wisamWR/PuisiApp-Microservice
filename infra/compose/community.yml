@@ -1,9 +1,31 @@
-# Domain community
-# Kelompok: 3 Jelajah dan baca (Azka); 4 Komunitas (Zoya)
-# Layanan: search, bookmark, comment
-#
-# Tulis layanan domain ini di sini. Path relatif dihitung dari folder infra/
-# (project_directory pada include), jadi build context ditulis ../services/<nama>.
-# Pola lengkap ada di infra/README.md. Alamat dependensi diambil dari .env.
-
-services: {}
+services:
+  comment-service:
+    build:
+      context: ..
+      dockerfile: services/comment-service/Dockerfile
+    restart: unless-stopped
+    environment:
+      SERVICE_NAME: comment-service
+      PORT: "8080"
+      DATABASE_URL: postgres://comment:${COMMENT_DB_PASS}@${POSTGRES_HOST}:${POSTGRES_PORT}/comment_db
+      AMQP_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@${RABBITMQ_HOST}:${RABBITMQ_PORT}/${RABBITMQ_VHOST}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    networks: [app, data]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:8080/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 10s
+      timeout: 3s
+      retries: 3

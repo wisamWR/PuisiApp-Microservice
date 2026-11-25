@@ -1,0 +1,19 @@
+{
+  "name": "comment-service",
+  "version": "0.1.0",
+  "description": "Layanan komentar komunitas PuisiApp",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@puisiapp/events": "file:../../libs/node",
+    "pg": "8.23.1",
+    "redis": "^6.3.1"
+  }
+}
