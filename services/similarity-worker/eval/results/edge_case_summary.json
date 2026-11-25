@@ -1,0 +1,392 @@
+{
+  "total_cases": 11,
+  "thresholds": {
+    "inspired": 0.2,
+    "similar": 0.5,
+    "suspected_plagiarism": 0.8,
+    "minimum_shingles": 15,
+    "minimum_whole_jaccard": 0.8
+  },
+  "category_counts": {
+    "short_exact_copy": 2,
+    "short_partial_copy": 1,
+    "short_unrelated": 1,
+    "short_common_phrase": 1,
+    "common_phrase": 5,
+    "long_exact_copy": 1
+  },
+  "short_cases_below_15": 5,
+  "short_case_ids": [
+    "SHORT-001",
+    "SHORT-002",
+    "SHORT-003",
+    "SHORT-004",
+    "SHORT-005"
+  ],
+  "lsh_detected": 4,
+  "oracle_metrics": {
+    "accuracy": 0.5455,
+    "per_class": {
+      "original": {
+        "precision": 1.0,
+        "recall": 0.2857,
+        "f1_score": 0.4444,
+        "support": 7
+      },
+      "inspired": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1_score": 0.0,
+        "support": 0
+      },
+      "similar": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "support": 3
+      },
+      "suspected_plagiarism": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "support": 1
+      }
+    },
+    "confusion_matrix": {
+      "original": {
+        "original": 2,
+        "inspired": 5,
+        "similar": 0,
+        "suspected_plagiarism": 0
+      },
+      "inspired": {
+        "original": 0,
+        "inspired": 0,
+        "similar": 0,
+        "suspected_plagiarism": 0
+      },
+      "similar": {
+        "original": 0,
+        "inspired": 0,
+        "similar": 3,
+        "suspected_plagiarism": 0
+      },
+      "suspected_plagiarism": {
+        "original": 0,
+        "inspired": 0,
+        "similar": 0,
+        "suspected_plagiarism": 1
+      }
+    }
+  },
+  "pipeline_metrics_before_gate": {
+    "accuracy": 1.0,
+    "per_class": {
+      "original": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "support": 7
+      },
+      "inspired": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1_score": 0.0,
+        "support": 0
+      },
+      "similar": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "support": 3
+      },
+      "suspected_plagiarism": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "support": 1
+      }
+    },
+    "confusion_matrix": {
+      "original": {
+        "original": 7,
+        "inspired": 0,
+        "similar": 0,
+        "suspected_plagiarism": 0
+      },
+      "inspired": {
+        "original": 0,
+        "inspired": 0,
+        "similar": 0,
+        "suspected_plagiarism": 0
+      },
+      "similar": {
+        "original": 0,
+        "inspired": 0,
+        "similar": 3,
+        "suspected_plagiarism": 0
+      },
+      "suspected_plagiarism": {
+        "original": 0,
+        "inspired": 0,
+        "similar": 0,
+        "suspected_plagiarism": 1
+      }
+    }
+  },
+  "pipeline_metrics": {
+    "accuracy": 1.0,
+    "per_class": {
+      "original": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "support": 7
+      },
+      "inspired": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1_score": 0.0,
+        "support": 0
+      },
+      "similar": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "support": 3
+      },
+      "suspected_plagiarism": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "support": 1
+      }
+    },
+    "confusion_matrix": {
+      "original": {
+        "original": 7,
+        "inspired": 0,
+        "similar": 0,
+        "suspected_plagiarism": 0
+      },
+      "inspired": {
+        "original": 0,
+        "inspired": 0,
+        "similar": 0,
+        "suspected_plagiarism": 0
+      },
+      "similar": {
+        "original": 0,
+        "inspired": 0,
+        "similar": 3,
+        "suspected_plagiarism": 0
+      },
+      "suspected_plagiarism": {
+        "original": 0,
+        "inspired": 0,
+        "similar": 0,
+        "suspected_plagiarism": 1
+      }
+    }
+  },
+  "results": [
+    {
+      "case_id": "SHORT-001",
+      "category": "short_exact_copy",
+      "expected_level": "similar",
+      "oracle_prediction": "similar",
+      "pipeline_prediction_before_gate": "similar",
+      "pipeline_prediction": "similar",
+      "source_shingle_count": 12,
+      "candidate_shingle_count": 12,
+      "jaccard": 1.0,
+      "containment": 1.0,
+      "score": 1.0,
+      "whole_lsh_match": true,
+      "stanza_lsh_match": true,
+      "detected_by_lsh": true,
+      "plagiarism_jaccard_pass": true,
+      "purpose": "Exact copy with fewer than 15 unique shingles; must not be classified as suspected_plagiarism because of the minimum shingle rule."
+    },
+    {
+      "case_id": "SHORT-002",
+      "category": "short_exact_copy",
+      "expected_level": "similar",
+      "oracle_prediction": "similar",
+      "pipeline_prediction_before_gate": "similar",
+      "pipeline_prediction": "similar",
+      "source_shingle_count": 11,
+      "candidate_shingle_count": 11,
+      "jaccard": 1.0,
+      "containment": 1.0,
+      "score": 1.0,
+      "whole_lsh_match": true,
+      "stanza_lsh_match": true,
+      "detected_by_lsh": true,
+      "plagiarism_jaccard_pass": true,
+      "purpose": "Test exact short-text matching."
+    },
+    {
+      "case_id": "SHORT-003",
+      "category": "short_partial_copy",
+      "expected_level": "similar",
+      "oracle_prediction": "similar",
+      "pipeline_prediction_before_gate": "similar",
+      "pipeline_prediction": "similar",
+      "source_shingle_count": 8,
+      "candidate_shingle_count": 7,
+      "jaccard": 0.8906,
+      "containment": 1.0,
+      "score": 1.0,
+      "whole_lsh_match": true,
+      "stanza_lsh_match": true,
+      "detected_by_lsh": true,
+      "plagiarism_jaccard_pass": true,
+      "purpose": "Test short partial copying."
+    },
+    {
+      "case_id": "SHORT-004",
+      "category": "short_unrelated",
+      "expected_level": "original",
+      "oracle_prediction": "original",
+      "pipeline_prediction_before_gate": "original",
+      "pipeline_prediction": "original",
+      "source_shingle_count": 7,
+      "candidate_shingle_count": 9,
+      "jaccard": 0.0,
+      "containment": 0.0,
+      "score": 0.0,
+      "whole_lsh_match": false,
+      "stanza_lsh_match": false,
+      "detected_by_lsh": false,
+      "plagiarism_jaccard_pass": false,
+      "purpose": "Test unrelated short poems."
+    },
+    {
+      "case_id": "SHORT-005",
+      "category": "short_common_phrase",
+      "expected_level": "original",
+      "oracle_prediction": "inspired",
+      "pipeline_prediction_before_gate": "original",
+      "pipeline_prediction": "original",
+      "source_shingle_count": 10,
+      "candidate_shingle_count": 11,
+      "jaccard": 0.1562,
+      "containment": 0.258,
+      "score": 0.258,
+      "whole_lsh_match": false,
+      "stanza_lsh_match": false,
+      "detected_by_lsh": false,
+      "plagiarism_jaccard_pass": false,
+      "purpose": "Test short texts sharing a common phrase."
+    },
+    {
+      "case_id": "COMMON-001",
+      "category": "common_phrase",
+      "expected_level": "original",
+      "oracle_prediction": "original",
+      "pipeline_prediction_before_gate": "original",
+      "pipeline_prediction": "original",
+      "source_shingle_count": 24,
+      "candidate_shingle_count": 20,
+      "jaccard": 0.0391,
+      "containment": 0.0827,
+      "score": 0.0827,
+      "whole_lsh_match": false,
+      "stanza_lsh_match": false,
+      "detected_by_lsh": false,
+      "plagiarism_jaccard_pass": false,
+      "purpose": "Test unrelated poems sharing common phrases."
+    },
+    {
+      "case_id": "COMMON-002",
+      "category": "common_phrase",
+      "expected_level": "original",
+      "oracle_prediction": "inspired",
+      "pipeline_prediction_before_gate": "original",
+      "pipeline_prediction": "original",
+      "source_shingle_count": 22,
+      "candidate_shingle_count": 22,
+      "jaccard": 0.1484,
+      "containment": 0.2585,
+      "score": 0.2585,
+      "whole_lsh_match": false,
+      "stanza_lsh_match": false,
+      "detected_by_lsh": false,
+      "plagiarism_jaccard_pass": false,
+      "purpose": "Test common phrase overlap in longer texts."
+    },
+    {
+      "case_id": "COMMON-003",
+      "category": "common_phrase",
+      "expected_level": "original",
+      "oracle_prediction": "inspired",
+      "pipeline_prediction_before_gate": "original",
+      "pipeline_prediction": "original",
+      "source_shingle_count": 24,
+      "candidate_shingle_count": 23,
+      "jaccard": 0.1562,
+      "containment": 0.2761,
+      "score": 0.2761,
+      "whole_lsh_match": false,
+      "stanza_lsh_match": false,
+      "detected_by_lsh": false,
+      "plagiarism_jaccard_pass": false,
+      "purpose": "Test shared ordinary expressions in otherwise different poems."
+    },
+    {
+      "case_id": "COMMON-004",
+      "category": "common_phrase",
+      "expected_level": "original",
+      "oracle_prediction": "inspired",
+      "pipeline_prediction_before_gate": "original",
+      "pipeline_prediction": "original",
+      "source_shingle_count": 19,
+      "candidate_shingle_count": 20,
+      "jaccard": 0.125,
+      "containment": 0.2167,
+      "score": 0.2167,
+      "whole_lsh_match": false,
+      "stanza_lsh_match": false,
+      "detected_by_lsh": false,
+      "plagiarism_jaccard_pass": false,
+      "purpose": "Test common expressions that should not independently trigger plagiarism."
+    },
+    {
+      "case_id": "COMMON-005",
+      "category": "common_phrase",
+      "expected_level": "original",
+      "oracle_prediction": "inspired",
+      "pipeline_prediction_before_gate": "original",
+      "pipeline_prediction": "original",
+      "source_shingle_count": 18,
+      "candidate_shingle_count": 16,
+      "jaccard": 0.1562,
+      "containment": 0.2872,
+      "score": 0.2872,
+      "whole_lsh_match": false,
+      "stanza_lsh_match": false,
+      "detected_by_lsh": false,
+      "plagiarism_jaccard_pass": false,
+      "purpose": "Test partial overlap caused by ordinary phrases."
+    },
+    {
+      "case_id": "LONG-001",
+      "category": "long_exact_copy",
+      "expected_level": "suspected_plagiarism",
+      "oracle_prediction": "suspected_plagiarism",
+      "pipeline_prediction_before_gate": "suspected_plagiarism",
+      "pipeline_prediction": "suspected_plagiarism",
+      "source_shingle_count": 40,
+      "candidate_shingle_count": 40,
+      "jaccard": 1.0,
+      "containment": 1.0,
+      "score": 1.0,
+      "whole_lsh_match": true,
+      "stanza_lsh_match": true,
+      "detected_by_lsh": true,
+      "plagiarism_jaccard_pass": true,
+      "purpose": "Control case: exact copy with more than 15 unique shingles."
+    }
+  ]
+}

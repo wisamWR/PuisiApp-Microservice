@@ -1,3 +1,4 @@
+
 from typing import Any
 
 from event_lib import buat_event, uuidv5
@@ -45,25 +46,53 @@ def buat_event_similarity(
     """Membentuk event hasil scoring sesuai kontrak."""
     payload_sumber = event_sumber["payload"]
 
-    # Satu puisi bisa cocok lewat beberapa bucket (utuh dan per bait);
-    # simpan skor tertinggi per puisi pembanding, urut skor menurun.
-    terbaik: dict[str, float] = {}
+    # Simpan kandidat dengan skor tertinggi per puisi.
+    terbaik: dict[str, dict] = {}
+
     for item in hasil_kandidat:
+        poem_id = item["poem_id"]
         skor = round(item["score"], 6)
-        if skor > terbaik.get(item["poem_id"], -1.0):
-            terbaik[item["poem_id"]] = skor
+
+        if (
+            poem_id not in terbaik
+            or skor > terbaik[poem_id]["score"]
+        ):
+            terbaik[poem_id] = {
+                "score": skor,
+                "whole_jaccard": item["whole_jaccard_estimate"],
+            }
 
     comparisons = [
-        {"compared_poem_id": poem_id, "score": skor}
-        for poem_id, skor in sorted(terbaik.items(), key=lambda x: x[1], reverse=True)
+        {
+            "compared_poem_id": poem_id,
+            "score": data["score"],
+        }
+        for poem_id, data in sorted(
+            terbaik.items(),
+            key=lambda x: x[1]["score"],
+            reverse=True,
+        )
     ]
 
-    score = max(
-        (item["score"] for item in comparisons),
-        default=0.0,
+    # Ambil Jaccard seluruh puisi dari kandidat dengan skor tertinggi.
+    kandidat_terbaik = max(
+        terbaik.values(),
+        key=lambda item: item["score"],
+        default=None,
     )
 
-    # Perlindungan puisi pendek tetap mengikuti spesifikasi T7.2.
+    score = (
+        kandidat_terbaik["score"]
+        if kandidat_terbaik is not None
+        else 0.0
+    )
+
+    whole_jaccard = (
+        kandidat_terbaik["whole_jaccard"]
+        if kandidat_terbaik is not None
+        else 0.0
+    )
+
     settings = load_settings()
 
     level = tentukan_level(
@@ -73,6 +102,13 @@ def buat_event_similarity(
         threshold_similar=settings.threshold_similar,
         threshold_plagiarism=settings.threshold_plagiarism,
     )
+
+    # Validasi tambahan untuk klasifikasi plagiarisme.
+    if (
+        level == "suspected_plagiarism"
+        and whole_jaccard < settings.min_whole_jaccard_for_plagiarism
+    ):
+        level = "similar"
 
     payload_hasil = {
         "poem_id": payload_sumber["poem_id"],

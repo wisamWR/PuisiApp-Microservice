@@ -16,7 +16,6 @@ def estimasi_containment(
         jaccard * (jumlah_a + jumlah_b) / (1 + jaccard)
     )
 
-    # Intersection tidak mungkin melebihi ukuran himpunan terkecil.
     intersection = min(intersection, jumlah_a, jumlah_b)
 
     return min(1.0, intersection / jumlah_a)
@@ -51,6 +50,12 @@ def proses_kandidat(cur, payload: dict) -> list[dict]:
     hasil = []
 
     for item in kandidat:
+        # Hitung Jaccard seluruh puisi untuk setiap kandidat.
+        whole_jaccard = estimasi_jaccard(
+            payload["signature"],
+            item["signature"],
+        )
+
         if item["match_kind"] == "whole":
             jaccard, containment, score = hitung_skor_kemiripan(
                 payload["signature"],
@@ -115,6 +120,7 @@ def proses_kandidat(cur, payload: dict) -> list[dict]:
                 "poem_id": str(item["poem_id"]),
                 "version": item["version"],
                 "jaccard_estimate": jaccard,
+                "whole_jaccard_estimate": whole_jaccard,
                 "containment_estimate": containment,
                 "score": score,
                 "matched_stanza": matched_stanza,

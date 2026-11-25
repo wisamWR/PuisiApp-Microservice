@@ -1,0 +1,101 @@
+﻿pair_id,source_id,category,expected_level,source_shingle_count,candidate_shingle_count,jaccard_whole,containment_whole,score_whole,whole_lsh_match,stanza_lsh_match,matched_source_stanzas,detected_by_lsh,oracle_score,pipeline_score,pipeline_jaccard,pipeline_containment,plagiarism_jaccard_pass,oracle_prediction,pipeline_prediction_before_gate,pipeline_prediction
+PAIR-001,P01,unrelated,original,95,122,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-021,P01,inspired,inspired,95,54,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-041,P01,paraphrase,similar,95,50,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-061,P01,partial_copy,similar,95,31,0.3906,1.0,1.0,True,True,[1],True,1.0,1.0,0.3906,1.0,False,suspected_plagiarism,suspected_plagiarism,similar
+PAIR-081,P01,full_copy,suspected_plagiarism,95,95,1.0,1.0,1.0,True,True,"[1, 2]",True,1.0,1.0,1.0,1.0,True,suspected_plagiarism,suspected_plagiarism,suspected_plagiarism
+PAIR-002,P02,unrelated,original,98,134,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-022,P02,inspired,inspired,98,52,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-042,P02,paraphrase,similar,98,48,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-062,P02,partial_copy,similar,98,35,0.3047,0.8874,0.8874,False,True,[1],True,1.0,1.0,1.0,1.0,False,suspected_plagiarism,suspected_plagiarism,similar
+PAIR-082,P02,full_copy,suspected_plagiarism,98,98,1.0,1.0,1.0,True,True,"[1, 2, 3]",True,1.0,1.0,1.0,1.0,True,suspected_plagiarism,suspected_plagiarism,suspected_plagiarism
+PAIR-003,P03,unrelated,original,238,81,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-023,P03,inspired,inspired,238,53,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-043,P03,paraphrase,similar,238,62,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-063,P03,partial_copy,similar,238,77,0.3828,1.0,1.0,True,True,[1],True,1.0,1.0,0.3828,1.0,False,suspected_plagiarism,suspected_plagiarism,similar
+PAIR-083,P03,full_copy,suspected_plagiarism,238,238,1.0,1.0,1.0,True,True,"[1, 2, 3, 4, 5, 6, 7, 8, 9]",True,1.0,1.0,1.0,1.0,True,suspected_plagiarism,suspected_plagiarism,suspected_plagiarism
+PAIR-004,P04,unrelated,original,121,101,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-024,P04,inspired,inspired,121,53,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-044,P04,paraphrase,similar,121,57,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-064,P04,partial_copy,similar,121,38,0.2656,0.8782,0.8782,False,False,[],False,0.8782,0.0,0.0,0.0,False,suspected_plagiarism,original,original
+PAIR-084,P04,full_copy,suspected_plagiarism,121,121,1.0,1.0,1.0,True,True,[1],True,1.0,1.0,1.0,1.0,True,suspected_plagiarism,suspected_plagiarism,suspected_plagiarism
+PAIR-005,P05,unrelated,original,223,56,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-025,P05,inspired,inspired,223,51,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-045,P05,paraphrase,similar,223,57,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-065,P05,partial_copy,similar,223,74,0.2812,0.881,0.881,False,False,[],False,0.881,0.0,0.0,0.0,False,suspected_plagiarism,original,original
+PAIR-085,P05,full_copy,suspected_plagiarism,223,223,1.0,1.0,1.0,True,True,[1],True,1.0,1.0,1.0,1.0,True,suspected_plagiarism,suspected_plagiarism,suspected_plagiarism
+PAIR-006,P06,unrelated,original,130,132,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-026,P06,inspired,inspired,130,52,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-046,P06,paraphrase,similar,130,53,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-066,P06,partial_copy,similar,130,42,0.3203,0.9935,0.9935,False,False,[],False,0.9935,0.0,0.0,0.0,False,suspected_plagiarism,original,original
+PAIR-086,P06,full_copy,suspected_plagiarism,130,130,1.0,1.0,1.0,True,True,[1],True,1.0,1.0,1.0,1.0,True,suspected_plagiarism,suspected_plagiarism,suspected_plagiarism
+PAIR-007,P07,unrelated,original,133,95,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-027,P07,inspired,inspired,133,49,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-047,P07,paraphrase,similar,133,53,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-067,P07,partial_copy,similar,133,44,0.375,1.0,1.0,True,True,[1],True,1.0,1.0,0.375,1.0,False,suspected_plagiarism,suspected_plagiarism,similar
+PAIR-087,P07,full_copy,suspected_plagiarism,133,133,1.0,1.0,1.0,True,True,"[1, 2, 3]",True,1.0,1.0,1.0,1.0,True,suspected_plagiarism,suspected_plagiarism,suspected_plagiarism
+PAIR-008,P08,unrelated,original,95,102,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-028,P08,inspired,inspired,95,53,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-048,P08,paraphrase,similar,95,49,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-068,P08,partial_copy,similar,95,35,0.375,1.0,1.0,True,True,[1],True,1.0,1.0,0.375,1.0,False,suspected_plagiarism,suspected_plagiarism,similar
+PAIR-088,P08,full_copy,suspected_plagiarism,95,95,1.0,1.0,1.0,True,True,"[1, 2]",True,1.0,1.0,1.0,1.0,True,suspected_plagiarism,suspected_plagiarism,suspected_plagiarism
+PAIR-009,P09,unrelated,original,128,93,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-029,P09,inspired,inspired,128,52,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-049,P09,paraphrase,similar,128,54,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-069,P09,partial_copy,similar,128,41,0.2969,0.9436,0.9436,False,True,[1],True,0.9436,0.7109,0.7109,0.7073,False,suspected_plagiarism,similar,similar
+PAIR-089,P09,full_copy,suspected_plagiarism,128,128,1.0,1.0,1.0,True,True,"[1, 2, 3]",True,1.0,1.0,1.0,1.0,True,suspected_plagiarism,suspected_plagiarism,suspected_plagiarism
+PAIR-010,P10,unrelated,original,53,167,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-030,P10,inspired,inspired,53,49,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-050,P10,paraphrase,similar,53,58,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-070,P10,partial_copy,similar,53,16,0.2188,0.774,0.774,False,True,[1],True,0.774,0.649,0.625,0.649,False,similar,similar,similar
+PAIR-090,P10,full_copy,suspected_plagiarism,53,53,1.0,1.0,1.0,True,True,"[1, 2, 3]",True,1.0,1.0,1.0,1.0,True,suspected_plagiarism,suspected_plagiarism,suspected_plagiarism
+PAIR-011,P11,unrelated,original,122,95,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-031,P11,inspired,inspired,122,55,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-051,P11,paraphrase,similar,122,51,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-071,P11,partial_copy,similar,122,40,0.3047,0.9458,0.9458,False,True,"[1, 2]",True,0.9458,0.5709,0.5547,0.5709,False,suspected_plagiarism,similar,similar
+PAIR-091,P11,full_copy,suspected_plagiarism,122,122,1.0,1.0,1.0,True,True,"[1, 2, 3, 4]",True,1.0,1.0,1.0,1.0,True,suspected_plagiarism,suspected_plagiarism,suspected_plagiarism
+PAIR-012,P12,unrelated,original,134,98,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-032,P12,inspired,inspired,134,57,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-052,P12,paraphrase,similar,134,56,0.0078,0.0263,0.0263,False,False,[],False,0.0291,0.0,0.0,0.0,False,original,original,original
+PAIR-072,P12,partial_copy,similar,134,48,0.3594,1.0,1.0,False,True,[1],True,1.0,0.7902,0.7891,0.7902,False,suspected_plagiarism,similar,similar
+PAIR-092,P12,full_copy,suspected_plagiarism,134,134,1.0,1.0,1.0,True,True,"[1, 2, 3]",True,1.0,1.0,1.0,1.0,True,suspected_plagiarism,suspected_plagiarism,suspected_plagiarism
+PAIR-013,P13,unrelated,original,81,238,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-033,P13,inspired,inspired,81,49,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-053,P13,paraphrase,similar,81,56,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-073,P13,partial_copy,similar,81,26,0.3828,1.0,1.0,False,True,[1],True,1.0,0.8516,0.8516,0.8077,False,suspected_plagiarism,suspected_plagiarism,similar
+PAIR-093,P13,full_copy,suspected_plagiarism,81,81,1.0,1.0,1.0,True,True,"[1, 2, 3]",True,1.0,1.0,1.0,1.0,True,suspected_plagiarism,suspected_plagiarism,suspected_plagiarism
+PAIR-014,P14,unrelated,original,101,121,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-034,P14,inspired,inspired,101,56,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-054,P14,paraphrase,similar,101,53,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-074,P14,partial_copy,similar,101,33,0.3359,1.0,1.0,False,False,[],False,1.0,0.0,0.0,0.0,False,suspected_plagiarism,original,original
+PAIR-094,P14,full_copy,suspected_plagiarism,101,101,1.0,1.0,1.0,True,True,[1],True,1.0,1.0,1.0,1.0,True,suspected_plagiarism,suspected_plagiarism,suspected_plagiarism
+PAIR-015,P15,unrelated,original,168,223,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-035,P15,inspired,inspired,168,44,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-055,P15,paraphrase,similar,168,55,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-075,P15,partial_copy,similar,168,68,0.375,0.9465,0.9465,False,True,"[1, 2, 3]",True,1.0,1.0,1.0,1.0,False,suspected_plagiarism,suspected_plagiarism,similar
+PAIR-095,P15,full_copy,suspected_plagiarism,168,168,1.0,1.0,1.0,True,True,"[1, 2, 3, 4, 5, 6, 7]",True,1.0,1.0,1.0,1.0,True,suspected_plagiarism,suspected_plagiarism,suspected_plagiarism
+PAIR-016,P16,unrelated,original,132,130,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-036,P16,inspired,inspired,132,50,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-056,P16,paraphrase,similar,132,51,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-076,P16,partial_copy,similar,132,41,0.2969,0.9659,0.9659,False,True,"[1, 2]",True,0.9659,0.5173,0.4844,0.5173,False,suspected_plagiarism,similar,similar
+PAIR-096,P16,full_copy,suspected_plagiarism,132,132,1.0,1.0,1.0,True,True,"[1, 2, 3, 4, 5, 6]",True,1.0,1.0,1.0,1.0,True,suspected_plagiarism,suspected_plagiarism,suspected_plagiarism
+PAIR-017,P17,unrelated,original,95,133,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-037,P17,inspired,inspired,95,53,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-057,P17,paraphrase,similar,95,53,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-077,P17,partial_copy,similar,95,31,0.3438,1.0,1.0,False,False,[],False,1.0,0.0,0.0,0.0,False,suspected_plagiarism,original,original
+PAIR-097,P17,full_copy,suspected_plagiarism,95,95,1.0,1.0,1.0,True,True,[1],True,1.0,1.0,1.0,1.0,True,suspected_plagiarism,suspected_plagiarism,suspected_plagiarism
+PAIR-018,P18,unrelated,original,102,95,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-038,P18,inspired,inspired,102,52,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-058,P18,paraphrase,similar,102,54,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-078,P18,partial_copy,similar,102,32,0.2891,0.939,0.939,False,False,[],False,0.939,0.0,0.0,0.0,False,suspected_plagiarism,original,original
+PAIR-098,P18,full_copy,suspected_plagiarism,102,102,1.0,1.0,1.0,True,True,[1],True,1.0,1.0,1.0,1.0,True,suspected_plagiarism,suspected_plagiarism,suspected_plagiarism
+PAIR-019,P19,unrelated,original,93,128,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-039,P19,inspired,inspired,93,49,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-059,P19,paraphrase,similar,93,51,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-079,P19,partial_copy,similar,93,29,0.3281,1.0,1.0,False,True,"[1, 2]",True,1.0,0.6137,0.6094,0.6137,False,suspected_plagiarism,similar,similar
+PAIR-099,P19,full_copy,suspected_plagiarism,93,93,1.0,1.0,1.0,True,True,"[1, 2, 3, 4, 5]",True,1.0,1.0,1.0,1.0,True,suspected_plagiarism,suspected_plagiarism,suspected_plagiarism
+PAIR-020,P20,unrelated,original,167,53,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-040,P20,inspired,inspired,167,48,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-060,P20,paraphrase,similar,167,52,0.0,0.0,0.0,False,False,[],False,0.0,0.0,0.0,0.0,False,original,original,original
+PAIR-080,P20,partial_copy,similar,167,55,0.375,1.0,1.0,False,True,[1],True,1.0,0.7206,0.7031,0.7206,False,suspected_plagiarism,similar,similar
+PAIR-100,P20,full_copy,suspected_plagiarism,167,167,1.0,1.0,1.0,True,True,"[1, 2, 3, 4]",True,1.0,1.0,1.0,1.0,True,suspected_plagiarism,suspected_plagiarism,suspected_plagiarism

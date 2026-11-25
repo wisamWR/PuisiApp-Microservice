@@ -1,3 +1,4 @@
+
 import os
 from dataclasses import dataclass
 
@@ -15,6 +16,7 @@ class Settings:
     threshold_inspired: float
     threshold_similar: float
     threshold_plagiarism: float
+    min_whole_jaccard_for_plagiarism: float
 
 
 def load_settings() -> Settings:
@@ -23,6 +25,15 @@ def load_settings() -> Settings:
 
     if bands * rows != 128:
         raise ValueError("LSH_BANDS x LSH_ROWS harus sama dengan 128")
+
+    min_whole_jaccard = float(
+        os.getenv("MIN_WHOLE_JACCARD_FOR_PLAGIARISM", "0.80")
+    )
+
+    if not 0.0 <= min_whole_jaccard <= 1.0:
+        raise ValueError(
+            "MIN_WHOLE_JACCARD_FOR_PLAGIARISM harus antara 0 dan 1"
+        )
 
     return Settings(
         service_name=os.getenv("SERVICE_NAME", "similarity-worker"),
@@ -36,4 +47,5 @@ def load_settings() -> Settings:
         threshold_inspired=float(os.getenv("THRESHOLD_INSPIRED", "0.20")),
         threshold_similar=float(os.getenv("THRESHOLD_SIMILAR", "0.50")),
         threshold_plagiarism=float(os.getenv("THRESHOLD_PLAGIARISM", "0.80")),
+        min_whole_jaccard_for_plagiarism=min_whole_jaccard,
     )
