@@ -13,6 +13,7 @@ import ProfilePage from './pages/ProfilePage'
 import AdminUsersPage from './pages/AdminUsersPage'
 import WritePoemPage from './pages/WritePoemPage'
 import MyPoemsPage from './pages/MyPoemsPage'
+import HomePage from './pages/HomePage'
 import NotificationsPage from './pages/NotificationsPage'
 
 function App() {
@@ -22,7 +23,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route element={<AppLayout />}>
-            <Route index element={<PlaceholderPage pageKey="home" />} />
+            <Route index element={<HomePage />} />
             <Route path="mood-entry" element={<MoodEntryPage />} />
             <Route path="mood-feed" element={<MoodFeedPage />} />
             <Route path="poems/:id" element={<PoemDetailPage />} />
