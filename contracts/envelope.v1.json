@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://puisiapp.example/schema/envelope.v1.json",
+  "title": "Amplop event PuisiApp (RASA) v1",
+  "description": "Satu-satunya sumber format amplop event (Listing A.1 laporan). Pemilik: T0.6.",
+  "type": "object",
+  "required": [
+    "event_id",
+    "event_type",
+    "schema_version",
+    "occurred_at",
+    "producer",
+    "correlation_id",
+    "aggregate_id",
+    "aggregate_version",
+    "payload"
+  ],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Kunci idempotensi; unik untuk setiap event"
+    },
+    "event_type": {
+      "type": "string",
+      "pattern": "^[a-z]+(\\.[a-z_]+)+$",
+      "description": "Sama dengan routing key, mis. poem.submitted"
+    },
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "occurred_at": { "type": "string", "format": "date-time" },
+    "producer": { "type": "string", "description": "Nama layanan penerbit" },
+    "correlation_id": {
+      "type": "string",
+      "description": "Sama untuk seluruh rantai event satu aksi pengguna"
+    },
+    "causation_id": {
+      "type": ["string", "null"],
+      "description": "event_id yang memicu event ini"
+    },
+    "traceparent": {
+      "type": "string",
+      "description": "Konteks W3C Trace Context untuk OpenTelemetry"
+    },
+    "aggregate_id": {
+      "type": "string",
+      "description": "Biasanya poem_id, report_id, atau case_id"
+    },
+    "aggregate_version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Versi entitas; konsumen mengabaikan versi yang lebih lama"
+    },
+    "payload": { "type": "object" }
+  },
+  "additionalProperties": false
+}

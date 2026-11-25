@@ -1,0 +1,43 @@
+# Templat container outbox-relay (Debezium Server). Dipakai lewat `extends`
+# dari compose domain pemilik database:
+#
+#   outbox-relay-submission:
+#     extends: { file: debezium/relay.yml, service: outbox-relay }
+#     environment:
+#       RELAY_DB: submission_db
+#       RELAY_SLOT: outbox_submission
+#     volumes:
+#       - relay-submission-data:/debezium/data
+#     depends_on:
+#       rabbitmq-topologi: { condition: service_completed_successfully }
+#       poem-create-service: { condition: service_healthy }   # yang membuat tabel outbox
+#
+# Satu instans Debezium Server = satu konektor = satu database.
+
+services:
+  outbox-relay:
+    image: quay.io/debezium/server:3.7.1.Final
+    restart: unless-stopped
+    environment:
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+      RABBITMQ_VHOST: ${RABBITMQ_VHOST}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      DEBEZIUM_DB_PASS: ${DEBEZIUM_DB_PASS}
+      JAVA_OPTS: -Xms64m -Xmx256m
+    volumes:
+      - ./application.properties:/debezium/config/application.properties:ro
+    networks: [data]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/q/health/ready | grep -q '\"status\": \"UP\"'"]
+      interval: 15s
+      timeout: 5s
+      retries: 4
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 384M

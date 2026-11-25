@@ -11,16 +11,30 @@ function kirimJson(res, status, data) {
   res.end(payload);
 }
 
-export function buatServerHttp({ indeksTema, versi = '1.0.0' }) {
+export function buatServerHttp({ indeksTema, circuitBreaker = null, versi = '1.0.0' }) {
   return http.createServer(async (req, res) => {
     const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
 
     if (req.method === 'GET' && url.pathname === '/health') {
-      return kirimJson(res, 200, { status: 'ok', service: 'theme-feed', version: versi });
+      return kirimJson(res, 200, {
+        status: 'ok',
+        service: 'theme-feed',
+        version: versi,
+        circuit_breaker: circuitBreaker ? circuitBreaker.getStatus() : { state: 'CLOSED' },
+      });
     }
 
     if (req.method === 'GET' && url.pathname === '/api/themes/summary') {
-      const summary = await indeksTema.ringkasanTema();
+      const eksekusiSummary = () => indeksTema.ringkasanTema();
+      const fallbackSummary = () => ({
+        total_poems: 0,
+        degraded: true,
+        themes: DAFTAR_TEMA.map((theme) => ({ theme, count: 0 })),
+      });
+
+      const summary = circuitBreaker
+        ? await circuitBreaker.eksekusi(eksekusiSummary, fallbackSummary)
+        : await eksekusiSummary();
       return kirimJson(res, 200, summary);
     }
 
@@ -37,12 +51,19 @@ export function buatServerHttp({ indeksTema, versi = '1.0.0' }) {
         return kirimJson(res, 400, { error: 'invalid_theme', allowed: DAFTAR_TEMA });
       }
 
-      const hasil = await indeksTema.ambilFeed(tema, { page, limit });
+      const eksekusiFeed = () => indeksTema.ambilFeed(tema, { page, limit });
+      const fallbackFeed = () => ({ total: 0, items: [], degraded: true });
+
+      const hasil = circuitBreaker
+        ? await circuitBreaker.eksekusi(eksekusiFeed, fallbackFeed)
+        : await eksekusiFeed();
+
       return kirimJson(res, 200, {
         theme: tema,
         page,
         limit,
         total: hasil?.total ?? 0,
+        degraded: Boolean(hasil?.degraded),
         items: hasil?.items ?? [],
       });
     }

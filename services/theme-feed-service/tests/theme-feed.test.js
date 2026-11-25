@@ -110,7 +110,7 @@ test('konsumen event mengindeks tema dan menghapus saat poem.deleted', async () 
 
   const poemId = '11111111-1111-4111-8111-111111111119';
   const emit = async (event_type, payload) => {
-    const amplop = buatEvent(event_type, poemId, 1, payload);
+    const amplop = buatEvent(event_type, poemId, 1, payload, { producer: 'theme-feed-test' });
     const msg = {
       properties: { headers: {} },
       content: Buffer.from(JSON.stringify(amplop)),

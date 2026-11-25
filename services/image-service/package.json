@@ -1,0 +1,26 @@
+{
+  "name": "image-service",
+  "version": "0.1.0",
+  "description": "T2.5: image-preview-service (pratinjau sinkron) dan image-render-worker (gambar kutipan final ke S3). Satu image, dua entrypoint.",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start:preview": "node src/preview.js",
+    "start:render": "node src/render-worker.js",
+    "test": "node --test \"test/**/*.test.js\""
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "3.1167.0",
+    "@puisiapp/events": "file:../../libs/node",
+    "fastify": "5.12.8",
+    "prom-client": "15.1.3",
+    "sharp": "0.35.5"
+  },
+  "devDependencies": {
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1"
+  }
+}

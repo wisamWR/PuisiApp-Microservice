@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">
+  <!-- latar2 "Kertas Senja": kertas krem hangat dengan bingkai tipis -->
+  <defs>
+    <radialGradient id="g" cx="0.5" cy="0.42" r="0.75">
+      <stop offset="0" stop-color="#F7F0E3"/>
+      <stop offset="1" stop-color="#E4D2B6"/>
+    </radialGradient>
+  </defs>
+  <rect width="1080" height="1080" fill="url(#g)"/>
+  <rect x="60" y="60" width="960" height="960" fill="none" stroke="#8C6E4E" stroke-opacity="0.45" stroke-width="3"/>
+  <rect x="78" y="78" width="924" height="924" fill="none" stroke="#8C6E4E" stroke-opacity="0.25" stroke-width="1.5"/>
+  <circle cx="540" cy="150" r="5" fill="#8C6E4E" fill-opacity="0.5"/>
+  <circle cx="512" cy="150" r="3" fill="#8C6E4E" fill-opacity="0.35"/>
+  <circle cx="568" cy="150" r="3" fill="#8C6E4E" fill-opacity="0.35"/>
+</svg>

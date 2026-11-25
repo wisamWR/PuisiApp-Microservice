@@ -1,0 +1,23 @@
+{
+  "name": "@puisiapp/poem-common",
+  "version": "0.1.0",
+  "description": "Kode bersama domain puisi (kelompok 2): validasi pengajuan/revisi, metrik, helper HTTP. Dipakai poem-create, poem-edit, poem-delete.",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test \"test/**/*.test.js\""
+  },
+  "dependencies": {
+    "@puisiapp/events": "file:../../libs/node",
+    "fastify": "5.12.8",
+    "prom-client": "15.1.3",
+    "sanitize-html": "2.18.1"
+  }
+}

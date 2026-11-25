@@ -1,0 +1,383 @@
+# Domain poem
+# Kelompok: 2 Penulisan puisi (Wisam)
+# Layanan: poem-create, poem-edit, poem-delete, publication, poem-query, processing-tracker, status-stream, notification, image-preview, image-render-worker, outbox-relay per database
+#
+# Path relatif dihitung dari folder infra/ (project_directory pada include),
+# jadi build context ditulis ../services/<nama>. Pola lengkap ada di
+# infra/README.md. Alamat dependensi diambil dari .env.
+
+services:
+  # ---------------------------------------------------------------- T2.1
+  # Menerima POST /api/poems, menulis submission + outbox dalam satu transaksi,
+  # membalas 202. Tidak terhubung ke RabbitMQ: penerbitan event dikerjakan
+  # outbox-relay-submission, jadi pengajuan tetap diterima saat broker mati.
+  poem-create-service:
+    build:
+      context: ..
+      dockerfile: services/poem-create-service/Dockerfile
+    restart: unless-stopped
+    environment:
+      SERVICE_NAME: poem-create-service
+      PORT: "8080"
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      DATABASE_URL: postgres://poem_create:${POEM_CREATE_DB_PASS}@${POSTGRES_HOST}:${POSTGRES_PORT}/submission_db
+      TEMPLATE_SAH: ${TEMPLATE_SAH:-latar1,latar2,latar3}
+    networks: [app, data]
+    depends_on:
+      postgres: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          memory: 192M
+
+  outbox-relay-submission:
+    extends:
+      file: debezium/relay.yml
+      service: outbox-relay
+    environment:
+      RELAY_DB: submission_db
+      RELAY_SLOT: outbox_submission
+    volumes:
+      - relay-submission-data:/debezium/data
+    depends_on:
+      rabbitmq-topologi: { condition: service_completed_successfully }
+      poem-create-service: { condition: service_healthy }
+
+  # ---------------------------------------------------------------- T2.4
+  # Revisi dan hapus puisi. Tahap "Lengkap" (Sprint 2), bukan cakupan demo PA3,
+  # jadi hanya jalan dengan profil: docker compose --profile lengkap up -d
+  poem-edit-service:
+    profiles: [lengkap]
+    build:
+      context: ..
+      dockerfile: services/poem-edit-service/Dockerfile
+    restart: unless-stopped
+    environment: &env-tulis
+      SERVICE_NAME: poem-edit-service
+      PORT: "8080"
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      DATABASE_URL: postgres://poem_edit:${POEM_EDIT_DB_PASS}@${POSTGRES_HOST}:${POSTGRES_PORT}/revision_db
+      TEMPLATE_SAH: ${TEMPLATE_SAH:-latar1,latar2,latar3}
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+      RABBITMQ_VHOST: ${RABBITMQ_VHOST}
+    networks: [app, data]
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+    healthcheck: &cek-siap
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          memory: 192M
+
+  poem-delete-service:
+    profiles: [lengkap]
+    build:
+      context: ..
+      dockerfile: services/poem-delete-service/Dockerfile
+    restart: unless-stopped
+    environment:
+      <<: *env-tulis
+      SERVICE_NAME: poem-delete-service
+      DATABASE_URL: postgres://poem_delete:${POEM_DELETE_DB_PASS}@${POSTGRES_HOST}:${POSTGRES_PORT}/deletion_db
+    networks: [app, data]
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+    healthcheck: *cek-siap
+    deploy:
+      resources:
+        limits:
+          memory: 192M
+
+  outbox-relay-revision:
+    profiles: [lengkap]
+    extends:
+      file: debezium/relay.yml
+      service: outbox-relay
+    environment:
+      RELAY_DB: revision_db
+      RELAY_SLOT: outbox_revision
+    volumes:
+      - relay-revision-data:/debezium/data
+    depends_on:
+      rabbitmq-topologi: { condition: service_completed_successfully }
+      poem-edit-service: { condition: service_healthy }
+
+  outbox-relay-deletion:
+    profiles: [lengkap]
+    extends:
+      file: debezium/relay.yml
+      service: outbox-relay
+    environment:
+      RELAY_DB: deletion_db
+      RELAY_SLOT: outbox_deletion
+    volumes:
+      - relay-deletion-data:/debezium/data
+    depends_on:
+      rabbitmq-topologi: { condition: service_completed_successfully }
+      poem-delete-service: { condition: service_healthy }
+
+  # ---------------------------------------------------------------- T2.2
+  # Mesin status publikasi (worker). Konsumsi poem.submitted / revised / deleted,
+  # poem.similarity.scored (T7.2), case.decided (kelompok 8); tulis status +
+  # outbox poem.published / held / hidden dalam satu transaksi.
+  publication-service:
+    build:
+      context: ..
+      dockerfile: services/publication-service/Dockerfile
+    restart: unless-stopped
+    environment:
+      SERVICE_NAME: publication-service
+      PORT: "8080"
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      DATABASE_URL: postgres://publication:${PUBLICATION_DB_PASS}@${POSTGRES_HOST}:${POSTGRES_PORT}/publication_db
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+      RABBITMQ_VHOST: ${RABBITMQ_VHOST}
+    networks: [app, data]
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq-topologi: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          memory: 160M
+
+  outbox-relay-publication:
+    extends:
+      file: debezium/relay.yml
+      service: outbox-relay
+    environment:
+      RELAY_DB: publication_db
+      RELAY_SLOT: outbox_publication
+    volumes:
+      - relay-publication-data:/debezium/data
+    depends_on:
+      rabbitmq-topologi: { condition: service_completed_successfully }
+      publication-service: { condition: service_healthy }
+
+  # ---------------------------------------------------------------- T2.3
+  # Sisi baca (CQRS): read model dari 14 jenis event + GET /api/poems dengan
+  # cache-aside Redis. Hanya konsumen, tanpa outbox dan relay.
+  poem-query-service:
+    build:
+      context: ..
+      dockerfile: services/poem-query-service/Dockerfile
+    restart: unless-stopped
+    environment:
+      SERVICE_NAME: poem-query-service
+      PORT: "8080"
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      DATABASE_URL: postgres://poem_query:${POEM_QUERY_DB_PASS}@${POSTGRES_HOST}:${POSTGRES_PORT}/poem_read_db
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      CACHE_TTL_DETIK: ${POEM_QUERY_CACHE_TTL:-30}
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+      RABBITMQ_VHOST: ${RABBITMQ_VHOST}
+    networks: [app, data]
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      rabbitmq-topologi: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          memory: 192M
+
+  # ---------------------------------------------------------------- T2.7
+  # Satu image (services/processing-status), dua entrypoint. Status disimpan di
+  # Redis; perubahan disebar lewat Redis pub/sub ke semua replika SSE.
+  processing-tracker:
+    build:
+      context: ..
+      dockerfile: services/processing-status/Dockerfile
+    image: puisiapp/processing-status:dev
+    command: ["node", "src/tracker.js"]
+    restart: unless-stopped
+    environment: &env-status
+      SERVICE_NAME: processing-tracker
+      PORT: "8080"
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      # Langkah yang ditunggu sebelum COMPLETED. Keluarkan langkah yang
+      # workernya belum ada (mis. authorship di tahap Demo).
+      PROCESSING_LANGKAH: ${PROCESSING_LANGKAH:-emotion,themes,keywords,image,similarity,authorship}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+      RABBITMQ_VHOST: ${RABBITMQ_VHOST}
+    networks: [app, data]
+    depends_on:
+      redis: { condition: service_healthy }
+      rabbitmq-topologi: { condition: service_completed_successfully }
+    healthcheck: &cek-redis
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+  # SSE GET /api/poems/{id}/status/stream. Dua replika: memenuhi kriteria T2.7
+  # dan membuktikan pub/sub antar-replika; gateway membagi koneksi lewat DNS Docker.
+  status-stream-service:
+    image: puisiapp/processing-status:dev
+    command: ["node", "src/stream.js"]
+    restart: unless-stopped
+    environment:
+      <<: *env-status
+      SERVICE_NAME: status-stream-service
+    networks: [app, data]
+    depends_on:
+      redis: { condition: service_healthy }
+      processing-tracker: { condition: service_started } # membangun image bersama lebih dulu
+    healthcheck: *cek-redis
+    deploy:
+      replicas: ${STATUS_STREAM_REPLIKA:-2}
+      resources:
+        limits:
+          memory: 128M
+
+  # ---------------------------------------------------------------- T2.8
+  # Notifikasi penulis dan pelapor dari event status, laporan, keputusan, banding.
+  # Hanya konsumen + API, tanpa outbox dan relay. Tahap "Lengkap".
+  notification-service:
+    profiles: [lengkap]
+    build:
+      context: ..
+      dockerfile: services/notification-service/Dockerfile
+    restart: unless-stopped
+    environment:
+      SERVICE_NAME: notification-service
+      PORT: "8080"
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      DATABASE_URL: postgres://notification:${NOTIFICATION_DB_PASS}@${POSTGRES_HOST}:${POSTGRES_PORT}/notif_db
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+      RABBITMQ_VHOST: ${RABBITMQ_VHOST}
+    networks: [app, data]
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq-topologi: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          memory: 160M
+
+  # ---------------------------------------------------------------- T2.5
+  # Satu image (services/image-service), dua entrypoint.
+  # Pratinjau: sinkron, stateless, tanpa basis data; template di memori.
+  image-preview-service:
+    build:
+      context: ..
+      dockerfile: services/image-service/Dockerfile
+    image: puisiapp/image-service:dev
+    command: ["node", "src/preview.js"]
+    restart: unless-stopped
+    environment:
+      SERVICE_NAME: image-preview-service
+      PORT: "8080"
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    networks: [app]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  # Gambar final per versi ke S3 (MinIO di lokal), lalu poem.image.rendered.
+  # egress: akses keluar ke Amazon S3 di EC2.
+  image-render-worker:
+    image: puisiapp/image-service:dev
+    command: ["node", "src/render-worker.js"]
+    restart: unless-stopped
+    environment:
+      SERVICE_NAME: image-render-worker
+      PORT: "8080"
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      PREFETCH: "2"
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+      RABBITMQ_VHOST: ${RABBITMQ_VHOST}
+      S3_ENDPOINT: ${S3_ENDPOINT}
+      S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE}
+      S3_REGION: ${S3_REGION}
+      S3_BUCKET: ${S3_BUCKET}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY}
+      S3_SECRET_KEY: ${S3_SECRET_KEY}
+      S3_PUBLIC_BASE_URL: ${S3_PUBLIC_BASE_URL}
+    networks: [app, data, egress]
+    depends_on:
+      rabbitmq: { condition: service_healthy }
+      minio: { condition: service_healthy }
+      image-preview-service: { condition: service_started } # membangun image bersama lebih dulu
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+
+volumes:
+  relay-submission-data: {}
+  relay-revision-data: {}
+  relay-deletion-data: {}
+  relay-publication-data: {}

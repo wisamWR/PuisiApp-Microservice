@@ -14,7 +14,7 @@ export function hitungSkorTema({ skorTema = 0.5, wilsonScore = 0, publishedAt, s
   const terbitMs = publishedAt ? Date.parse(publishedAt) : sekarangMs;
   const umurJam = Number.isFinite(terbitMs) ? Math.max(0, (sekarangMs - terbitMs) / 3_600_000) : 0;
   const peluruhan = Math.pow(0.5, umurJam / 72);
-  return Number((0.65 * tema + 0.25 * wilson + 0.1 * peluruhan).toFixed(6));
+  return Number((0.75 * wilson + 0.15 * tema + 0.1 * peluruhan).toFixed(6));
 }
 
 export function buatIndeksTema(redis) {
@@ -35,7 +35,7 @@ export function buatIndeksTema(redis) {
         author_id: String(puisi.author_id || ''),
         author_name: String(puisi.author_name || 'Penyair PuisiApp'),
         excerpt: String(puisi.excerpt || ''),
-        status: String(puisi.status || 'published'),
+        status: String(puisi.status || 'draft'),
         themes: JSON.stringify(themes),
         theme_scores: JSON.stringify(scores),
         wilson_score: String(Number(puisi.wilson_score) || 0),
@@ -53,7 +53,7 @@ export function buatIndeksTema(redis) {
         author_id: card.author_id || null,
         author_name: card.author_name || 'Penyair PuisiApp',
         excerpt: card.excerpt || '',
-        status: card.status || 'published',
+        status: card.status || 'draft',
         themes: JSON.parse(card.themes || '[]'),
         theme_scores: JSON.parse(card.theme_scores || '{}'),
         wilson_score: Number(card.wilson_score || 0),
@@ -85,12 +85,26 @@ export function buatIndeksTema(redis) {
       }
     },
 
-    async hapusPuisi(poemId) {
+    async tandaiNonaktif(poemId, status = 'hidden') {
       if (!redis || !poemId) return;
+      const id = String(poemId);
       for (const tema of DAFTAR_TEMA) {
-        await redis.zRem(keyZset(tema), String(poemId));
+        await redis.zRem(keyZset(tema), id);
       }
-      await redis.del(keyCard(poemId));
+      const lama = (await this.ambilKartuPuisi(id)) || {
+        poem_id: id,
+        themes: [],
+        theme_scores: {},
+      };
+      await this.simpanKartu({
+        ...lama,
+        poem_id: id,
+        status,
+      });
+    },
+
+    async hapusPuisi(poemId) {
+      await this.tandaiNonaktif(poemId, 'deleted');
     },
 
     async bangunUlangSemua(daftarPuisi, sekarangMs = Date.now()) {
@@ -123,12 +137,13 @@ export function buatIndeksTema(redis) {
       const normalTema = String(tema || '').toLowerCase();
       if (!DAFTAR_TEMA.includes(normalTema) || !redis) return null;
 
-      const entri = await redis.zRangeWithScores(keyZset(normalTema), 0, -1, { REV: true });
-      const total = entri.length;
+      const key = keyZset(normalTema);
+      const total = Number(await redis.zCard(key)) || 0;
       const offset = (Math.max(1, page) - 1) * limit;
+      const entri = await redis.zRangeWithScores(key, offset, offset + limit - 1, { REV: true });
       const items = [];
 
-      for (const { value, score } of entri.slice(offset, offset + limit)) {
+      for (const { value, score } of entri) {
         const card = await this.ambilKartuPuisi(value);
         if (!card || card.status !== 'published') continue;
         items.push({

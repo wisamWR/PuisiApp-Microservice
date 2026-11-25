@@ -1,0 +1,40 @@
+# Kredensial: tidak pernah di-commit
+.env
+.env.*
+!.env.example
+secrets/
+*.pem
+*.key
+
+# Node.js
+node_modules/
+dist/
+coverage/
+.npm/
+*.tsbuildinfo
+
+# Python
+*.egg-info/
+build/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Editor dan OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Log dan artefak lokal
+*.log
+tmp/
+
+# Catatan puisi hasil seed (T0.10), khusus mesin lokal
+tools/seed-data/state.json
+tools/seed-data/state.json.tmp

@@ -1,0 +1,112 @@
+# Domain vote
+# Kelompok: 9 Suara dan peringkat (Raffa)
+# Layanan: vote-service, vote-persist-worker, ranking-worker
+#
+# Path relatif dihitung dari folder infra/ (project_directory pada include),
+# jadi build context ditulis ../services/<nama>. Pola lengkap ada di
+# infra/README.md. Alamat dependensi diambil dari .env.
+#
+# Alur: PUT /api/poems/{id}/vote -> vote-service (skrip Lua di Redis, sumber
+# kebenaran sementara) -> vote.cast langsung ke RabbitMQ -> vote-persist-worker
+# (UPSERT batch ke vote_db) dan ranking-worker (skor Wilson -> poem.score.updated).
+
+x-redis: &redis
+  REDIS_HOST: ${REDIS_HOST}
+  REDIS_PORT: ${REDIS_PORT}
+  REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+x-rabbitmq: &rabbitmq
+  RABBITMQ_HOST: ${RABBITMQ_HOST}
+  RABBITMQ_PORT: ${RABBITMQ_PORT}
+  RABBITMQ_USER: ${RABBITMQ_USER}
+  RABBITMQ_PASS: ${RABBITMQ_PASS}
+  RABBITMQ_VHOST: ${RABBITMQ_VHOST}
+
+services:
+  # ---------------------------------------------------------------- T9.1
+  # API suara + salinan pemilik/status puisi (poem.submitted, poem.published,
+  # poem.hidden, poem.deleted) dan umur akun (user.registered) di Redis.
+  vote-service:
+    build:
+      context: ..
+      dockerfile: services/vote-service/Dockerfile
+    restart: unless-stopped
+    environment:
+      <<: [*redis, *rabbitmq]
+      SERVICE_NAME: vote-service
+      PORT: "8080"
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      VOTE_RATE_PER_MENIT: "30"
+      VOTE_BOBOT_AKUN_BARU: "0.5"
+    networks: [app, data]
+    depends_on:
+      redis: { condition: service_healthy }
+      rabbitmq-topologi: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          memory: 160M
+
+  # ---------------------------------------------------------------- T9.2
+  # Write-behind: vote.cast batch (200 pesan atau 1 detik) -> UPSERT vote_db.
+  vote-persist-worker:
+    build:
+      context: ..
+      dockerfile: services/vote-persist-worker/Dockerfile
+    restart: unless-stopped
+    environment:
+      <<: [*redis, *rabbitmq]
+      SERVICE_NAME: vote-persist-worker
+      PORT: "8080"
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      DATABASE_URL: postgres://vote:${VOTE_DB_PASS}@${POSTGRES_HOST}:${POSTGRES_PORT}/vote_db
+      BATCH_MAKS: "200"
+      BATCH_JEDA_MS: "1000"
+    networks: [data]
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq-topologi: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          memory: 160M
+
+  # ---------------------------------------------------------------- T9.3
+  # vote.cast -> hitungan berbobot di Redis -> Wilson -> poem.score.updated.
+  ranking-worker:
+    build:
+      context: ..
+      dockerfile: services/ranking-worker/Dockerfile
+    restart: unless-stopped
+    environment:
+      <<: [*redis, *rabbitmq]
+      SERVICE_NAME: ranking-worker
+      PORT: "8080"
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      WILSON_AMBANG: "0.001"
+    networks: [data]
+    depends_on:
+      redis: { condition: service_healthy }
+      rabbitmq-topologi: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          memory: 128M

@@ -1,0 +1,23 @@
+{
+  "name": "publication-service",
+  "version": "0.1.0",
+  "description": "T2.2: mesin status publikasi puisi, outbox poem.published / poem.held / poem.hidden",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test \"test/**/*.test.js\""
+  },
+  "dependencies": {
+    "@puisiapp/events": "file:../../libs/node",
+    "pg": "8.23.1",
+    "prom-client": "15.1.3"
+  },
+  "devDependencies": {
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1"
+  }
+}
