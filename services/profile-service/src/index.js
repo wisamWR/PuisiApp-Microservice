@@ -75,11 +75,6 @@ const server = http.createServer(async (req, res) => {
   const idPengguna = req.headers['x-user-id'];
 
   try {
-  if (req.method === 'GET' && url.pathname === '/metrics') {
-    const body = "# HELP profile_service_up up\n# TYPE profile_service_up gauge\nprofile_service_up 1\n";
-    res.writeHead(200, { 'Content-Type': 'text/plain; version=0.0.4; charset=utf-8', 'Content-Length': Buffer.byteLength(body) });
-    return res.end(body);
-  }
 
     if (req.method === 'GET' && url.pathname === '/health') {
       rute = '/health';

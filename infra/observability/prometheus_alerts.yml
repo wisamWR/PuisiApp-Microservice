@@ -1,4 +1,4 @@
-﻿groups:
+groups:
   - name: slo_availability_burn_rate
     rules:
       - alert: AvailabilityBurnRateHigh1h

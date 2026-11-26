@@ -106,11 +106,6 @@ const server = http.createServer(async (req, res) => {
   res.once('finish', () => metrik.catatRequest(req.method, rute, res.statusCode, mulai));
   const url = new URL(req.url, 'http://local');
 
-  if (req.method === 'GET' && url.pathname === '/metrics') {
-    const body = "# HELP token_service_up up\n# TYPE token_service_up gauge\ntoken_service_up 1\n";
-    res.writeHead(200, { 'Content-Type': 'text/plain; version=0.0.4; charset=utf-8', 'Content-Length': Buffer.byteLength(body) });
-    return res.end(body);
-  }
 
   if (req.method === 'GET' && url.pathname === '/health') {
     rute = '/health';
