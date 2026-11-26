@@ -1,7 +1,7 @@
 /**
  * API baca puisi (contracts/openapi/poem-query.yaml):
  *   GET /api/poems/{id}              detail, cache-aside Redis
- *   GET /api/poems?author=&page=&size=  daftar puisi penulis
+ *   GET /api/poems?author=&page=&size=  daftar puisi publik atau per penulis
  */
 import { buatFastify, idPengguna, kirimGalat, pasangDasar, POLA_UUID } from '@puisiapp/poem-common';
 import { lihatDetail, puisiSaya, ringkasan } from './tampilan.js';
@@ -54,16 +54,21 @@ export function buatApp(d) {
   app.get('/api/poems', async (req, reply) => {
     const userId = idPengguna(req);
     if (!userId) return kirimGalat(reply, 401, 'unauthorized', 'Silakan masuk terlebih dahulu');
-    const author = typeof req.query.author === 'string' ? req.query.author.trim() : '';
+    const rawAuthor = req.query.author;
+    if (rawAuthor !== undefined && typeof rawAuthor !== 'string') {
+      return kirimGalat(reply, 400, 'parameter_tidak_valid', 'Parameter author maksimal 64 karakter');
+    }
+    const trimmed = typeof rawAuthor === 'string' ? rawAuthor.trim() : '';
+    if (trimmed.length > 64) {
+      return kirimGalat(reply, 400, 'parameter_tidak_valid', 'Parameter author maksimal 64 karakter');
+    }
+    const author = trimmed || null;
     const page = bilanganBulat(req.query.page, 1, 1, 10_000);
     const size = bilanganBulat(req.query.size, 20, 1, 50);
-    if (!author || author.length > 64) {
-      return kirimGalat(reply, 400, 'parameter_tidak_valid', 'Parameter author wajib diisi (maksimal 64 karakter)');
-    }
     if (page == null || size == null) {
       return kirimGalat(reply, 400, 'parameter_tidak_valid', 'page minimal 1, size 1 sampai 50');
     }
-    const semua = author === userId;
+    const semua = author !== null && author === userId;
     const { total, baris } = await d.daftarPenulis({ authorId: author, semua, page, size });
     reply.header('cache-control', 'private, no-cache');
     return { items: baris.map((r) => ringkasan(r, semua)), page, size, total };

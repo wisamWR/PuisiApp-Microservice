@@ -3,7 +3,7 @@
  *
  * Proses konsumen: 14 jenis event -> read model poem_read_db (q.poem-query),
  * lalu hapus cache detail puisi yang berubah setelah commit.
- * Proses API: GET /api/poems/{id} (cache-aside Redis) dan GET /api/poems?author=.
+ * Proses API: GET /api/poems/{id} (cache-aside Redis) dan GET /api/poems (publik / per penulis).
  */
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
