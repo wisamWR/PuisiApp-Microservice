@@ -10,6 +10,7 @@ import { createClient } from 'redis';
 import { buatPenerbitToken, MASA_BERLAKU_BAWAAN } from './token.js';
 import { buatPenyimpanRefresh, MASA_REFRESH_DETIK } from './refresh.js';
 import { buatDaftarCabut } from './cabut.js';
+import { buatMetrikHttp } from './metrics.js';
 
 const log = buatLogger();
 
@@ -33,6 +34,7 @@ function cookieHapus() {
   ];
 }
 const PORT = Number(process.env.PORT) || 8080;
+const metrik = buatMetrikHttp('token-service');
 const MAKS_BODY = 4 * 1024;
 
 // Kunci tetap dari .env. Kalau belum diisi (masih placeholder atau kosong), pakai kunci sementara
@@ -99,6 +101,9 @@ function bacaBody(req) {
 }
 
 const server = http.createServer(async (req, res) => {
+  const mulai = performance.now();
+  let rute = 'tidak_dikenal';
+  res.once('finish', () => metrik.catatRequest(req.method, rute, res.statusCode, mulai));
   const url = new URL(req.url, 'http://local');
 
   if (req.method === 'GET' && url.pathname === '/metrics') {
@@ -108,11 +113,18 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.method === 'GET' && url.pathname === '/health') {
+    rute = '/health';
     return kirimJson(res, 200, { status: 'ok' });
+  }
+
+  if (req.method === 'GET' && url.pathname === '/metrics') {
+    rute = '/metrics';
+    return metrik.layaniMetrics(res);
   }
 
   // Verifikasi untuk gateway. Token hanya dibaca dari cookie access_token.
   if (req.method === 'GET' && url.pathname === '/internal/auth/verify') {
+    rute = '/internal/auth/verify';
     const token = ambilCookie(req.headers.cookie, 'access_token');
     const klaim = token ? await penerbit.verify(token) : null;
     if (!klaim || (await daftarCabut.sudahDicabut(klaim.jti))) {
@@ -126,6 +138,7 @@ const server = http.createServer(async (req, res) => {
 
   // Cek peran admin untuk gateway (T1.7). 200 jika admin, 403 jika bukan, 401 jika tidak valid.
   if (req.method === 'GET' && url.pathname === '/internal/auth/admin') {
+    rute = '/internal/auth/admin';
     const token = ambilCookie(req.headers.cookie, 'access_token');
     const klaim = token ? await penerbit.verify(token) : null;
     if (!klaim || (await daftarCabut.sudahDicabut(klaim.jti))) {

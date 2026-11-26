@@ -1,5 +1,6 @@
 import http from 'node:http';
 import { DAFTAR_EMOSI, DAFTAR_MODE } from './indeks-redis.js';
+import { buatMetrikHttp } from './metrics.js';
 
 function kirimJson(res, status, data, extraHeaders = {}) {
   const body = JSON.stringify(data);
@@ -31,8 +32,11 @@ export function buatRepoPg(pool) {
   };
 }
 
-export function buatAppHttp({ repo, indeks, serviceName = 'mood-feed-service' }) {
+export function buatAppHttp({ repo, indeks, serviceName = 'mood-feed-service', metrik = buatMetrikHttp(serviceName) }) {
   return http.createServer(async (req, res) => {
+    const mulai = performance.now();
+    let rute = 'tidak_dikenal';
+    res.once('finish', () => metrik.catatRequest(req.method, rute, res.statusCode, mulai));
     try {
       const url = new URL(req.url || '/', 'http://localhost');
       const path = url.pathname;
@@ -43,10 +47,16 @@ export function buatAppHttp({ repo, indeks, serviceName = 'mood-feed-service' })
   }
 
       if (req.method === 'GET' && path === '/health') {
+        rute = '/health';
         return kirimJson(res, 200, { status: 'ok', service: serviceName });
+      }
+      if (req.method === 'GET' && path === '/metrics') {
+        rute = '/metrics';
+        return metrik.layaniMetrics(res);
       }
       const matchFeed = path.match(/^\/api\/feed\/mood\/([^/]+)$/);
       if (req.method === 'GET' && matchFeed) {
+        rute = '/api/feed/mood/:mood';
         const emosi = decodeURIComponent(matchFeed[1]).toLowerCase().trim();
         const mode = (url.searchParams.get('mode') || 'senada').toLowerCase().trim();
         const limit = Math.min(50, Math.max(1, Number(url.searchParams.get('limit')) || 20));
@@ -78,6 +88,7 @@ export function buatAppHttp({ repo, indeks, serviceName = 'mood-feed-service' })
       }
       const matchEmosi = path.match(/^\/api\/emotions\/poems\/([^/]+)$/);
       if (req.method === 'GET' && matchEmosi) {
+        rute = '/api/emotions/poems/:id';
         const data = await repo.ambilEmosiPuisi(decodeURIComponent(matchEmosi[1]).trim());
         if (!data || data.status === 'deleted' || data.status === 'hidden') {
           return kirimJson(res, 404, { error: 'not_found', message: 'Analisis emosi puisi tidak ditemukan' });
@@ -88,6 +99,7 @@ export function buatAppHttp({ repo, indeks, serviceName = 'mood-feed-service' })
           disclaimer: 'Analisis ini menggambarkan nuansa dan suasana hati karya puisi secara leksikal, bukan penilaian kondisi psikologis pembaca maupun penulis.',
         });
       }
+      rute = path;
       return kirimJson(res, 404, { error: 'not_found' });
     } catch (err) {
       return kirimJson(res, 500, { error: 'internal_error', message: err.message });
