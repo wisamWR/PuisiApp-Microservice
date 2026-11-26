@@ -4,6 +4,10 @@ export const IKATAN = ['authorship.recorded', 'poem.submitted', 'poem.deleted'];
 
 const POLA_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+function validAuthorId(authorId) {
+  return typeof authorId === 'string' && authorId.length >= 1 && authorId.length <= 64;
+}
+
 export async function proyeksikan(tx, event) {
   if (event.event_type === 'authorship.recorded') {
     const p = event.payload ?? {};
@@ -44,7 +48,7 @@ export async function proyeksikan(tx, event) {
     const poemId = p.poem_id ?? event.aggregate_id ?? '';
     const authorId = p.author_id ?? '';
 
-    if (!POLA_UUID.test(poemId) || !POLA_UUID.test(authorId)) {
+    if (!POLA_UUID.test(poemId) || !validAuthorId(authorId)) {
       throw new GalatPermanen('Payload poem.submitted tidak valid');
     }
 

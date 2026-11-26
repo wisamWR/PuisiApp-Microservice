@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS poem_ownership_projection (
     poem_id UUID PRIMARY KEY,
-    author_id UUID NOT NULL,
+    author_id VARCHAR(64) NOT NULL,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
