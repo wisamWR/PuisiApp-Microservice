@@ -1,4 +1,4 @@
-﻿CREATE TABLE IF NOT EXISTS authorship_records (
+CREATE TABLE IF NOT EXISTS authorship_records (
     id BIGSERIAL PRIMARY KEY,
     poem_id UUID NOT NULL,
     version INTEGER NOT NULL CHECK (version >= 1),

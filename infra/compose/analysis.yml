@@ -1,4 +1,4 @@
-﻿
+
 # Domain analysis
 # Kelompok: 5 Mood, 6 Tema (Sabila); 7 Keaslian (Raffa)
 
@@ -122,7 +122,6 @@ services:
       SERVICE_NAME: authorship-query-service
       PORT: "8080"
       DATABASE_URL: postgresql://authorship_query:${AUTHORSHIP_QUERY_DB_PASS}@${POSTGRES_HOST}:${POSTGRES_PORT}/authorship_db
-      POEM_READ_DATABASE_URL: postgresql://authorship_query:${AUTHORSHIP_QUERY_DB_PASS}@${POSTGRES_HOST}:${POSTGRES_PORT}/poem_read_db
       RABBITMQ_HOST: ${RABBITMQ_HOST}
       RABBITMQ_PORT: ${RABBITMQ_PORT}
       RABBITMQ_USER: ${RABBITMQ_USER}
@@ -148,4 +147,3 @@ services:
 
 volumes:
   relay-similarity-data: {}
-

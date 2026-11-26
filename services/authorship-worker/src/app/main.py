@@ -7,7 +7,7 @@ import pika
 from event_lib import StorePg, buat_konsumen, buat_publisher
 
 from app.config import load_settings
-from app.database import get_connection, simpan_catatan, versi_tersimpan
+from app.database import get_connection, jalankan_migrasi, simpan_catatan, versi_tersimpan
 from app.event import buat_event_authorship
 
 ANTREAN = "q.authorship-worker"
@@ -35,6 +35,26 @@ class HealthHandler(BaseHTTPRequestHandler):
 
     def log_message(self, format, *args):
         print(f"[HTTP] {format % args}")
+
+
+def jalankan_migrasi_awal():
+    while True:
+        conn = None
+        try:
+            conn = get_connection()
+            diterapkan = jalankan_migrasi(conn)
+            if diterapkan:
+                print(f"[DB] Migrasi authorship-worker diterapkan: {', '.join(diterapkan)}")
+            else:
+                print("[DB] Migrasi authorship-worker sudah up-to-date.")
+            return
+        except Exception as exc:
+            print(f"[DB] Migrasi gagal: {exc}")
+            print("[DB] Mencoba migrasi kembali dalam 5 detik...")
+            time.sleep(5)
+        finally:
+            if conn is not None and not conn.closed:
+                conn.close()
 
 
 def jalankan_konsumen(settings):
@@ -90,6 +110,7 @@ def jalankan_konsumen(settings):
 
 def main():
     settings = load_settings()
+    jalankan_migrasi_awal()
 
     thread = threading.Thread(
         target=jalankan_konsumen,

@@ -1,4 +1,4 @@
-﻿{
+{
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://puisiapp.example/schema/authorship.recorded.v1.json",
   "title": "Event catatan keaslian direkam",

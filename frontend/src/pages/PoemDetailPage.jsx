@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import EmotionFlowPanel from '../components/EmotionFlowPanel'
 import PuisiDiproses from '../components/PuisiDiproses'
