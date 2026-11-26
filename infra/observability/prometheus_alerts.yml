@@ -1,0 +1,117 @@
+﻿groups:
+  - name: slo_availability_burn_rate
+    rules:
+      - alert: AvailabilityBurnRateHigh1h
+        expr: |
+          (
+            1 - (
+              sum(rate(http_server_request_duration_seconds_count{status_code=~"5.."}[1h]))
+              /
+              clamp_min(sum(rate(http_server_request_duration_seconds_count[1h])), 1e-9)
+            )
+          ) > (14.4 * 0.001)
+          and
+          (
+            1 - (
+              sum(rate(http_server_request_duration_seconds_count{status_code=~"5.."}[5m]))
+              /
+              clamp_min(sum(rate(http_server_request_duration_seconds_count[5m])), 1e-9)
+            )
+          ) > (14.4 * 0.001)
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Burn rate SLO ketersediaan tinggi (jendela 1 jam & 5 menit)"
+          description: "Error rate melampaui burn rate 14.4x terhadap error budget SLO 99.9% pada jendela 1 jam dan 5 menit."
+
+      - alert: AvailabilityBurnRateElevated5m
+        expr: |
+          (
+            1 - (
+              sum(rate(http_server_request_duration_seconds_count{status_code=~"5.."}[5m]))
+              /
+              clamp_min(sum(rate(http_server_request_duration_seconds_count[5m])), 1e-9)
+            )
+          ) > (6 * 0.001)
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Burn rate SLO ketersediaan meningkat (jendela 5 menit)"
+          description: "Burn rate error pada jendela 5 menit melampaui 6x error budget SLO 99.9%."
+
+  - name: latency_and_cache
+    rules:
+      - alert: FeedLatencyP95Above300ms
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum by (le, route, service) (
+              rate(http_server_request_duration_seconds_bucket{route=~".*feed.*"}[5m])
+            )
+          ) > 0.300
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Latensi p95 feed di atas 300 ms"
+          description: "Nilai p95 durasi rute feed ({{ $labels.route }}) melebihi 300 ms selama 2 menit."
+
+      - alert: RedisHitRatioBelow80Percent
+        expr: |
+          (
+            rate(redis_keyspace_hits_total[5m])
+            /
+            clamp_min(rate(redis_keyspace_hits_total[5m]) + rate(redis_keyspace_misses_total[5m]), 1e-9)
+          ) < 0.80
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis hit ratio di bawah 80%"
+          description: "Rasio cache hit Redis turun di bawah 80% selama 2 menit."
+
+  - name: rabbitmq_queues_and_consumers
+    rules:
+      - alert: RabbitMQQueueMessagesAbove500
+        expr: |
+          rabbitmq_queue_messages{queue!~".*\\.dlq$"} > 500
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Panjang queue RabbitMQ di atas 500 pesan"
+          description: "Queue {{ $labels.queue }} memiliki lebih dari 500 pesan."
+
+      - alert: RabbitMQMessageAgeAbove30s
+        expr: |
+          rabbitmq_queue_message_age_seconds > 30
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Umur pesan di queue RabbitMQ di atas 30 detik"
+          description: "Pesan tertua di queue {{ $labels.queue }} berusia lebih dari 30 detik."
+
+      - alert: RabbitMQDLQNotEmpty
+        expr: |
+          rabbitmq_queue_messages{queue=~".*\\.dlq$"} > 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "DLQ RabbitMQ tidak kosong"
+          description: "Dead Letter Queue {{ $labels.queue }} berisi pesan gagal diproses."
+
+      - alert: RabbitMQQueueWithoutConsumer
+        expr: |
+          rabbitmq_queue_consumers{queue!~".*\\.dlq$"} == 0
+          and
+          rabbitmq_queue_messages_ready{queue!~".*\\.dlq$"} >= 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Queue RabbitMQ tanpa konsumen"
+          description: "Queue {{ $labels.queue }} tidak memiliki konsumen aktif (0 consumers)."

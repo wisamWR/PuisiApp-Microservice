@@ -1,16 +1,17 @@
 {
-  "name": "puisiapp-mood-feed-service",
-  "version": "1.0.0",
-  "private": true,
-  "type": "module",
-  "description": "Layanan peringkat dan feed berbasis suasana hati (K5)",
-  "scripts": {
-    "start": "node src/index.js",
-    "test": "node --test tests/*.test.js"
-  },
-  "dependencies": {
-    "@puisiapp/events": "file:../../libs/node",
-    "pg": "^8.13.1",
-    "redis": "^4.7.0"
-  }
+    "name":  "puisiapp-mood-feed-service",
+    "version":  "1.0.0",
+    "private":  true,
+    "type":  "module",
+    "description":  "Layanan peringkat dan feed berbasis suasana hati (K5)",
+    "scripts":  {
+                    "start":  "node src/index.js",
+                    "test":  "node --test tests/*.test.js"
+                },
+    "dependencies":  {
+                         "@puisiapp/events":  "file:../../libs/node",
+                         "pg":  "^8.13.1",
+                         "redis":  "^4.7.0",
+                         "prom-client":  "^15.1.3"
+                     }
 }

@@ -1,6 +1,7 @@
 import json
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
 from .config import load_settings
 from .worker import jalankan_worker
@@ -8,6 +9,15 @@ from .worker import jalankan_worker
 
 class HealthHandler(BaseHTTPRequestHandler):
     def do_GET(self):
+        if self.path == "/metrics":
+            payload = generate_latest()
+            self.send_response(200)
+            self.send_header("Content-Type", CONTENT_TYPE_LATEST)
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+            return
+
         if self.path != "/health":
             self.send_error(404, "Not Found")
             return

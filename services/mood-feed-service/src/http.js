@@ -36,6 +36,12 @@ export function buatAppHttp({ repo, indeks, serviceName = 'mood-feed-service' })
     try {
       const url = new URL(req.url || '/', 'http://localhost');
       const path = url.pathname;
+  if (req.method === 'GET' && path === '/metrics') {
+    const body = "# HELP mood_feed_up up\n# TYPE mood_feed_up gauge\nmood_feed_up 1\n";
+    res.writeHead(200, { 'Content-Type': 'text/plain; version=0.0.4; charset=utf-8', 'Content-Length': Buffer.byteLength(body) });
+    return res.end(body);
+  }
+
       if (req.method === 'GET' && path === '/health') {
         return kirimJson(res, 200, { status: 'ok', service: serviceName });
       }

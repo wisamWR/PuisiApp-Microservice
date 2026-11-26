@@ -2,6 +2,7 @@ import json
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
 import pika
 from event_lib import StorePg, buat_konsumen
@@ -16,6 +17,15 @@ EVENT_INPUT = ["poem.fingerprint.created"]
 
 class HealthHandler(BaseHTTPRequestHandler):
     def do_GET(self):
+        if self.path == "/metrics":
+            payload = generate_latest()
+            self.send_response(200)
+            self.send_header("Content-Type", CONTENT_TYPE_LATEST)
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+            return
+
         if self.path != "/health":
             self.send_error(404, "Not Found")
             return
