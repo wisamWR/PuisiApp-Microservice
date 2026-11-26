@@ -2,10 +2,11 @@ import json
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
 import pika
 from event_lib import StorePg, buat_konsumen
+
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
 from app.config import load_settings
 from app.database import get_connection, jalankan_migrasi

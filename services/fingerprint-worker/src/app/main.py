@@ -1,12 +1,12 @@
-
 import json
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
 import pika
 from event_lib import StoreTanpaDb, buat_konsumen, buat_publisher
+
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
 from app.config import load_settings
 from app.event import buat_event_fingerprint

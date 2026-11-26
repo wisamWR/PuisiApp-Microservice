@@ -1,6 +1,7 @@
 import json
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
 from .config import load_settings
