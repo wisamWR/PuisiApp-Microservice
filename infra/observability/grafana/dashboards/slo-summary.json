@@ -1,0 +1,114 @@
+{
+  "uid": "puisiapp-slo-summary",
+  "title": "01 - Ringkasan SLO (T0.8)",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "15s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Availability SLO Ratio (5m)",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "1 - (sum(rate(http_server_request_duration_seconds_count{status_code=~\"5..\"}[5m])) / clamp_min(sum(rate(http_server_request_duration_seconds_count[5m])), 1e-9))",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "percentunit", "decimals": 3 } }
+    },
+    {
+      "id": 2,
+      "title": "Burn Rate 1h",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 0 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "(1 - (sum(rate(http_server_request_duration_seconds_count{status_code=~\"5..\"}[1h])) / clamp_min(sum(rate(http_server_request_duration_seconds_count[1h])), 1e-9))) / 0.001",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "decimals": 2 } }
+    },
+    {
+      "id": 3,
+      "title": "Burn Rate 5m",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 6, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "(1 - (sum(rate(http_server_request_duration_seconds_count{status_code=~\"5..\"}[5m])) / clamp_min(sum(rate(http_server_request_duration_seconds_count[5m])), 1e-9))) / 0.001",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "decimals": 2 } }
+    },
+    {
+      "id": 4,
+      "title": "Feed Latency p95 (Target <= 300ms)",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 6, "x": 18, "y": 0 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_request_duration_seconds_bucket{route=~\".*feed.*\"}[5m]))) * 1000",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ms", "decimals": 1 } }
+    },
+    {
+      "id": 5,
+      "title": "Redis Cache Hit Ratio (Target >= 80%)",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "rate(redis_keyspace_hits_total[5m]) / clamp_min(rate(redis_keyspace_hits_total[5m]) + rate(redis_keyspace_misses_total[5m]), 1e-9)",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "percentunit", "decimals": 2 } }
+    },
+    {
+      "id": 6,
+      "title": "PostgreSQL Replication Lag (seconds)",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 8, "x": 8, "y": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "max(pg_replication_lag_seconds)",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s", "decimals": 2 } }
+    },
+    {
+      "id": 7,
+      "title": "Max Queue Depth & DLQ Messages",
+      "type": "timeseries",
+      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "max(rabbitmq_queue_messages{queue!~\".*\\\\.dlq$\"})",
+          "legendFormat": "Max Queue Depth",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(rabbitmq_queue_messages{queue=~\".*\\\\.dlq$\"})",
+          "legendFormat": "Total DLQ Messages",
+          "refId": "B"
+        }
+      ]
+    }
+  ]
+}

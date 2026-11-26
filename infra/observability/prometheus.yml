@@ -1,0 +1,58 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ["alertmanager:9093"]
+
+rule_files:
+  - "/etc/prometheus/rules/prometheus_alerts.yml"
+
+scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: "otel-collector"
+    static_configs:
+      - targets: ["otel-collector:8888"]
+
+  - job_name: "rabbitmq-exporter"
+    static_configs:
+      - targets: ["rabbitmq-exporter:9419"]
+
+  - job_name: "postgres-exporter"
+    static_configs:
+      - targets: ["postgres-exporter:9187"]
+
+  - job_name: "redis-exporter"
+    static_configs:
+      - targets: ["redis-exporter:9121"]
+
+  - job_name: "nginx-exporter"
+    static_configs:
+      - targets: ["nginx-exporter:9113"]
+  - job_name: "services"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets:
+          - "poem-create-service:8080"
+          - "poem-query-service:8080"
+          - "mood-feed:8080"
+          - "processing-tracker:8080"
+          - "status-stream-service:8080"
+          - "authorship-worker:8080"
+          - "similarity-worker:8080"
+          - "emotion-worker:8080"
+          - "fingerprint-worker:8080"
+          - "authorship-query-service:8080"
+          - "token-service:8080"
+          - "vote-service:8080"
+          - "publication-service:8080"
+          - "login-service:8080"
+          - "profile-service:8080"
+          - "register-service:8080"
+          - "image-render-worker:8080"
+          - "image-preview-service:8080"
