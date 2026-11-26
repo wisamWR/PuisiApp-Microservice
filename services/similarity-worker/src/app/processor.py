@@ -1,4 +1,3 @@
-
 from app.database import cari_kandidat
 from app.similarity import estimasi_jaccard, hitung_skor
 
@@ -12,11 +11,8 @@ def estimasi_containment(
     if jumlah_a <= 0 or jumlah_b <= 0:
         return 0.0
 
-    intersection = (
-        jaccard * (jumlah_a + jumlah_b) / (1 + jaccard)
-    )
+    intersection = jaccard * (jumlah_a + jumlah_b) / (1 + jaccard)
 
-    # Intersection tidak mungkin melebihi ukuran himpunan terkecil.
     intersection = min(intersection, jumlah_a, jumlah_b)
 
     return min(1.0, intersection / jumlah_a)
@@ -51,6 +47,12 @@ def proses_kandidat(cur, payload: dict) -> list[dict]:
     hasil = []
 
     for item in kandidat:
+        # Hitung Jaccard seluruh puisi untuk setiap kandidat.
+        whole_jaccard = estimasi_jaccard(
+            payload["signature"],
+            item["signature"],
+        )
+
         if item["match_kind"] == "whole":
             jaccard, containment, score = hitung_skor_kemiripan(
                 payload["signature"],
@@ -96,9 +98,7 @@ def proses_kandidat(cur, payload: dict) -> list[dict]:
                     jumlah_kandidat,
                 )
 
-                perbandingan.append(
-                    (s, j, c, stanza["stanza"])
-                )
+                perbandingan.append((s, j, c, stanza["stanza"]))
 
             if not perbandingan:
                 continue
@@ -115,6 +115,7 @@ def proses_kandidat(cur, payload: dict) -> list[dict]:
                 "poem_id": str(item["poem_id"]),
                 "version": item["version"],
                 "jaccard_estimate": jaccard,
+                "whole_jaccard_estimate": whole_jaccard,
                 "containment_estimate": containment,
                 "score": score,
                 "matched_stanza": matched_stanza,

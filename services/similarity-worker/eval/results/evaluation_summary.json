@@ -1,0 +1,184 @@
+{
+  "total_pairs": 100,
+  "evaluation_assumption": "Each source poem is assumed to be registered before its candidate poem.",
+  "thresholds": {
+    "inspired": 0.2,
+    "similar": 0.5,
+    "suspected_plagiarism": 0.8,
+    "minimum_shingles": 15,
+    "minimum_whole_jaccard_for_plagiarism": 0.8
+  },
+  "lsh_detection_rate": 0.34,
+  "oracle_metrics": {
+    "accuracy": 0.41,
+    "per_class": {
+      "original": {
+        "precision": 0.3333,
+        "recall": 1.0,
+        "f1_score": 0.5,
+        "support": 20
+      },
+      "inspired": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1_score": 0.0,
+        "support": 20
+      },
+      "similar": {
+        "precision": 1.0,
+        "recall": 0.025,
+        "f1_score": 0.0488,
+        "support": 40
+      },
+      "suspected_plagiarism": {
+        "precision": 0.5128,
+        "recall": 1.0,
+        "f1_score": 0.678,
+        "support": 20
+      }
+    },
+    "confusion_matrix": {
+      "original": {
+        "original": 20,
+        "inspired": 0,
+        "similar": 0,
+        "suspected_plagiarism": 0
+      },
+      "inspired": {
+        "original": 20,
+        "inspired": 0,
+        "similar": 0,
+        "suspected_plagiarism": 0
+      },
+      "similar": {
+        "original": 20,
+        "inspired": 0,
+        "similar": 1,
+        "suspected_plagiarism": 19
+      },
+      "suspected_plagiarism": {
+        "original": 0,
+        "inspired": 0,
+        "similar": 0,
+        "suspected_plagiarism": 20
+      }
+    }
+  },
+  "pipeline_metrics_before_gate": {
+    "accuracy": 0.47,
+    "per_class": {
+      "original": {
+        "precision": 0.303,
+        "recall": 1.0,
+        "f1_score": 0.4651,
+        "support": 20
+      },
+      "inspired": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1_score": 0.0,
+        "support": 20
+      },
+      "similar": {
+        "precision": 1.0,
+        "recall": 0.175,
+        "f1_score": 0.2979,
+        "support": 40
+      },
+      "suspected_plagiarism": {
+        "precision": 0.7407,
+        "recall": 1.0,
+        "f1_score": 0.8511,
+        "support": 20
+      }
+    },
+    "confusion_matrix": {
+      "original": {
+        "original": 20,
+        "inspired": 0,
+        "similar": 0,
+        "suspected_plagiarism": 0
+      },
+      "inspired": {
+        "original": 20,
+        "inspired": 0,
+        "similar": 0,
+        "suspected_plagiarism": 0
+      },
+      "similar": {
+        "original": 26,
+        "inspired": 0,
+        "similar": 7,
+        "suspected_plagiarism": 7
+      },
+      "suspected_plagiarism": {
+        "original": 0,
+        "inspired": 0,
+        "similar": 0,
+        "suspected_plagiarism": 20
+      }
+    }
+  },
+  "pipeline_metrics": {
+    "accuracy": 0.54,
+    "per_class": {
+      "original": {
+        "precision": 0.303,
+        "recall": 1.0,
+        "f1_score": 0.4651,
+        "support": 20
+      },
+      "inspired": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1_score": 0.0,
+        "support": 20
+      },
+      "similar": {
+        "precision": 1.0,
+        "recall": 0.35,
+        "f1_score": 0.5185,
+        "support": 40
+      },
+      "suspected_plagiarism": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "support": 20
+      }
+    },
+    "confusion_matrix": {
+      "original": {
+        "original": 20,
+        "inspired": 0,
+        "similar": 0,
+        "suspected_plagiarism": 0
+      },
+      "inspired": {
+        "original": 20,
+        "inspired": 0,
+        "similar": 0,
+        "suspected_plagiarism": 0
+      },
+      "similar": {
+        "original": 26,
+        "inspired": 0,
+        "similar": 14,
+        "suspected_plagiarism": 0
+      },
+      "suspected_plagiarism": {
+        "original": 0,
+        "inspired": 0,
+        "similar": 0,
+        "suspected_plagiarism": 20
+      }
+    }
+  },
+  "category_counts": {
+    "unrelated": 20,
+    "inspired": 20,
+    "paraphrase": 20,
+    "partial_copy": 20,
+    "full_copy": 20
+  }
+}

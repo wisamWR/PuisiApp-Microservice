@@ -2,22 +2,21 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://puisiapp.example/schema/authorship.recorded.v1.json",
   "title": "Event catatan keaslian direkam",
-  "description": "Catatan jejak keaslian versi puisi berhasil direkam.",
+  "description": "Catatan timestamp dan rantai hash setiap versi puisi.",
   "type": "object",
   "required": [
     "poem_id",
     "version",
     "content_hash",
+    "previous_hash",
+    "chain_hash",
+    "recorded_at",
     "algorithm"
   ],
   "properties": {
-    "algorithm": {
-      "const": "SHA-256",
-      "type": "string"
-    },
     "poem_id": {
-      "minLength": 1,
-      "type": "string"
+      "type": "string",
+      "minLength": 1
     },
     "version": {
       "type": "integer",
@@ -25,16 +24,24 @@
     },
     "content_hash": {
       "type": "string",
-      "pattern": "^[a-fA-F0-9]{64}$"
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "previous_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "chain_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "algorithm": {
+      "type": "string",
+      "const": "SHA-256"
     }
   },
-  "additionalProperties": false,
-  "examples": [
-    {
-      "poem_id": "0b7d6f0e-4a8b-4a52-9d0b-3f4f0e9b2a10",
-      "version": 1,
-      "content_hash": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
-      "algorithm": "SHA-256"
-    }
-  ]
+  "additionalProperties": false
 }
