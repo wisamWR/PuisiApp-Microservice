@@ -91,7 +91,7 @@ Relay outbox pernah mati setelah restart stack. Pemulihan dilakukan dengan `dock
 
 ## 5. Keterbatasan dan Langkah Lanjut
 
-Penyebab kegagalan similarity-worker belum diketahui. Langkah pertama adalah memperbaiki log di `libs/python/event_lib/konsumen.py` dengan menambahkan `exc_info=exc` pada tiga pemanggilan logger di blok `except`. Perubahan ini ada di pustaka bersama, jadi perlu disepakati dengan pemilik `libs/python`. Setelah itu, pemilik layanan (Kelompok 6) dapat membaca exception yang sebenarnya, ditambah isi pesan di DLQ yang dibaca tanpa dihapus.
+Penyebab kegagalan similarity-worker belum diketahui. Langkah pertama adalah memperbaiki log di `libs/python/event_lib/konsumen.py` dengan menambahkan `exc_info=exc` pada tiga pemanggilan logger di blok `except`. Perubahan ini ada di pustaka bersama, jadi perlu disepakati dengan pemilik `libs/python`. Setelah itu, pemilik layanan (Kelompok 7, Raffa) dapat membaca exception yang sebenarnya, ditambah isi pesan di DLQ yang dibaca tanpa dihapus.
 
 Healthcheck similarity-worker sebaiknya ikut memeriksa status thread konsumen, bukan hanya proses HTTP. Relay outbox juga perlu healthcheck agar dimulai ulang otomatis.
 
