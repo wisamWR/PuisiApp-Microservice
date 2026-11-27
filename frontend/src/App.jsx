@@ -16,7 +16,11 @@ import ProfilePage from './pages/ProfilePage'
 import AdminUsersPage from './pages/AdminUsersPage'
 import WritePoemPage from './pages/WritePoemPage'
 import MyPoemsPage from './pages/MyPoemsPage'
+import HomePage from './pages/HomePage'
+import AuthorPage from './pages/AuthorPage'
+import SearchPage from './pages/SearchPage'
 import NotificationsPage from './pages/NotificationsPage'
+import BookmarksPage from './pages/BookmarksPage'
 
 function App() {
   return (
@@ -25,15 +29,16 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route element={<AppLayout />}>
-            <Route index element={<PlaceholderPage pageKey="home" />} />
+            <Route index element={<HomePage />} />
             <Route path="mood-entry" element={<MoodEntryPage />} />
             <Route path="mood-feed" element={<MoodFeedPage />} />
             <Route path="poems/:id" element={<PoemDetailPage />} />
             <Route path="poems/:id/edit" element={<WritePoemPage />} />
             <Route path="write" element={<WritePoemPage />} />
             <Route path="my-poems" element={<MyPoemsPage />} />
-            <Route path="authors/:id" element={<PlaceholderPage pageKey="authorProfile" />} />
-            <Route path="search" element={<PlaceholderPage pageKey="search" />} />
+            <Route path="authors/:id" element={<AuthorPage />} />
+            <Route path="search" element={<SearchPage />} />
+            <Route path="bookmarks" element={<BookmarksPage />} />
             <Route path="themes" element={<PlaceholderPage pageKey="themes" />} />
             <Route path="notifications" element={<NotificationsPage />} />
             <Route path="profile" element={<ProfilePage />} />
