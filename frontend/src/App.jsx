@@ -18,6 +18,7 @@ import WritePoemPage from './pages/WritePoemPage'
 import MyPoemsPage from './pages/MyPoemsPage'
 import HomePage from './pages/HomePage'
 import AuthorPage from './pages/AuthorPage'
+import SearchPage from './pages/SearchPage'
 import NotificationsPage from './pages/NotificationsPage'
 
 function App() {
@@ -35,7 +36,7 @@ function App() {
             <Route path="write" element={<WritePoemPage />} />
             <Route path="my-poems" element={<MyPoemsPage />} />
             <Route path="authors/:id" element={<AuthorPage />} />
-            <Route path="search" element={<PlaceholderPage pageKey="search" />} />
+            <Route path="search" element={<SearchPage />} />
             <Route path="themes" element={<PlaceholderPage pageKey="themes" />} />
             <Route path="notifications" element={<NotificationsPage />} />
             <Route path="profile" element={<ProfilePage />} />
