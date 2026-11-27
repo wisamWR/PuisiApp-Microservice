@@ -89,9 +89,6 @@ export default function PoemDetailPage() {
     let attempts = 0
     const maxAttempts = 8
 
-    setAuthorship(null)
-    setAuthorshipError('')
-
     const fetchAuthorship = () => {
       api
         .get(`/poems/${encodeURIComponent(id)}/authorship`)
