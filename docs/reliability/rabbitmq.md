@@ -73,3 +73,13 @@ Setelah `main` berisi perubahan terbaru similarity-worker, pengujian perlu diula
 Pesan di DLQ sebaiknya tidak di-requeue atau dihapus sebelum penyebabnya diketahui, karena pesan itu menjadi bukti. Penulisan ulang atau pemulihan harus dilakukan setelah ada perbaikan.
 
 Skenario uji dari draf sebelumnya tetap relevan: consumer crash saat memproses, poison message yang masuk DLQ setelah tiga kali gagal, dan pemulihan relay setelah restart. Skenario ini perlu dijalankan ulang pada kode `main` yang sudah diperbarui sebelum dicantumkan sebagai hasil.
+
+## Lampiran A: Uji Broker (RabbitMQ 4.1.8, lokal)
+
+Uji ini dilakukan dengan antrean sementara `test.rel` dan `test.rel.dlq` yang dibuat khusus untuk pengujian, lalu dihapus setelah selesai. Antrean milik kelompok lain tidak disentuh.
+
+Pada uji pertama, satu pesan dipublikasikan ke `test.rel` dan dibaca dengan mode reject tanpa requeue. Pesan itu kemudian muncul di `test.rel.dlq`, sehingga konfigurasi dead-letter bekerja sebagaimana dirancang.
+
+Pada uji kedua, satu pesan persisten dipublikasikan ke antrean durable, lalu RabbitMQ di-restart dan status healthy-nya diperiksa sebelum membaca ulang. Pesan tetap tersedia setelah restart.
+
+Uji ini hanya memverifikasi perilaku broker. Publisher confirms dan manual ack pada consumer belum diuji dan belum masuk ke pembuktian dokumen ini.
