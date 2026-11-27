@@ -204,19 +204,17 @@ services:
       timeout: 5s
       retries: 6
 
-  # ------------------------------------------------------------ API gateway (T0.4)
-  # Satu-satunya layanan yang memetakan port ke host. Alamat layanan lain di-resolve
-  # saat request, jadi gateway tetap bisa start walau layanan tujuan belum ada.
-  # Di EC2 isi GATEWAY_BIND=0.0.0.0 pada .env.production.
-  api-gateway:
+  # ------------------------------------------------------------ API gateway HA (Bagian 3.4)
+  # Dua replika Nginx Active-Active di belakang HAProxy Load Balancer dengan health check aktif,
+  # restart otomatis, dan batas memori per kontainer.
+  gateway-1: &gateway
     image: nginx:1.28-alpine
-    restart: unless-stopped
+    restart: always
+    mem_limit: 256m
     entrypoint: ["/bin/sh", "/docker-entrypoint.sh"]
     env_file:
       - path: ../.env
         required: true
-    ports:
-      - "${GATEWAY_BIND:-127.0.0.1}:${GATEWAY_HOST_PORT:-8080}:80"
     volumes:
       - ./nginx/docker-entrypoint.sh:/docker-entrypoint.sh:ro
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
@@ -227,9 +225,24 @@ services:
     networks: [edge, app]
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1/health"]
-      interval: 10s
-      timeout: 3s
+      interval: 5s
+      timeout: 2s
       retries: 3
+
+  gateway-2:
+    <<: *gateway
+
+  load-balancer:
+    image: haproxy:2.9-alpine
+    restart: always
+    ports:
+      - "${GATEWAY_BIND:-127.0.0.1}:${GATEWAY_HOST_PORT:-8080}:80"
+    volumes:
+      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    networks: [edge]
+    depends_on:
+      gateway-1: { condition: service_healthy }
+      gateway-2: { condition: service_healthy }
 
 networks:
   edge: {}
