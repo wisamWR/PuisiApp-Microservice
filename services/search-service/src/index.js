@@ -9,7 +9,7 @@ import {
   hubungkan,
   jalankanMigrasi,
 } from '@puisiapp/events';
-import { tanganiPuisi, tanganiProfil } from './handler.js';
+import { tanganiPuisi, tanganiProfil, tanganiPendaftaran } from './handler.js';
 import { cariPuisi, cariPenulis } from './cari.js';
 
 const log = buatLogger();
@@ -39,9 +39,12 @@ if (process.env.RABBITMQ_HOST) {
     koneksi,
     log,
     antrean: 'q.search-service.profil',
-    ikatan: ['user.profile.updated'],
+    ikatan: ['user.registered', 'user.profile.updated'],
     store,
-    handler: tanganiProfil,
+    // Satu antrean, dua jenis event: user.registered mengisi nama awal, user.profile.updated menimpa nama.
+    handler: (event, ctx) => (event.event_type === 'user.registered'
+      ? tanganiPendaftaran(event, ctx)
+      : tanganiProfil(event, ctx)),
   });
 }
 

@@ -9,7 +9,7 @@ export async function cariPuisi(pool, { q, page, size }) {
     [q],
   );
   const { rows } = await pool.query(
-    `SELECT poem_id, judul AS title, isi, author_id, published_at, versi AS version,
+    `SELECT poem_id, judul AS title, isi, bait_kutipan, author_id, published_at, versi AS version,
             ts_rank_cd(vektor, plainto_tsquery('simple', $1)) AS skor
      FROM poem_cari
      WHERE status = 'PUBLISHED' AND vektor @@ plainto_tsquery('simple', $1)
@@ -22,7 +22,8 @@ export async function cariPuisi(pool, { q, page, size }) {
       poem_id: r.poem_id,
       version: r.version,
       title: r.title,
-      quote_text: r.isi.split('\n')[0],
+      // Bait kutipan dari poem.submitted/revised. Baris lama tanpa bait kutipan memakai baris pertama isi.
+      quote_text: r.bait_kutipan ?? r.isi.split('\n')[0],
       author_id: r.author_id,
       published_at: r.published_at,
       skor: Number(r.skor),
