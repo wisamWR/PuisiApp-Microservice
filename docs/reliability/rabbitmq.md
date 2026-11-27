@@ -69,7 +69,7 @@ Perbedaan dari draf sebelumnya:
 
 ## 4. Pengujian dan Temuan
 
-Pengujian dilakukan di WSL dengan Docker Compose pada branch `k3-search`. Kondisi ini perlu diingat, karena `main` sudah berubah setelah pengujian dilakukan, termasuk merge k3-search (PR #28). Temuan berikut terbukti pada kondisi tersebut, kecuali bagian yang ditandai sebagai pemeriksaan kode. Validasi envelope dan handler untuk pesan fingerprint yang sebelumnya ditolak lolos dengan kode similarity-worker dan libs/python yang identik dengan main (basis 8ed9286). Pemrosesan penuh sampai puisi berstatus PUBLISHED belum diuji. Validasi envelope dan handler untuk pesan fingerprint yang sama lolos dengan kode `main`, tetapi pemrosesan penuh sampai puisi berstatus PUBLISHED belum diuji.
+Pengujian dilakukan di WSL dengan Docker Compose pada branch `k3-search`. Kondisi ini perlu diingat, karena `main` sudah berubah setelah pengujian dilakukan, termasuk merge k3-search (PR #28). Temuan berikut terbukti pada kondisi tersebut, kecuali bagian yang ditandai sebagai pemeriksaan kode. Validasi envelope dan handler untuk pesan fingerprint yang sebelumnya ditolak lolos dengan kode similarity-worker dan libs/python yang identik dengan main (basis 8ed9286). Pemrosesan penuh sampai puisi berstatus PUBLISHED belum diuji.
 
 Binding antrean sudah sesuai. Antrean `q.search-service` terikat ke routing key `poem.submitted`, `poem.revised`, `poem.published`, `poem.hidden`, `poem.deleted`, dan `poem.keywords.extracted`, serta ke `retry.delayed`. Pemeriksaan dilakukan lewat API management RabbitMQ, karena `rabbitmqctl list_bindings` tidak menampilkan hasil apa pun pada lingkungan ini.
 
@@ -95,7 +95,7 @@ Penyebab kegagalan similarity-worker belum diketahui. Langkah pertama adalah mem
 
 Healthcheck similarity-worker sebaiknya ikut memeriksa status thread konsumen, bukan hanya proses HTTP. Relay outbox juga perlu healthcheck agar dimulai ulang otomatis.
 
-Setelah `main` berisi perubahan terbaru similarity-worker, pengujian perlu diulang dengan membangun ulang image dari `main`. Hasil di atas tidak otomatis berlaku untuk kode terbaru.
+Setelah `main` berisi perubahan terbaru similarity-worker, pemrosesan penuh sampai PUBLISHED perlu diuji ulang dengan image dari `main`. Hasil di atas tidak otomatis berlaku untuk kode terbaru.
 
 Pesan di DLQ sebaiknya tidak di-requeue atau dihapus sebelum penyebabnya diketahui, karena pesan itu menjadi bukti. Penulisan ulang atau pemulihan harus dilakukan setelah ada perbaikan.
 
