@@ -230,7 +230,8 @@ export default function CommentSection({
               const canDelete =
                 currentUserId &&
                 (comment.user_id === currentUserId ||
-                  userRole === 'moderator')
+                  userRole === 'moderator' ||
+                  userRole === 'admin')
 
               return (
                 <article className="comment-item" key={comment.id}>

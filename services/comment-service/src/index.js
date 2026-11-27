@@ -16,6 +16,13 @@ import {
   jalankanMigrasi,
 } from '@puisiapp/events';
 
+import {
+  validasiKomentar,
+  bolehHapus,
+  apakahUuid,
+  PANJANG_MAKS_ALASAN,
+} from './aturan.js';
+
 const log = buatLogger();
 const folderIni = path.dirname(fileURLToPath(import.meta.url));
 
@@ -174,14 +181,6 @@ process.on('SIGINT', () => matikan('SIGINT'));
 // ------------------------------------------------------------------
 // API GET dan POST komentar
 
-function bersihkanHtml(teks) {
-  return teks
-    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
-    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, '')
-    .replace(/<[^>]*>/g, '')
-    .trim();
-}
-
 function kirimJson(res, status, data) {
   res.writeHead(status, {
     'content-type': 'application/json; charset=utf-8',
@@ -286,6 +285,19 @@ server.on('request', async (req, res) => {
       });
     }
 
+    // ID puisi dan komentar berupa UUID. ID lain langsung 404, bukan galat database (500).
+    const idDiPath = url.pathname.match(/^\/api\/(?:poems|comments)\/([^/]+)/);
+
+    if (
+      endpointKomentar &&
+      idDiPath &&
+      !apakahUuid(idDiPath[1])
+    ) {
+      return kirimJson(res, 404, {
+        error: 'Komentar atau puisi tidak ditemukan',
+      });
+    }
+
     // POST: membuat komentar.
         // Identifikasi endpoint daftar komentar.
     const daftar = url.pathname.match(
@@ -338,15 +350,15 @@ server.on('request', async (req, res) => {
 
       const poemId = decodeURIComponent(daftar[1]);
       const body = await bacaBody(req);
-      const content = bersihkanHtml(
-        typeof body.content === 'string' ? body.content : '',
-      );
+      const cekKomentar = validasiKomentar(body.content);
 
-      if (!content || content.length > 1000) {
+      if (!cekKomentar.ok) {
         return kirimJson(res, 400, {
           error: 'Komentar harus berisi 1-1000 karakter',
         });
       }
+
+      const { content } = cekKomentar;
 
       const commentId = randomUUID();
       const createdAt = new Date().toISOString();
@@ -435,7 +447,7 @@ server.on('request', async (req, res) => {
 
         const data = komentar.rows[0];
 
-        if (data.user_id !== userId && userRole !== 'moderator') {
+        if (!bolehHapus(data.user_id, userId, userRole)) {
           const error = new Error('FORBIDDEN');
           error.statusCode = 403;
           throw error;
@@ -492,7 +504,7 @@ server.on('request', async (req, res) => {
       const reason =
         typeof body.reason === 'string' ? body.reason.trim() : '';
 
-      if (reason.length > 500) {
+      if (reason.length > PANJANG_MAKS_ALASAN) {
         return kirimJson(res, 400, {
           error: 'Alasan laporan maksimal 500 karakter',
         });
