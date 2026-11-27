@@ -27,16 +27,20 @@ const tidur = (ms) => new Promise((r) => setTimeout(r, ms));
  * @param {import('pg').Pool} pool
  * @param {import('amqplib').ConfirmChannel} ch
  * @param {number} ukuranBatch
+ * @param {Date|string|null} [sejak]  hanya baris dengan created_at >= sejak. Dipakai saat
+ *        failover untuk menerbitkan ulang event yang mungkin belum terkirim Debezium,
+ *        tanpa menerbitkan ulang seluruh riwayat outbox.
  */
-export async function relaySatuPutaran(pool, ch, ukuranBatch = 100) {
+export async function relaySatuPutaran(pool, ch, ukuranBatch = 100, sejak = null) {
   const tx = await pool.connect();
   try {
     await tx.query('BEGIN');
     const { rows } = await tx.query(
       `SELECT event_id, event_type, payload FROM outbox
+       WHERE $2::timestamptz IS NULL OR created_at >= $2::timestamptz
        ORDER BY created_at, event_id
        LIMIT $1 FOR UPDATE SKIP LOCKED`,
-      [ukuranBatch],
+      [ukuranBatch, sejak],
     );
     if (rows.length === 0) {
       await tx.query('COMMIT');
@@ -82,7 +86,7 @@ export async function jalankanRelayPolling(o) {
   const selesai = (async () => {
     while (jalan) {
       try {
-        const n = await relaySatuPutaran(o.pool, ch, o.ukuranBatch);
+        const n = await relaySatuPutaran(o.pool, ch, o.ukuranBatch, o.sejak ?? null);
         if (n > 0) log.debug('event outbox diterbitkan', { jumlah: n });
         else await tidur(intervalMs);
       } catch (err) {
