@@ -1,0 +1,12 @@
+﻿case_id,category,expected_level,oracle_prediction,pipeline_prediction_before_gate,pipeline_prediction,source_shingle_count,candidate_shingle_count,jaccard,containment,score,whole_lsh_match,stanza_lsh_match,detected_by_lsh,plagiarism_jaccard_pass,purpose
+SHORT-001,short_exact_copy,similar,similar,similar,similar,12,12,1.0,1.0,1.0,True,True,True,True,Exact copy with fewer than 15 unique shingles; must not be classified as suspected_plagiarism because of the minimum shingle rule.
+SHORT-002,short_exact_copy,similar,similar,similar,similar,11,11,1.0,1.0,1.0,True,True,True,True,Test exact short-text matching.
+SHORT-003,short_partial_copy,similar,similar,similar,similar,8,7,0.8906,1.0,1.0,True,True,True,True,Test short partial copying.
+SHORT-004,short_unrelated,original,original,original,original,7,9,0.0,0.0,0.0,False,False,False,False,Test unrelated short poems.
+SHORT-005,short_common_phrase,original,inspired,original,original,10,11,0.1562,0.258,0.258,False,False,False,False,Test short texts sharing a common phrase.
+COMMON-001,common_phrase,original,original,original,original,24,20,0.0391,0.0827,0.0827,False,False,False,False,Test unrelated poems sharing common phrases.
+COMMON-002,common_phrase,original,inspired,original,original,22,22,0.1484,0.2585,0.2585,False,False,False,False,Test common phrase overlap in longer texts.
+COMMON-003,common_phrase,original,inspired,original,original,24,23,0.1562,0.2761,0.2761,False,False,False,False,Test shared ordinary expressions in otherwise different poems.
+COMMON-004,common_phrase,original,inspired,original,original,19,20,0.125,0.2167,0.2167,False,False,False,False,Test common expressions that should not independently trigger plagiarism.
+COMMON-005,common_phrase,original,inspired,original,original,18,16,0.1562,0.2872,0.2872,False,False,False,False,Test partial overlap caused by ordinary phrases.
+LONG-001,long_exact_copy,suspected_plagiarism,suspected_plagiarism,suspected_plagiarism,suspected_plagiarism,40,40,1.0,1.0,1.0,True,True,True,True,Control case: exact copy with more than 15 unique shingles.

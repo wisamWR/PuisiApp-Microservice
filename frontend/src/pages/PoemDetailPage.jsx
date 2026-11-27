@@ -9,8 +9,6 @@ import { SAMPLE_MOOD_POEMS } from '../lib/moodData'
 
 export default function PoemDetailPage() {
   const { id } = useParams()
-  // T2.6 (kelompok 2): setelah Tulis Puisi menerima 202, data puisi dikirim lewat
-  // state router dan ditampilkan sebagai "sedang diproses" (read-your-writes).
   const puisiDiproses = useLocation().state?.puisiDiproses
   const baruDikirim = puisiDiproses?.poem_id === id ? puisiDiproses : null
   const [emotionData, setEmotionData] = useState(null)
@@ -18,6 +16,9 @@ export default function PoemDetailPage() {
   // T3.1: judul dan isi dari GET /api/poems/:id (poem-query-service)
   const [poem, setPoem] = useState(null)
   const [galatPoem, setGalatPoem] = useState('')
+  const [authorship, setAuthorship] = useState(null)
+  const [authorshipError, setAuthorshipError] = useState('')
+  const [downloadingCert, setDownloadingCert] = useState(false)
 
   const demoPoem = SAMPLE_MOOD_POEMS.find((p) => p.poem_id === id) || null
 
@@ -77,6 +78,71 @@ export default function PoemDetailPage() {
       clearTimeout(timer)
     }
   }, [id, demoPoem])
+
+  useEffect(() => {
+    let aktif = true
+    let retryTimer = null
+    let attempts = 0
+    const maxAttempts = 8
+
+    setAuthorship(null)
+    setAuthorshipError('')
+
+    const fetchAuthorship = () => {
+      api
+        .get(`/poems/${encodeURIComponent(id)}/authorship`)
+        .then(({ data }) => {
+          if (!aktif) return
+          setAuthorship(data)
+          setAuthorshipError('')
+        })
+        .catch((err) => {
+          if (!aktif) return
+          const status = err?.response?.status
+          if (status === 401) {
+            setAuthorshipError('Masuk terlebih dahulu untuk melihat riwayat authorship dan mengunduh sertifikat.')
+            return
+          }
+          if ((status === 404 || (status >= 500 && status < 600)) && attempts < maxAttempts) {
+            attempts += 1
+            setAuthorshipError('Menyiapkan catatan authorship dan sertifikat...')
+            retryTimer = setTimeout(fetchAuthorship, 2000)
+            return
+          }
+          if (status === 404) {
+            setAuthorshipError('Riwayat authorship belum tersedia untuk puisi ini.')
+          } else {
+            setAuthorshipError('Gagal memuat riwayat authorship.')
+          }
+        })
+    }
+
+    fetchAuthorship()
+
+    return () => {
+      aktif = false
+      if (retryTimer) clearTimeout(retryTimer)
+    }
+  }, [id])
+
+  async function handleDownloadCertificate() {
+    setDownloadingCert(true)
+    try {
+      const resp = await api.get(`/poems/${encodeURIComponent(id)}/certificate`, {
+        responseType: 'blob',
+      })
+      const url = window.URL.createObjectURL(new Blob([resp.data], { type: 'application/pdf' }))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `authorship-${id}.pdf`)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+    } finally {
+      setDownloadingCert(false)
+    }
+  }
 
   const dominanLabel = emotionData?.dominant
     ? `Dominan: ${emotionData.dominant.charAt(0).toUpperCase() + emotionData.dominant.slice(1)}`
@@ -142,6 +208,45 @@ export default function PoemDetailPage() {
             textLines={demoPoem ? demoPoem.text_lines : []}
           />
         )}
+
+        <section className="authorship-panel" aria-label="Bukti waktu dan riwayat authorship">
+          <div className="authorship-header">
+            <h2>Riwayat &amp; Bukti Waktu Authorship</h2>
+            {authorship && (
+              <button
+                type="button"
+                onClick={handleDownloadCertificate}
+                disabled={downloadingCert}
+              >
+                {downloadingCert ? 'Mengunduh PDF...' : 'Unduh Sertifikat PDF'}
+              </button>
+            )}
+          </div>
+
+          {authorshipError && <p>{authorshipError}</p>}
+
+          {authorship && (
+            <ul>
+              {authorship.records.map((rec) => (
+                <li key={rec.version}>
+                  <strong>Versi {rec.version}</strong> — Dicatat pada:{' '}
+                  <time dateTime={rec.recorded_at}>
+                    {new Date(rec.recorded_at).toISOString()}
+                  </time>
+                  <div>Content Hash: <code>{rec.content_hash}</code></div>
+                  <div>Previous Hash: <code>{rec.previous_hash}</code></div>
+                  <div>Chain Hash ({rec.algorithm}): <code>{rec.chain_hash}</code></div>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <p className="authorship-disclaimer">
+            <strong>Catatan Bukti Waktu:</strong> Catatan ini merekam waktu pencatatan dan integritas
+            rantai hash data di dalam sistem. Sertifikat ini bukan bukti hukum kepemilikan atau
+            penetapan hak cipta secara resmi.
+          </p>
+        </section>
       </article>
     </section>
   )

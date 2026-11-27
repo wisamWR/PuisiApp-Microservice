@@ -4,6 +4,7 @@ import pg from 'pg';
 import { createClient } from 'redis';
 import { buatLogger, buatKonsumen, buatStorePg, hubungkan, jalankanMigrasi } from '@puisiapp/events';
 import { buatAppHttp, buatRepoPg } from './http.js';
+import { buatMetrikHttp } from './metrics.js';
 import { buatIndeksFeed } from './indeks-redis.js';
 import { buatHandlerEvent, EVENT_DIKONSUMSI } from './konsumen-event.js';
 
@@ -31,7 +32,8 @@ const { versiTersimpan, handler } = buatHandlerEvent({ indeks, log });
 const konsumen = await buatKonsumen({ koneksi, log, antrean: `q.${serviceName}`, ikatan: EVENT_DIKONSUMSI, store: buatStorePg(pool), versiTersimpan, handler });
 
 const port = Number(process.env.PORT ?? 8080);
-const server = buatAppHttp({ repo, indeks, serviceName });
+const metrik = buatMetrikHttp(serviceName);
+const server = buatAppHttp({ repo, indeks, serviceName, metrik });
 server.listen(port, () => log.info('mood-feed-service berjalan', { port }));
 
 let berhenti = false;

@@ -1,0 +1,21 @@
+{
+  "name": "authorship-query-service",
+  "version": "0.1.0",
+  "description": "T7.4: read model dan API riwayat authorship puisi",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@puisiapp/events": "file:../../libs/node",
+    "@puisiapp/poem-common": "file:../poem-common",
+    "fastify": "5.6.1",
+    "pg": "8.23.1",
+    "pdfkit": "0.17.2"
+  }
+}

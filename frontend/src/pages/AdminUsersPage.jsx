@@ -24,7 +24,7 @@ export default function AdminUsersPage() {
     }
     setSedangCari(true)
     try {
-      const data = await api.get(`/admin/users?q=${encodeURIComponent(kata)}`)
+      const { data } = await api.get(`/admin/users?q=${encodeURIComponent(kata)}`)
       setItems(data.items)
       setPeranBaru(Object.fromEntries(data.items.map((u) => [u.id, u.role])))
     } catch (err) {
@@ -40,7 +40,7 @@ export default function AdminUsersPage() {
     setSukses('')
     setSimpanId(u.id)
     try {
-      const hasil = await api.put(`/admin/users/${u.id}/role`, { role: peranBaru[u.id] })
+      const { data: hasil } = await api.put(`/admin/users/${u.id}/role`, { role: peranBaru[u.id] })
       setItems((daftar) => daftar.map((x) => (x.id === u.id ? { ...x, role: hasil.role } : x)))
       setSukses(`Peran ${hasil.username} sekarang ${hasil.role}.`)
     } catch (err) {

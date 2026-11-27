@@ -5,6 +5,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import pika
 from event_lib import StorePg, buat_konsumen
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
 from app.config import load_settings
 from app.database import get_connection, jalankan_migrasi
@@ -16,15 +17,26 @@ EVENT_INPUT = ["poem.fingerprint.created"]
 
 class HealthHandler(BaseHTTPRequestHandler):
     def do_GET(self):
+        if self.path == "/metrics":
+            payload = generate_latest()
+            self.send_response(200)
+            self.send_header("Content-Type", CONTENT_TYPE_LATEST)
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+            return
+
         if self.path != "/health":
             self.send_error(404, "Not Found")
             return
 
         settings = load_settings()
-        body = json.dumps({
-            "status": "ok",
-            "service": settings.service_name,
-        }).encode("utf-8")
+        body = json.dumps(
+            {
+                "status": "ok",
+                "service": settings.service_name,
+            }
+        ).encode("utf-8")
 
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
@@ -96,10 +108,7 @@ def main():
         HealthHandler,
     )
 
-    print(
-        f"{settings.service_name} berjalan "
-        f"pada {settings.host}:{settings.port}"
-    )
+    print(f"{settings.service_name} berjalan pada {settings.host}:{settings.port}")
 
     try:
         server.serve_forever()

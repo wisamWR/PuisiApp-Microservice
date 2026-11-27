@@ -32,7 +32,7 @@ export const e = {
     image_url: `http://localhost:9000/puisi-images/poems/${id}/v${v}.jpg`, width: 1080, height: 1080, rendered_at: new Date().toISOString(),
   }),
   kemiripan: (id, v = 1) => amplop('poem.similarity.scored', id, v, { poem_id: id, score: 0.05, level: 'original', comparisons: [] }),
-  jejak: (id, v = 1) => amplop('authorship.recorded', id, v, { poem_id: id, version: v, content_hash: 'a'.repeat(64), algorithm: 'SHA-256' }),
+  jejak: (id, v = 1) => amplop('authorship.recorded', id, v, { poem_id: id, version: v, content_hash: 'a'.repeat(64), previous_hash: '0'.repeat(64), chain_hash: 'b'.repeat(64), recorded_at: new Date().toISOString(), algorithm: 'SHA-256' }),
   terbit: (id, v = 1, t) => amplop('poem.published', id, v, { published_at: t ?? new Date().toISOString() }, t),
   disembunyikan: (id, v = 1, t) => amplop('poem.hidden', id, v, { reason: 'uji', hidden_at: t ?? new Date().toISOString() }, t),
   dihapus: (id, v = 1) => amplop('poem.deleted', id, v, { poem_id: id, author_id: PENULIS, last_version: v, deleted_at: new Date().toISOString() }),

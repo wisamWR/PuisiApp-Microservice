@@ -1,0 +1,2 @@
+# Domain authorship.
+set $up_authorship_query "${AUTHORSHIP_QUERY_HOST}";

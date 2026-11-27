@@ -12,10 +12,12 @@ import pg from 'pg';
 import { buatKonsumen, buatLogger, buatStorePg, hubungkan, jalankanMigrasi } from '@puisiapp/events';
 import { validasiProfil } from './validasi.js';
 import { ambilProfil, buatProfilAwal, ubahProfil } from './profil.js';
+import { buatMetrikHttp } from './metrics.js';
 
 const log = buatLogger();
 const folderIni = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT) || 8080;
+const metrik = buatMetrikHttp('profile-service');
 const MAKS_BODY = 8 * 1024;
 const RE_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -66,15 +68,26 @@ function bacaBody(req) {
 }
 
 const server = http.createServer(async (req, res) => {
+  const mulai = performance.now();
+  let rute = 'tidak_dikenal';
+  res.once('finish', () => metrik.catatRequest(req.method, rute, res.statusCode, mulai));
   const url = new URL(req.url, 'http://local');
   const idPengguna = req.headers['x-user-id'];
 
   try {
+
     if (req.method === 'GET' && url.pathname === '/health') {
+      rute = '/health';
       return kirimJson(res, 200, { status: 'ok' });
     }
 
+    if (req.method === 'GET' && url.pathname === '/metrics') {
+      rute = '/metrics';
+      return metrik.layaniMetrics(res);
+    }
+
     if (url.pathname === '/api/profiles/me') {
+      rute = '/api/profiles/me';
       if (!idPengguna) return kirimJson(res, 401, { error: 'unauthorized' });
 
       if (req.method === 'GET') {
@@ -106,12 +119,14 @@ const server = http.createServer(async (req, res) => {
 
     const cocokId = url.pathname.match(/^\/api\/profiles\/([^/]+)$/);
     if (cocokId) {
+      rute = '/api/profiles/:id';
       if (req.method !== 'GET') return kirimJson(res, 405, { error: 'metode tidak diizinkan' });
       if (!RE_UUID.test(cocokId[1])) return kirimJson(res, 404, { error: 'profil tidak ditemukan' });
       const profil = await ambilProfil(pool, cocokId[1]);
       return profil ? kirimJson(res, 200, profil) : kirimJson(res, 404, { error: 'profil tidak ditemukan' });
     }
 
+    rute = url.pathname;
     return kirimJson(res, 404, { error: 'tidak ditemukan' });
   } catch (err) {
     log.error('permintaan gagal', { galat: err.name, pesan: err.message });

@@ -1,0 +1,101 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "PuisiApp Account Recovery & Email Verification API",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/auth/verify-email": {
+      "post": {
+        "summary": "Verifikasi email menggunakan token sekali pakai",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["token"],
+                "properties": {
+                  "token": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Email berhasil diverifikasi" },
+          "400": { "description": "Token tidak valid, sudah dipakai, atau kedaluwarsa" }
+        }
+      }
+    },
+    "/api/auth/email-status": {
+      "get": {
+        "summary": "Status verifikasi email pengguna yang sedang login (wajib login, X-User-Id dari gateway)",
+        "responses": {
+          "200": {
+            "description": "Status verifikasi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["user_id", "email_verified"],
+                  "properties": {
+                    "user_id": { "type": "string" },
+                    "email_verified": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Belum login" }
+        }
+      }
+    },
+    "/api/auth/forgot-password": {
+      "post": {
+        "summary": "Minta tautan reset kata sandi (selalu mengembalikan 202)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email"],
+                "properties": {
+                  "email": { "type": "string", "format": "email" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": { "description": "Permintaan diterima" }
+        }
+      }
+    },
+    "/api/auth/reset-password": {
+      "post": {
+        "summary": "Atur ulang kata sandi menggunakan token sekali pakai (berlaku 30 menit)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["token", "password"],
+                "properties": {
+                  "token": { "type": "string" },
+                  "password": { "type": "string", "minLength": 8 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Kata sandi berhasil diperbarui dan semua refresh token dicabut" },
+          "400": { "description": "Token tidak valid, sudah dipakai, atau kedaluwarsa" }
+        }
+      }
+    }
+  }
+}

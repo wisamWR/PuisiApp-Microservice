@@ -1,0 +1,53 @@
+{
+  "uid": "puisiapp-poem-upload-trace",
+  "title": "04 - Alur Pengunggahan Puisi & Trace (T0.8)",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "15s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Poem Submissions by Result",
+      "type": "timeseries",
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum by (hasil) (rate(rasa_poem_submissions_total[5m]))",
+          "legendFormat": "{{hasil}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Traces (Tempo)",
+      "type": "traces",
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 0 },
+      "datasource": { "type": "tempo", "uid": "tempo" },
+      "targets": [
+        {
+          "datasource": { "type": "tempo", "uid": "tempo" },
+          "query": "{ service.name =~ \"api-gateway|poem-create-service|.*-worker\" }",
+          "queryType": "traceql",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Logs with correlation_id, event_id & trace_id (Loki)",
+      "type": "logs",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 7 },
+      "datasource": { "type": "loki", "uid": "loki" },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "{service=~\".+\"} |= \"correlation_id\"",
+          "refId": "A"
+        }
+      ]
+    }
+  ]
+}
