@@ -9,7 +9,7 @@ import {
   hubungkan,
   jalankanMigrasi,
 } from '@puisiapp/events';
-import { tanganiPuisi, tanganiProfil, tanganiPendaftaran } from './handler.js';
+import { tanganiPuisi, tanganiPengguna } from './handler.js';
 import { cariPuisi, cariPenulis } from './cari.js';
 
 const log = buatLogger();
@@ -31,7 +31,7 @@ if (process.env.RABBITMQ_HOST) {
     koneksi,
     log,
     antrean: 'q.search-service',
-    ikatan: ['poem.submitted', 'poem.revised', 'poem.published', 'poem.hidden', 'poem.deleted', 'poem.keywords.extracted'],
+    ikatan: ['poem.submitted', 'poem.revised', 'poem.published', 'poem.held', 'poem.hidden', 'poem.deleted', 'poem.keywords.extracted'],
     store,
     handler: tanganiPuisi,
   });
@@ -39,12 +39,10 @@ if (process.env.RABBITMQ_HOST) {
     koneksi,
     log,
     antrean: 'q.search-service.profil',
-    ikatan: ['user.registered', 'user.profile.updated'],
+    ikatan: ['user.registered', 'user.profile.updated', 'user.deleted'],
     store,
-    // Satu antrean, dua jenis event: user.registered mengisi nama awal, user.profile.updated menimpa nama.
-    handler: (event, ctx) => (event.event_type === 'user.registered'
-      ? tanganiPendaftaran(event, ctx)
-      : tanganiProfil(event, ctx)),
+    // user.registered mengisi nama awal, user.profile.updated menimpa nama, user.deleted menghapus penulis.
+    handler: tanganiPengguna,
   });
 }
 

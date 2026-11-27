@@ -9,7 +9,7 @@ import { EMOSI_LIST, bacaPreferensiMood, sudahPilihMood } from '../lib/moodData'
 
 const navigation = [
   { heading: 'UTAMA', links: [['/', 'Beranda'], ['/mood-entry', 'Mood Entry'], ['/mood-feed', 'Mood Feed']] },
-  { heading: 'PUISI', links: [['/write', 'Tulis Puisi'], ['/my-poems', 'Puisi Saya'], ['/themes', 'Jelajah Tema'], ['/search', 'Pencarian']] },
+  { heading: 'PUISI', links: [['/write', 'Tulis Puisi'], ['/my-poems', 'Puisi Saya'], ['/themes', 'Jelajah Tema'], ['/search', 'Pencarian'], ['/bookmarks', 'Simpanan']] },
   { heading: 'AKUN & LAINNYA', links: [['/notifications', 'Notifikasi'], ['/moderation', 'Moderasi'], ['/login', 'Masuk'], ['/register', 'Daftar']] },
 ]
 

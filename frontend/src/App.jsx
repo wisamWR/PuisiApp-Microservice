@@ -20,6 +20,7 @@ import HomePage from './pages/HomePage'
 import AuthorPage from './pages/AuthorPage'
 import SearchPage from './pages/SearchPage'
 import NotificationsPage from './pages/NotificationsPage'
+import BookmarksPage from './pages/BookmarksPage'
 
 function App() {
   return (
@@ -37,6 +38,7 @@ function App() {
             <Route path="my-poems" element={<MyPoemsPage />} />
             <Route path="authors/:id" element={<AuthorPage />} />
             <Route path="search" element={<SearchPage />} />
+            <Route path="bookmarks" element={<BookmarksPage />} />
             <Route path="themes" element={<PlaceholderPage pageKey="themes" />} />
             <Route path="notifications" element={<NotificationsPage />} />
             <Route path="profile" element={<ProfilePage />} />

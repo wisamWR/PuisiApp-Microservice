@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { SimpanBagikan } from './SimpanBagikan'
 
 // Kartu untuk satu item HalamanPuisi (RingkasanPuisi di poem-query.yaml).
 // Penulis tidak ada di respons beranda, jadi tidak ditampilkan.
@@ -19,6 +20,7 @@ export function RingkasanKartu({ item }) {
           ))}
         </div>
       ) : null}
+      <SimpanBagikan poemId={poem_id} title={title} />
       <div className="poem-card-footer">
         <span className="poem-score">Skor: {score?.value ?? 0}</span>
         <Link to={`/poems/${poem_id}`} className="text-link">

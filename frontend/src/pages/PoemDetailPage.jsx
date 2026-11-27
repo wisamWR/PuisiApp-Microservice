@@ -3,6 +3,7 @@ import { Link, useLocation, useParams } from 'react-router-dom'
 import EmotionFlowPanel from '../components/EmotionFlowPanel'
 import PuisiDiproses from '../components/PuisiDiproses'
 import VoteButtons from '../components/VoteButtons'
+import { SimpanBagikan } from '../components/SimpanBagikan'
 import { EmotionLabel, Loader } from '../components/UI'
 import { api } from '../lib/api'
 import { SAMPLE_MOOD_POEMS } from '../lib/moodData'
@@ -179,6 +180,8 @@ export default function PoemDetailPage() {
         {/* T9.3: upvote/downvote. Tampil bila puisi dikenal vote-service (sudah diajukan). */}
         <div className="poem-detail-vote">
           <VoteButtons poemId={id} />
+          {/* T3.4: simpan dan bagikan tautan /p/{id} */}
+          <SimpanBagikan poemId={id} title={poem?.title} />
         </div>
 
         {galatPoem ? (
