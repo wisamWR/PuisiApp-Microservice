@@ -36,6 +36,8 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-info}
       CACHE_TTL_SECONDS: "60"
       DATABASE_URL: postgres://mood_feed:${MOOD_FEED_DB_PASS}@${POSTGRES_HOST}:${POSTGRES_PORT}/mood_feed_db
+      # GET dibaca dari standby postgres-replica; bila replika mati, otomatis kembali ke primary.
+      DATABASE_REPLICA_URL: postgres://mood_feed:${MOOD_FEED_DB_PASS}@${POSTGRES_REPLICA_HOST:-postgres-replica}:${POSTGRES_PORT}/mood_feed_db
       RABBITMQ_HOST: ${RABBITMQ_HOST}
       RABBITMQ_PORT: ${RABBITMQ_PORT}
       RABBITMQ_USER: ${RABBITMQ_USER}
@@ -50,6 +52,12 @@ services:
       redis: { condition: service_healthy }
       rabbitmq: { condition: service_healthy }
       rabbitmq-topologi: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 20s
 
   # T7.1 - Fingerprint Worker
   fingerprint-worker:
