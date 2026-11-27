@@ -29,3 +29,23 @@ services:
       interval: 10s
       timeout: 3s
       retries: 3
+      start_period: 15s
+
+  # Relay outbox comment_db (T0.3): comment.created, comment.deleted, comment.reported
+  # ke RabbitMQ. Tanpa relay ini event komentar hanya tertulis di outbox dan
+  # laporan komentar tidak pernah sampai ke moderasi (kelompok 8).
+  outbox-relay-comment:
+    extends:
+      file: debezium/relay.yml
+      service: outbox-relay
+    environment:
+      RELAY_DB: comment_db
+      RELAY_SLOT: outbox_comment
+    volumes:
+      - relay-comment-data:/debezium/data
+    depends_on:
+      rabbitmq-topologi: { condition: service_completed_successfully }
+      comment-service: { condition: service_healthy }   # yang membuat tabel outbox
+
+volumes:
+  relay-comment-data: {}
