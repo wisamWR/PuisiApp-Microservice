@@ -1,20 +1,38 @@
 openapi: 3.0.3
 info:
   title: search-service (T3.2, Kelompok 3)
-  version: 0.2.0
+  version: 0.2.1
   description: |
     Pencarian puisi PUBLISHED dan penulis. Hanya pengguna yang sudah login yang bisa mencari.
 
     Basis data: search-service memiliki basis data sendiri (search_db) dan tidak membaca poem_read_db
     milik poem-query-service. Kolom tsvector diisi dari event berikut:
-    poem.published, poem.hidden, poem.deleted, poem.revised, poem.keywords.extracted, user.profile.updated.
+    poem.submitted, poem.revised, poem.published, poem.hidden, poem.deleted, poem.keywords.extracted,
+    user.registered, user.profile.updated.
 
     Urutan hasil: berdasarkan relevansi (ts_rank_cd). Jika skor sama, puisi diurutkan dari tanggal terbit
     terbaru, dan penulis diurutkan dari jumlah puisi terbanyak.
 
+    Quote: quote_text diambil dari bait kutipan (quote_stanza dan quote_text dari poem.submitted), bukan
+    dari baris pertama isi. Baris lama yang belum punya bait kutipan memakai baris pertama isi sebagai
+    cadangan sementara.
+
+    Nama penulis: display_name diambil dari user.profile.updated. Sebelum profil diubah, berisi username
+    dari user.registered. user.registered tidak menimpa nama yang sudah ada.
+
+    Catatan batasan: konfigurasi tsvector 'simple' (PostgreSQL bawaan, tanpa konfigurasi bahasa
+    Indonesia) tidak menangani kata berimbuhan. Kata berimbuhan tidak cocok otomatis dengan kata dasarnya.
+    Batasan ini diterima untuk v0.2.1 dan dicatat di laporan.
+
     Catatan kata_kunci: kolom kata kunci baru terisi setelah keyword-worker (T6.1, Kelompok 6) mulai
     menerbitkan poem.keywords.extracted. Sebelum itu, pencarian dengan kata kunci tidak menghasilkan hasil.
     Pencarian judul, isi, dan nama penulis tidak terpengaruh.
+
+    Perubahan dari v0.2.0:
+    - Skema item puisi diganti dari RingkasanPuisi ke KartuPuisiCari (hanya field yang benar-benar dikirim).
+    - quote_text diambil dari bait kutipan, bukan baris pertama isi.
+    - user.registered ditambahkan ke x-konsumsi-event (dan poem.submitted, yang menjadi sumber judul dan isi).
+    - Batas panjang display_name dan catatan batasan simple ditambahkan.
 
     Perubahan dari v0.1: parameter by digantikan type. Alasan: pencarian puisi selalu mencocokkan judul,
     isi, dan kata kunci sekaligus, dan pencarian penulis berbeda bentuk hasilnya (kartu penulis),
@@ -24,11 +42,13 @@ servers:
   - url: /api
 
 x-konsumsi-event:
+  - poem.submitted
+  - poem.revised
   - poem.published
   - poem.hidden
   - poem.deleted
-  - poem.revised
   - poem.keywords.extracted
+  - user.registered
   - user.profile.updated
 
 paths:
@@ -96,7 +116,7 @@ components:
         items:
           type: array
           items:
-            $ref: 'poem-query.yaml#/components/schemas/RingkasanPuisi'
+            $ref: '#/components/schemas/KartuPuisiCari'
         page: { type: integer, minimum: 1 }
         size: { type: integer, minimum: 1 }
         total: { type: integer, minimum: 0 }
@@ -114,6 +134,31 @@ components:
         size: { type: integer, minimum: 1 }
         total: { type: integer, minimum: 0 }
 
+    KartuPuisiCari:
+      type: object
+      description: Ringkasan puisi PUBLISHED untuk hasil pencarian. Hanya field yang dikirim search-service (cari.js).
+      required: [poem_id, version, title, quote_text, author_id, published_at, skor]
+      properties:
+        poem_id: { type: string, format: uuid }
+        version: { type: integer, minimum: 1 }
+        title: { type: string, minLength: 1, maxLength: 150 }
+        quote_text:
+          type: string
+          minLength: 1
+          maxLength: 280
+          description: Bait kutipan dari poem.submitted (quote_text). Untuk baris lama tanpa bait kutipan, berisi baris pertama isi sebagai cadangan sementara.
+        author_id:
+          type: string
+          maxLength: 64
+          description: Sama dengan author_id di poem.submitted (dari header gateway).
+        published_at:
+          type: string
+          format: date-time
+          nullable: true
+        skor:
+          type: number
+          description: Nilai ts_rank_cd, dipakai untuk urutan. Tidak untuk ditampilkan.
+
     KartuPenulis:
       type: object
       description: Ringkasan penulis untuk hasil pencarian. Hanya data publik.
@@ -124,7 +169,7 @@ components:
           type: string
           minLength: 1
           maxLength: 50
-          description: Nama tampil dari user.profile.updated. Sebelum profil diubah, berisi username dari user.registered.
+          description: Nama tampil dari user.profile.updated. Sebelum profil diubah, berisi username dari user.registered (dipotong 50 karakter). Nama yang sudah ada tidak ditimpa oleh user.registered.
         jumlah_puisi:
           type: integer
           minimum: 0
