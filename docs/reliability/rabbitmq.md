@@ -80,7 +80,7 @@ Basis data `poem_read_db` berisi sembilan puisi, semuanya berstatus PROCESSING d
 - Periksa tabel outbox di basis data produser. Jika event 24 sampai 26 November tercatat sudah dikirim, berarti event keluar dari produser tetapi tidak ada queue yang menampungnya.
 - Periksa `q.outbox.unrouted`. Antrean ini hanya menampung event yang `event_type`-nya tidak punya binding di `outbox.relay`, sehingga kemungkinan besar kosong untuk kasus ini.
 
-Log similarity-worker hanya berisi pesan "galat sementara" tanpa exception atau stack trace. Pemeriksaan kode menunjukkan penyebabnya ada di pustaka bersama, bukan di similarity-worker. Di `libs/python/event_lib/konsumen.py`, exception ditangkap dengan `except Exception as exc`, tetapi `exc` tidak pernah dikirim ke logger. Ini terjadi pada tiga jalur: galat sementara, galat permanen, dan percobaan habis. Formatter di `libs/python/event_lib/log.py` hanya menulis field `err` jika record membawa `exc_info`. Akibatnya, semua worker Python (similarity, emotion, fingerprint) kehilangan detail galat. Versi Node sudah menyertakan `err` di log.
+Log similarity-worker hanya berisi pesan "galat sementara" tanpa exception atau stack trace. Pemeriksaan kode menunjukkan penyebabnya ada di pustaka bersama, bukan di similarity-worker. Di `libs/python/event_lib/konsumen.py`, blok pesan tidak valid sudah mengirim `str(exc)` ke logger sebagai field `err`. Di blok kedua, exception tidak dikirim ke logger pada empat jalur: galat permanen, percobaan habis, galat sementara yang dijadwalkan ulang, dan kegagalan menjadwalkan ulang. Formatter di `libs/python/event_lib/log.py` hanya menulis stack trace jika record membawa `exc_info`. Dengan begitu, pada empat jalur tersebut detail galat tidak muncul di log worker Python (similarity, emotion, fingerprint). Versi Node menyertakan `err` di semua jalur itu (`libs/node/src/konsumen.js`, baris 62 sampai 112).
 
 Pemeriksaan kode `services/similarity-worker/src/app/main.py` juga menemukan dua hal lain:
 
@@ -91,7 +91,7 @@ Relay outbox pernah mati setelah restart stack. Pemulihan dilakukan dengan `dock
 
 ## 5. Keterbatasan dan Langkah Lanjut
 
-Penyebab kegagalan similarity-worker belum diketahui. Langkah pertama adalah memperbaiki log di `libs/python/event_lib/konsumen.py` dengan menambahkan `exc_info=exc` pada tiga pemanggilan logger di blok `except`. Perubahan ini ada di pustaka bersama, jadi perlu disepakati dengan pemilik `libs/python`. Setelah itu, pemilik layanan (Kelompok 7, Raffa) dapat membaca exception yang sebenarnya, ditambah isi pesan di DLQ yang dibaca tanpa dihapus.
+Penyebab kegagalan similarity-worker belum diketahui. Langkah pertama adalah memperbaiki log di `libs/python/event_lib/konsumen.py` dengan menambahkan `exc_info=exc` pada empat pemanggilan logger di blok `except` kedua. Pada kegagalan menjadwalkan ulang, `except Exception:` perlu diubah menjadi `except Exception as exc:` terlebih dahulu. Perubahan ini ada di pustaka bersama, jadi perlu disepakati dengan pemilik `libs/python`. Setelah itu, pemilik layanan (Kelompok 7, Raffa) dapat membaca exception yang sebenarnya, ditambah isi pesan di DLQ yang dibaca tanpa dihapus.
 
 Healthcheck similarity-worker sebaiknya ikut memeriksa status thread konsumen, bukan hanya proses HTTP. Relay outbox juga perlu healthcheck agar dimulai ulang otomatis.
 
@@ -110,3 +110,9 @@ Pada uji pertama, satu pesan dipublikasikan ke `test.rel` dan dibaca dengan mode
 Pada uji kedua, satu pesan persisten dipublikasikan ke antrean durable, lalu RabbitMQ di-restart dan status healthy-nya diperiksa sebelum membaca ulang. Pesan tetap tersedia setelah restart.
 
 Uji ini hanya memverifikasi perilaku broker. Tipe antrean `test.rel` tidak dicatat saat pengujian, sedangkan antrean layanan di repo bertipe quorum. Uji perlu diulang dengan `x-queue-type: quorum` dan `x-delivery-limit` agar sama dengan konfigurasi sebenarnya. Publisher confirms dan manual ack pada consumer belum diuji dan belum masuk ke pembuktian dokumen ini.
+
+## Lampiran B: Uji batas pengiriman (x-delivery-limit)
+
+Uji dilakukan dengan antrean sementara `test.q` (quorum, `x-delivery-limit: 5`, DLQ `test.q.dlq`) dan dihapus setelah selesai. Satu pesan dipublikasikan, lalu diambil ulang enam kali dengan mode `ack_requeue_true`. Setelah itu, `test.q` kosong dan `test.q.dlq` berisi pesan tersebut.
+
+Uji ini memakai HTTP API untuk mengambil pesan, bukan consumer sungguhan. Hasilnya membuktikan bahwa pesan yang melewati batas pengiriman dipindah ke DLQ pada quorum queue. Perilaku worker yang crash sebelum ack belum diuji dengan cara ini.
