@@ -34,7 +34,7 @@ def load_settings() -> Settings:
         rabbitmq_pass=os.getenv("RABBITMQ_PASS", "guest"),
         rabbitmq_vhost=os.getenv("RABBITMQ_VHOST", "rasa"),
         mongo_url=os.getenv("MONGO_URL", "mongodb://mongodb:27017"),
-        mongo_db=os.getenv("MONGO_DB", "theme-db"),
+        mongo_db=os.getenv("MONGO_DB", "keyword-db"),
         prefetch=prefetch,
         max_keywords=max_keywords,
     )

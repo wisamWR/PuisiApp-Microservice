@@ -4,7 +4,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PORT=8080 \
     CONTRACTS_DIR=/app/contracts \
-    MONGO_DB=theme-db
+    MONGO_DB=keyword-db
 
 WORKDIR /app
 
