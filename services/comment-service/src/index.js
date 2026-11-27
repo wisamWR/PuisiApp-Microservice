@@ -59,23 +59,33 @@ await jalankanMigrasi(pool, {
 // 2. Hubungkan ke RabbitMQ.
 const koneksi = await hubungkan({ log });
 
-// 3. Konsumsi event publikasi puisi.
+// 3. Konsumsi event publikasi puisi dan proyeksi profil pengguna.
 const statusEvent = {
   'poem.published': 'PUBLISHED',
   'poem.hidden': 'HIDDEN',
   'poem.deleted': 'DELETED',
 };
 
+const eventDiikat = [
+  ...Object.keys(statusEvent),
+  'user.registered',
+  'user.profile.updated',
+];
+
 const konsumen = await buatKonsumen({
   koneksi,
   log,
   antrean: 'q.comment-service',
-  ikatan: Object.keys(statusEvent),
+  ikatan: eventDiikat,
   store: buatStorePg(pool),
   prefetch: Number(process.env.PREFETCH) || 10,
 
   // Ambil versi status puisi yang sudah tersimpan.
   versiTersimpan: async (event, { tx }) => {
+    if (!statusEvent[event.event_type]) {
+      return undefined;
+    }
+
     const { rows } = await tx.query(
       `SELECT aggregate_version
        FROM poem_publication_status
@@ -87,8 +97,49 @@ const konsumen = await buatKonsumen({
     return rows[0]?.aggregate_version;
   },
 
-  // Simpan perubahan status publikasi puisi.
+  // Simpan perubahan status publikasi puisi atau proyeksi nama pengguna.
   handler: async (event, { tx, log: logEvent }) => {
+    if (event.event_type === 'user.registered') {
+      const userIdEvent = event.payload?.id || event.aggregate_id;
+      const username = event.payload?.username || null;
+      const displayName = event.payload?.display_name || username || null;
+
+      if (userIdEvent) {
+        await tx.query(
+          `INSERT INTO user_profiles (user_id, username, display_name, updated_at)
+           VALUES ($1, $2, $3, now())
+           ON CONFLICT (user_id) DO UPDATE
+           SET username = COALESCE(EXCLUDED.username, user_profiles.username),
+               display_name = COALESCE(NULLIF(EXCLUDED.display_name, ''), user_profiles.display_name),
+               updated_at = now()`,
+          [userIdEvent, username, displayName],
+        );
+      }
+
+      return;
+    }
+
+    if (event.event_type === 'user.profile.updated') {
+      const userIdEvent = event.aggregate_id || event.payload?.id;
+      const displayName =
+        typeof event.payload?.display_name === 'string' && event.payload.display_name.trim()
+          ? event.payload.display_name.trim()
+          : null;
+
+      if (userIdEvent && displayName) {
+        await tx.query(
+          `INSERT INTO user_profiles (user_id, display_name, updated_at)
+           VALUES ($1, $2, now())
+           ON CONFLICT (user_id) DO UPDATE
+           SET display_name = EXCLUDED.display_name,
+               updated_at = now()`,
+          [userIdEvent, displayName],
+        );
+      }
+
+      return;
+    }
+
     const status = statusEvent[event.event_type];
 
     if (!status) {
@@ -103,9 +154,10 @@ const konsumen = await buatKonsumen({
        VALUES ($1, $2, $3)
        ON CONFLICT (poem_id) DO UPDATE
        SET status = EXCLUDED.status,
-           aggregate_version = EXCLUDED.aggregate_version,
+           aggregate_version = GREATEST(poem_publication_status.aggregate_version, EXCLUDED.aggregate_version),
            updated_at = now()
-       WHERE poem_publication_status.aggregate_version
+       WHERE poem_publication_status.status <> 'DELETED'
+         AND poem_publication_status.aggregate_version
              <= EXCLUDED.aggregate_version`,
       [
         event.aggregate_id,
@@ -254,16 +306,12 @@ server.on('request', async (req, res) => {
   const correlationId = req.headers['x-request-id'];
 
   try {
-    // Rate limit maksimal 10 request per menit per pengguna.
-    const endpointKomentar =
-      /^\/api\/poems\/[^/]+\/comments$/.test(url.pathname) ||
-      /^\/api\/comments\/[^/]+$/.test(url.pathname) ||
-      /^\/api\/comments\/[^/]+\/report$/.test(url.pathname);
+    // Rate limit maksimal 10 kiriman komentar per menit per pengguna (hanya POST /api/poems/{id}/comments).
+    const endpointKirimKomentar =
+      req.method === 'POST' &&
+      /^\/api\/poems\/[^/]+\/comments$/.test(url.pathname);
 
-    if (
-      endpointKomentar &&
-      ['GET', 'POST', 'DELETE'].includes(req.method)
-    ) {
+    if (endpointKirimKomentar) {
       if (!userId) {
         return kirimJson(res, 401, {
           error: 'Autentikasi diperlukan',
@@ -315,10 +363,16 @@ server.on('request', async (req, res) => {
       }
 
       const hasil = await pool.query(
-        `SELECT id, poem_id, user_id, content, created_at
-         FROM comments
-         WHERE poem_id = $1 AND deleted_at IS NULL
-         ORDER BY created_at DESC
+        `SELECT c.id,
+                c.poem_id,
+                c.user_id,
+                COALESCE(NULLIF(u.display_name, ''), NULLIF(u.username, ''), c.user_id) AS author_name,
+                c.content,
+                c.created_at
+         FROM comments c
+         LEFT JOIN user_profiles u ON u.user_id = c.user_id
+         WHERE c.poem_id = $1 AND c.deleted_at IS NULL
+         ORDER BY c.created_at DESC
          LIMIT $2 OFFSET $3`,
         [poemId, limit, offset],
       );

@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
+import { AuthContext } from '../lib/auth'
+import CommentSection from '../components/comments/CommentSection'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import EmotionFlowPanel from '../components/EmotionFlowPanel'
 import PuisiDiproses from '../components/PuisiDiproses'
@@ -10,6 +12,7 @@ import { SAMPLE_MOOD_POEMS } from '../lib/moodData'
 
 export default function PoemDetailPage() {
   const { id } = useParams()
+  const { user } = useContext(AuthContext)
   const puisiDiproses = useLocation().state?.puisiDiproses
   const baruDikirim = puisiDiproses?.poem_id === id ? puisiDiproses : null
   const [emotionData, setEmotionData] = useState(null)
@@ -250,6 +253,12 @@ export default function PoemDetailPage() {
             penetapan hak cipta secara resmi.
           </p>
         </section>
+
+        <CommentSection
+          poemId={id}
+          currentUserId={user?.id ?? null}
+          userRole={user?.role ?? null}
+        />
       </article>
     </section>
   )

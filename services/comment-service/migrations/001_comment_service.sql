@@ -23,3 +23,11 @@ CREATE TABLE IF NOT EXISTS comments (
 
 CREATE INDEX IF NOT EXISTS idx_comments_poem_created
 ON comments (poem_id, created_at DESC);
+
+-- Proyeksi nama pengguna dari event user.registered / user.profile.updated
+CREATE TABLE IF NOT EXISTS user_profiles (
+    user_id TEXT PRIMARY KEY,
+    username TEXT,
+    display_name TEXT,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
