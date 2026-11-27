@@ -28,7 +28,7 @@ services:
       postgres: { condition: service_healthy }
       rabbitmq: { condition: service_healthy }
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health/ready"]
       interval: 10s
       timeout: 3s
       retries: 3
@@ -58,7 +58,7 @@ services:
       rabbitmq-topologi: { condition: service_completed_successfully }
       token-service: { condition: service_healthy }
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health/ready"]
       interval: 10s
       timeout: 3s
       retries: 3
@@ -113,7 +113,7 @@ services:
       rabbitmq: { condition: service_healthy }
       rabbitmq-topologi: { condition: service_completed_successfully }
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health/ready"]
       interval: 10s
       timeout: 3s
       retries: 3
@@ -150,20 +150,6 @@ services:
       timeout: 3s
       retries: 3
       start_period: 15s
-
-  # Mailpit: server SMTP lokal dan web UI untuk pengujian pengiriman email (T1.6).
-  mailpit:
-    image: axllent/mailpit:latest
-    restart: unless-stopped
-    ports:
-      - "${MAILPIT_UI_PORT:-8025}:8025"
-    networks: [app]
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8025/api/v1/info"]
-      interval: 10s
-      timeout: 3s
-      retries: 3
-      start_period: 10s
 
   # Relay outbox account_db (T0.3). Dibuat dari templat yang sama dengan relay lain.
   outbox-relay-account:
@@ -217,7 +203,7 @@ services:
       rabbitmq: { condition: service_healthy }
       rabbitmq-topologi: { condition: service_completed_successfully }
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health/ready"]
       interval: 10s
       timeout: 3s
       retries: 3

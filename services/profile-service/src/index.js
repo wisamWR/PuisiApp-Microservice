@@ -22,7 +22,15 @@ const MAKS_BODY = 8 * 1024;
 const RE_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL belum diisi');
-const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 10 });
+const pool = new pg.Pool({
+  connectionString: process.env.DATABASE_URL,
+  max: Number(process.env.DB_POOL_MAX) || 10,
+  connectionTimeoutMillis: 2000,
+  statement_timeout: 5000,
+  // Batas di sisi klien: statement_timeout tidak berlaku bila server beku/tak menjawab.
+  query_timeout: 6_000,
+});
+pool.on('error', (err) => log.error('galat koneksi idle PostgreSQL', { err }));
 
 await jalankanMigrasi(pool, { folder: path.join(folderIni, '../migrations'), outbox: true, log });
 
@@ -79,6 +87,17 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'GET' && url.pathname === '/health') {
       rute = '/health';
       return kirimJson(res, 200, { status: 'ok' });
+    }
+    // Readiness: ikut memeriksa PostgreSQL. Dipakai healthcheck Docker (dan nanti load balancer),
+    // sehingga layanan yang kehilangan DB ditandai unhealthy tanpa harus restart.
+    if (req.method === 'GET' && url.pathname === '/health/ready') {
+      rute = '/health/ready';
+      try {
+        await pool.query('SELECT 1');
+        return kirimJson(res, 200, { status: 'ok' });
+      } catch {
+        return kirimJson(res, 503, { status: 'db_tidak_siap' });
+      }
     }
 
     if (req.method === 'GET' && url.pathname === '/metrics') {

@@ -28,6 +28,8 @@ const pool = new pg.Pool({
   max: Number(process.env.DB_POOL_MAX) || 10,
   connectionTimeoutMillis: 2000,
   statement_timeout: 5000,
+  // Batas di sisi klien: statement_timeout tidak berlaku bila server beku/tak menjawab.
+  query_timeout: 6_000,
 });
 pool.on('error', (err) => log.error('galat koneksi idle PostgreSQL', { err }));
 
