@@ -1,0 +1,16 @@
+{
+  "name": "email-worker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Worker pengiriman email verifikasi dan pemulihan akun via SMTP/Mailpit (T1.6)",
+  "scripts": {
+    "start": "node src/main.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@puisiapp/events": "file:../../libs/node",
+    "nodemailer": "^6.9.16",
+    "pg": "^8.23.1"
+  }
+}

@@ -42,7 +42,7 @@ export async function daftarAkun(pool, data, ctx = {}) {
         'user.registered',
         id,
         1,
-        { username: data.username, email: data.email },
+        { id, username: data.username, email: data.email, display_name: data.display_name, role: 'writer' },
         { correlationId: ctx.correlationId },
       );
       const eventKredensial = buatEvent(

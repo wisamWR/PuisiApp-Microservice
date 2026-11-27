@@ -88,6 +88,113 @@ services:
       retries: 3
       start_period: 15s
 
+  # account-recovery-service (T1.6): verifikasi email, forgot/reset password, cabut refresh token.
+  account-recovery-service:
+    build:
+      context: ..
+      dockerfile: services/account-recovery-service/Dockerfile
+    restart: unless-stopped
+    environment:
+      SERVICE_NAME: account-recovery-service
+      PORT: "8080"
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:8080}
+      DATABASE_URL: postgres://${RECOVERY_DB_USER:-recovery}:${RECOVERY_DB_PASS}@${POSTGRES_HOST}:${POSTGRES_PORT}/${RECOVERY_DB_NAME:-recovery_db}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+      RABBITMQ_VHOST: ${RABBITMQ_VHOST}
+    networks: [app, data]
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+      rabbitmq-topologi: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
+
+  # email-worker (T1.6): konsumsi email.send.requested dan kirim email via SMTP/Mailpit.
+  email-worker:
+    build:
+      context: ..
+      dockerfile: services/email-worker/Dockerfile
+    restart: unless-stopped
+    environment:
+      SERVICE_NAME: email-worker
+      PORT: "8080"
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      SMTP_HOST: ${SMTP_HOST:-mailpit}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_FROM: ${SMTP_FROM:-PuisiApp <no-reply@puisiapp.local>}
+      DATABASE_URL: postgres://${EMAIL_WORKER_DB_USER:-email_worker}:${EMAIL_WORKER_DB_PASS}@${POSTGRES_HOST}:${POSTGRES_PORT}/${EMAIL_WORKER_DB_NAME:-email_worker_db}
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+      RABBITMQ_VHOST: ${RABBITMQ_VHOST}
+    networks: [app, data]
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+      rabbitmq-topologi: { condition: service_completed_successfully }
+      mailpit: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
+
+  # Mailpit: server SMTP lokal dan web UI untuk pengujian pengiriman email (T1.6).
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    ports:
+      - "${MAILPIT_UI_PORT:-8025}:8025"
+    networks: [app]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8025/api/v1/info"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+  # Relay outbox account_db (T0.3). Dibuat dari templat yang sama dengan relay lain.
+  outbox-relay-account:
+    extends:
+      file: debezium/relay.yml
+      service: outbox-relay
+    environment:
+      RELAY_DB: account_db
+      RELAY_SLOT: outbox_account
+    volumes:
+      - ./debezium/application.properties:/debezium/config/application.properties:ro
+      - relay-account-data:/debezium/data
+    depends_on:
+      rabbitmq-topologi: { condition: service_completed_successfully }
+      register-service: { condition: service_healthy }   # yang membuat tabel outbox
+
+  # Relay outbox recovery_db untuk event email.send.requested.
+  outbox-relay-recovery:
+    extends:
+      file: debezium/relay.yml
+      service: outbox-relay
+    environment:
+      RELAY_DB: recovery_db
+      RELAY_SLOT: outbox_recovery
+    volumes:
+      - ./debezium/application.properties:/debezium/config/application.properties:ro
+      - relay-recovery-data:/debezium/data
+    depends_on:
+      rabbitmq-topologi: { condition: service_completed_successfully }
+      account-recovery-service: { condition: service_healthy }
+
   # profile-service (T1.5): profil publik. Konsumsi user.registered, ubah profil lewat /api/profiles/me.
   profile-service:
     build:
@@ -131,21 +238,7 @@ services:
       rabbitmq-topologi: { condition: service_completed_successfully }
       profile-service: { condition: service_healthy }   # yang membuat tabel outbox
 
-  # Relay outbox account_db (T0.3). Dibuat dari templat yang sama dengan relay lain.
-  outbox-relay-account:
-    extends:
-      file: debezium/relay.yml
-      service: outbox-relay
-    environment:
-      RELAY_DB: account_db
-      RELAY_SLOT: outbox_account
-    volumes:
-      - ./debezium/application.properties:/debezium/config/application.properties:ro
-      - relay-account-data:/debezium/data
-    depends_on:
-      rabbitmq-topologi: { condition: service_completed_successfully }
-      register-service: { condition: service_healthy }   # yang membuat tabel outbox
-
 volumes:
   relay-account-data: {}
   relay-profile-data: {}
+  relay-recovery-data: {}

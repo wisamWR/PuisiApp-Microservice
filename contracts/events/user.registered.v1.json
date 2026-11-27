@@ -9,6 +9,19 @@
     "email"
   ],
   "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Sama dengan aggregate_id; dipakai account-recovery-service (T1.6)"
+    },
+    "display_name": {
+      "type": ["string", "null"],
+      "maxLength": 100
+    },
+    "role": {
+      "type": "string",
+      "enum": ["reader", "writer", "moderator", "admin"]
+    },
     "email": {
       "type": "string",
       "format": "email"
@@ -22,8 +35,11 @@
   "additionalProperties": false,
   "examples": [
     {
+      "id": "0b7d6f0e-4a8b-4a52-9d0b-3f4f0e9b2a10",
       "username": "rina",
-      "email": "rina@example.com"
+      "email": "rina@example.com",
+      "display_name": "Rina",
+      "role": "writer"
     }
   ]
 }
