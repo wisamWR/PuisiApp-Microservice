@@ -11,6 +11,7 @@ import VerifyEmailPage from './pages/VerifyEmailPage'
 import './App.css'
 import MoodEntryPage from './pages/MoodEntryPage'
 import MoodFeedPage from './pages/MoodFeedPage'
+import ThemesPage from './pages/ThemesPage'
 import PoemDetailPage from './pages/PoemDetailPage'
 import ProfilePage from './pages/ProfilePage'
 import AdminUsersPage from './pages/AdminUsersPage'
@@ -39,7 +40,7 @@ function App() {
             <Route path="authors/:id" element={<AuthorPage />} />
             <Route path="search" element={<SearchPage />} />
             <Route path="bookmarks" element={<BookmarksPage />} />
-            <Route path="themes" element={<PlaceholderPage pageKey="themes" />} />
+            <Route path="themes" element={<ThemesPage />} />
             <Route path="notifications" element={<NotificationsPage />} />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="admin/users" element={<AdminUsersPage />} />
