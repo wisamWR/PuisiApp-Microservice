@@ -1,0 +1,91 @@
+
+[
+  {
+    "case_id": "SHORT-001",
+    "category": "short_exact_copy",
+    "expected_level": "similar",
+    "source_text": "Morning light crosses the quiet garden while birds sing beside the old wooden gate.",
+    "candidate_text": "Morning light crosses the quiet garden while birds sing beside the old wooden gate.",
+    "purpose": "Exact copy with fewer than 15 unique shingles; must not be classified as suspected_plagiarism because of the minimum shingle rule."
+  },
+  {
+    "case_id": "SHORT-002",
+    "category": "short_exact_copy",
+    "expected_level": "similar",
+    "source_text": "A little bird rests beneath the branches after the summer rain has passed.",
+    "candidate_text": "A little bird rests beneath the branches after the summer rain has passed.",
+    "purpose": "Test exact short-text matching."
+  },
+  {
+    "case_id": "SHORT-003",
+    "category": "short_partial_copy",
+    "expected_level": "similar",
+    "source_text": "The silver moon is shining above the quiet river tonight.",
+    "candidate_text": "The silver moon is shining above the quiet river.",
+    "purpose": "Test short partial copying."
+  },
+  {
+    "case_id": "SHORT-004",
+    "category": "short_unrelated",
+    "expected_level": "original",
+    "source_text": "Golden leaves are falling beside the silent mountain stream.",
+    "candidate_text": "A small candle burns beside the window during the winter evening.",
+    "purpose": "Test unrelated short poems."
+  },
+  {
+    "case_id": "SHORT-005",
+    "category": "short_common_phrase",
+    "expected_level": "original",
+    "source_text": "Under the silver moon, a sailor watches distant ships beyond the harbor.",
+    "candidate_text": "Under the silver moon, a child dreams of distant mountains beyond the valley.",
+    "purpose": "Test short texts sharing a common phrase."
+  },
+  {
+    "case_id": "COMMON-001",
+    "category": "common_phrase",
+    "expected_level": "original",
+    "source_text": "Under the silver moon, the fishermen return to shore. The quiet village welcomes them with lanterns and songs. Their boats rest beside the harbor until morning.",
+    "candidate_text": "Under the silver moon, a traveler walks alone. The distant hills are covered with snow. A small cottage offers shelter until morning.",
+    "purpose": "Test unrelated poems sharing common phrases."
+  },
+  {
+    "case_id": "COMMON-002",
+    "category": "common_phrase",
+    "expected_level": "original",
+    "source_text": "The morning sun rises above the hills. Birds gather near the river and sing among the trees. Farmers prepare their fields for another season.",
+    "candidate_text": "The morning sun rises above the sea. Ships gather near the harbor and wait among the waves. Sailors prepare their vessels for another journey.",
+    "purpose": "Test common phrase overlap in longer texts."
+  },
+  {
+    "case_id": "COMMON-003",
+    "category": "common_phrase",
+    "expected_level": "original",
+    "source_text": "I walk through the quiet garden each morning. The flowers open beneath the sunlight. Bees visit the roses while the wind moves softly through the trees.",
+    "candidate_text": "I walk through the quiet garden each morning. The old stone path leads toward a wooden bridge. Beyond it, the river flows between green fields.",
+    "purpose": "Test shared ordinary expressions in otherwise different poems."
+  },
+  {
+    "case_id": "COMMON-004",
+    "category": "common_phrase",
+    "expected_level": "original",
+    "source_text": "When the night is dark, the village lights its lamps. Families gather near the fire and tell stories of distant lands.",
+    "candidate_text": "When the night is dark, the forest becomes silent. Owls rest among the branches while the wind moves across the empty fields.",
+    "purpose": "Test common expressions that should not independently trigger plagiarism."
+  },
+  {
+    "case_id": "COMMON-005",
+    "category": "common_phrase",
+    "expected_level": "original",
+    "source_text": "The river flows beneath the old bridge. Children play along its banks while birds search for food among the reeds.",
+    "candidate_text": "The river flows beneath the old bridge. A merchant crosses the valley carrying letters for a distant town.",
+    "purpose": "Test partial overlap caused by ordinary phrases."
+  },
+  {
+    "case_id": "LONG-001",
+    "category": "long_exact_copy",
+    "expected_level": "suspected_plagiarism",
+    "source_text": "The morning light entered the garden slowly. Golden flowers opened beside the narrow path. Birds rested among the branches and filled the air with gentle songs. A quiet river flowed beyond the trees. The whole landscape seemed peaceful beneath the rising sun.",
+    "candidate_text": "The morning light entered the garden slowly. Golden flowers opened beside the narrow path. Birds rested among the branches and filled the air with gentle songs. A quiet river flowed beyond the trees. The whole landscape seemed peaceful beneath the rising sun.",
+    "purpose": "Control case: exact copy with more than 15 unique shingles."
+  }
+]

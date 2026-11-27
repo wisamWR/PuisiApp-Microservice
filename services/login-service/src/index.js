@@ -10,12 +10,14 @@ import { fileURLToPath } from 'node:url';
 import pg from 'pg';
 import { buatLogger, buatKonsumen, buatStorePg, hubungkan, jalankanMigrasi } from '@puisiapp/events';
 import { loginDenganKredensial } from './login.js';
-import { simpanKredensial, ubahPeranKredensial, hapusKredensial } from './kredensial.js';
+import { simpanKredensial, ubahPeranKredensial, hapusKredensial, perbaruiKataSandi } from './kredensial.js';
 import { cookieAkses, cookieRefresh } from './cookie.js';
+import { buatMetrikHttp } from './metrics.js';
 
 const log = buatLogger();
 const folderIni = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT) || 8080;
+const metrik = buatMetrikHttp('login-service');
 const MAKS_BODY = 4 * 1024;
 
 for (const nama of ['DATABASE_URL', 'TOKEN_SERVICE_URL']) {
@@ -36,6 +38,14 @@ if (process.env.RABBITMQ_HOST) {
     ikatan: ['user.credentials.created'],
     store: buatStorePg(pool),
     handler: simpanKredensial,
+  });
+  await buatKonsumen({
+    koneksi,
+    log,
+    antrean: 'q.login.user-password-reset',
+    ikatan: ['user.password.reset'],
+    store: buatStorePg(pool),
+    handler: perbaruiKataSandi,
   });
   await buatKonsumen({
     koneksi,
@@ -97,15 +107,29 @@ function bacaBody(req) {
 }
 
 const server = http.createServer(async (req, res) => {
+  const mulai = performance.now();
   const url = new URL(req.url, 'http://local');
+  let rute = 'tidak_dikenal';
+  res.once('finish', () => {
+    metrik.catatRequest(req.method, rute, res.statusCode, mulai);
+  });
+
 
   if (req.method === 'GET' && url.pathname === '/health') {
+    rute = '/health';
     return kirimJson(res, 200, { status: 'ok' });
   }
 
+  if (req.method === 'GET' && url.pathname === '/metrics') {
+    rute = '/metrics';
+    return metrik.layaniMetrics(res);
+  }
+
   if (req.method !== 'POST' || url.pathname !== '/api/auth/login') {
+    rute = url.pathname;
     return kirimJson(res, 404, { error: 'tidak ditemukan' });
   }
+  rute = '/api/auth/login';
 
   let body;
   try {

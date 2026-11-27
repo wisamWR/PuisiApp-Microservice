@@ -1,0 +1,402 @@
+[
+  {
+    "pair_id": "PAIR-021",
+    "source_id": "P01",
+    "source_author": "Christina Rossetti",
+    "source_title": "My heart is like a singing bird",
+    "source_text": "      Whose nest is in a watered shoot;\n    My heart is like an apple-tree\n      Whose boughs are bent with thick-set fruit;\n    My heart is like a rainbow shell\n      That paddles in a halcyon sea;\n    My heart is gladder than all these\n      Because my love is come to me.\n\n    Raise me a dais of silk and down;\n      Hang it with vair and purple dyes;\n    Carve it in doves and pomegranates,\n      And peacocks with a hundred eyes;\n    Work it in gold and silver grapes,\n      In leaves and silver fleurs-de-lys;\n    Because the birthday of my life\n      Is come, my love is come to me.",
+    "category": "inspired",
+    "expected_level": "inspired",
+    "candidate_text": "A morning opened like a bright window,\nand every small thing seemed newly made.\nThe orchard stirred with blossom and birds;\na clear stream carried the day's gladness.\nI gathered no flower from the field,\nbut watched their colors fill the air.\nA loved one crossed the garden path,\nand ordinary hours became a feast."
+  },
+  {
+    "pair_id": "PAIR-041",
+    "source_id": "P01",
+    "source_author": "Christina Rossetti",
+    "source_title": "My heart is like a singing bird",
+    "source_text": "      Whose nest is in a watered shoot;\n    My heart is like an apple-tree\n      Whose boughs are bent with thick-set fruit;\n    My heart is like a rainbow shell\n      That paddles in a halcyon sea;\n    My heart is gladder than all these\n      Because my love is come to me.\n\n    Raise me a dais of silk and down;\n      Hang it with vair and purple dyes;\n    Carve it in doves and pomegranates,\n      And peacocks with a hundred eyes;\n    Work it in gold and silver grapes,\n      In leaves and silver fleurs-de-lys;\n    Because the birthday of my life\n      Is come, my love is come to me.",
+    "category": "paraphrase",
+    "expected_level": "similar",
+    "candidate_text": "My joy began when you arrived.\nThe garden seemed to brighten,\nthe fruit trees bowed beneath their harvest,\nand birds filled the quiet air.\nI wanted to dress the room in color,\nto set bright flowers beside the door,\nand make this ordinary day memorable.\nYour presence turned it into a celebration."
+  },
+  {
+    "pair_id": "PAIR-022",
+    "source_id": "P02",
+    "source_author": "H. W. Longfellow",
+    "source_title": "THE RAINY DAY",
+    "source_text": "The day is cold, and dark, and dreary\nIt rains, and the wind is never weary;\nThe vine still clings to the mouldering wall,\nBut at every gust the dead leaves fall,\n    And the day is dark and dreary.\n\nMy life is cold, and dark, and dreary;\nIt rains, and the wind is never weary;\nMy thoughts still cling to the mouldering Past,\nBut the hopes of youth fall thick in the blast,\n    And the days are dark and dreary.\n\nBe still, sad heart! and cease repining;\nBehind the clouds is the sun still shining;\nThy fate is the common fate of all,\nInto each life some rain must fall,\n    Some days must be dark and dreary.",
+    "category": "inspired",
+    "expected_level": "inspired",
+    "candidate_text": "Rain threads the roofs throughout the afternoon,\nand bare branches tremble beside the lane.\nThe fields look tired beneath the clouds,\nwhile distant hills disappear in gray.\nStill, somewhere beyond this weather,\na warmer season waits beyond our sight.\nI keep a little hope beside the lamp\nand let the passing storm move on."
+  },
+  {
+    "pair_id": "PAIR-042",
+    "source_id": "P02",
+    "source_author": "H. W. Longfellow",
+    "source_title": "THE RAINY DAY",
+    "source_text": "The day is cold, and dark, and dreary\nIt rains, and the wind is never weary;\nThe vine still clings to the mouldering wall,\nBut at every gust the dead leaves fall,\n    And the day is dark and dreary.\n\nMy life is cold, and dark, and dreary;\nIt rains, and the wind is never weary;\nMy thoughts still cling to the mouldering Past,\nBut the hopes of youth fall thick in the blast,\n    And the days are dark and dreary.\n\nBe still, sad heart! and cease repining;\nBehind the clouds is the sun still shining;\nThy fate is the common fate of all,\nInto each life some rain must fall,\n    Some days must be dark and dreary.",
+    "category": "paraphrase",
+    "expected_level": "similar",
+    "candidate_text": "The weather is bleak today;\nrain keeps falling and the trees bend.\nOld leaves gather along the wall,\nand the road is dark beneath the clouds.\nMy thoughts feel much the same:\nplans have faded and hope seems distant.\nBut clouds do not remain forever;\nsomewhere above them, daylight continues."
+  },
+  {
+    "pair_id": "PAIR-023",
+    "source_id": "P03",
+    "source_author": "H. W. Longfellow",
+    "source_title": "EXCELSIOR",
+    "source_text": "The shades of night were falling fast,\nAs through an Alpine village passed\nA youth, who bore, 'mid snow and ice,\nA banner with the strange device,\n       Excelsior!\n\nHis brow was sad; his eye beneath,\nFlashed like a falchion from its sheath,\nAnd like a silver clarion rung\nThe accents of that unknown tongue,\n       Excelsior!\n\nIn happy homes he saw the light\nOf household fires gleam warm and bright;\nAbove, the spectral glaciers shone,\nAnd from his lips escaped a groan,\n       Excelsior!\n\n\"Try not the Pass!\" the old man said:\n\"Dark lowers the tempest overhead,\nThe roaring torrent is deep and wide!\nAnd loud that clarion voice replied,\n       Excelsior!\n\n\"Oh stay,\" the maiden said, \"and rest\nThy weary head upon this breast!\"\nA tear stood in his bright blue eye,\nBut still he answered, with a sigh,\n       Excelsior!\n\n\"Beware the pine-tree's withered branch!\nBeware the awful avalanche!\"\nThis was the peasant's last Good-night,\nA voice replied, far up the height,\n        Excelsior!\n\nAt break of day, as heavenward\nThe pious monks of Saint Bernard\nUttered the oft-repeated prayer,\nA voice cried through the startled air,\n       Excelsior!\n\nA traveller, by the faithful hound,\nHalf-buried in the snow was found,\nStill grasping in his hand of ice\nThat banner with the strange device,\n       Excelsior!\n\nThere in the twilight cold and gray,\nLifeless, but beautiful, he lay,\nAnd from the sky, serene and far,\nA voice fell, like a falling star,\n       Excelsior!",
+    "category": "inspired",
+    "expected_level": "inspired",
+    "candidate_text": "A lone traveler climbed toward the pass\nwhile winter gathered over the peaks.\nVillagers called him back to shelter,\nbut a distant summit held his gaze.\nHe crossed the narrow bridge at dusk,\nfollowing a dream no one could share.\nBy dawn, the trail had vanished under snow;\nonly his footprints marked the upward road."
+  },
+  {
+    "pair_id": "PAIR-043",
+    "source_id": "P03",
+    "source_author": "H. W. Longfellow",
+    "source_title": "EXCELSIOR",
+    "source_text": "The shades of night were falling fast,\nAs through an Alpine village passed\nA youth, who bore, 'mid snow and ice,\nA banner with the strange device,\n       Excelsior!\n\nHis brow was sad; his eye beneath,\nFlashed like a falchion from its sheath,\nAnd like a silver clarion rung\nThe accents of that unknown tongue,\n       Excelsior!\n\nIn happy homes he saw the light\nOf household fires gleam warm and bright;\nAbove, the spectral glaciers shone,\nAnd from his lips escaped a groan,\n       Excelsior!\n\n\"Try not the Pass!\" the old man said:\n\"Dark lowers the tempest overhead,\nThe roaring torrent is deep and wide!\nAnd loud that clarion voice replied,\n       Excelsior!\n\n\"Oh stay,\" the maiden said, \"and rest\nThy weary head upon this breast!\"\nA tear stood in his bright blue eye,\nBut still he answered, with a sigh,\n       Excelsior!\n\n\"Beware the pine-tree's withered branch!\nBeware the awful avalanche!\"\nThis was the peasant's last Good-night,\nA voice replied, far up the height,\n        Excelsior!\n\nAt break of day, as heavenward\nThe pious monks of Saint Bernard\nUttered the oft-repeated prayer,\nA voice cried through the startled air,\n       Excelsior!\n\nA traveller, by the faithful hound,\nHalf-buried in the snow was found,\nStill grasping in his hand of ice\nThat banner with the strange device,\n       Excelsior!\n\nThere in the twilight cold and gray,\nLifeless, but beautiful, he lay,\nAnd from the sky, serene and far,\nA voice fell, like a falling star,\n       Excelsior!",
+    "category": "paraphrase",
+    "expected_level": "similar",
+    "candidate_text": "Night was descending over the mountain village\nwhen a young traveler began the climb.\nHe carried a bright flag and a stubborn hope,\nthough the snow made every step uncertain.\nPeople offered shelter and warned of danger;\nhe thanked them but continued upward.\nThe storm erased the path behind him.\nAt sunrise, the valley found him still,\nhis journey ended beneath the silent peaks."
+  },
+  {
+    "pair_id": "PAIR-024",
+    "source_id": "P04",
+    "source_author": "Robert Frost",
+    "source_title": "Into My Own",
+    "source_text": "    ONE of my wishes is that those dark trees,\n    So old and firm they scarcely show the breeze,\n    Were not, as 'twere, the merest mask of gloom,\n    But stretched away unto the edge of doom.\n    I should not be withheld but that some day\n    Into their vastness I should steal away,\n    Fearless of ever finding open land,\n    Or highway where the slow wheel pours the sand.\n    I do not see why I should e'er turn back,\n    Or those should not set forth upon my track\n    To overtake me, who should miss me here\n    And long to know if still I held them dear.\n    They would not find me changed from him they knew--\n    Only more sure of all I thought was true.",
+    "category": "inspired",
+    "expected_level": "inspired",
+    "candidate_text": "Beyond the familiar orchard lies a country\nI have imagined but never entered.\nThe old trees hide its distant border,\ntheir branches whispering of open ground.\nPerhaps I will leave before the next rain,\nwith no map folded in my coat.\nThose who know me may follow later;\nI hope they understand why I went."
+  },
+  {
+    "pair_id": "PAIR-044",
+    "source_id": "P04",
+    "source_author": "Robert Frost",
+    "source_title": "Into My Own",
+    "source_text": "    ONE of my wishes is that those dark trees,\n    So old and firm they scarcely show the breeze,\n    Were not, as 'twere, the merest mask of gloom,\n    But stretched away unto the edge of doom.\n    I should not be withheld but that some day\n    Into their vastness I should steal away,\n    Fearless of ever finding open land,\n    Or highway where the slow wheel pours the sand.\n    I do not see why I should e'er turn back,\n    Or those should not set forth upon my track\n    To overtake me, who should miss me here\n    And long to know if still I held them dear.\n    They would not find me changed from him they knew--\n    Only more sure of all I thought was true.",
+    "category": "paraphrase",
+    "expected_level": "similar",
+    "candidate_text": "I often imagine leaving these familiar woods,\nwalking until the known roads disappear.\nThe trees stand like a dark boundary,\nbut beyond them there may be open country.\nI would go without fear of turning back,\neven if those at home wondered where I was.\nThey might search the distant paths\nand find that I had kept my purpose."
+  },
+  {
+    "pair_id": "PAIR-025",
+    "source_id": "P05",
+    "source_author": "Robert Frost",
+    "source_title": "Ghost House",
+    "source_text": "    I DWELL in a lonely house I know\n    That vanished many a summer ago,\n    And left no trace but the cellar walls,\n    And a cellar in which the daylight falls,\n    And the purple-stemmed wild raspberries grow.\n    O'er ruined fences the grape-vines shield\n    The woods come back to the mowing field;\n    The orchard tree has grown one copse\n    Of new wood and old where the woodpecker chops;\n    The footpath down to the well is healed.\n    I dwell with a strangely aching heart\n    In that vanished abode there far apart\n    On that disused and forgotten road\n    That has no dust-bath now for the toad.\n    Night comes; the black bats tumble and dart;\n    The whippoorwill is coming to shout\n    And hush and cluck and flutter about:\n    I hear him begin far enough away\n    Full many a time to say his say\n    Before he arrives to say it out.\n    It is under the small, dim, summer star.\n    I know not who these mute folk are\n    Who share the unlit place with me--\n    Those stones out under the low-limbed tree\n    Doubtless bear names that the mosses mar.\n    They are tireless folk, but slow and sad,\n    Though two, close-keeping, are lass and lad,--\n    With none among them that ever sings,\n    And yet, in view of how many things,\n    As sweet companions as might be had.",
+    "category": "inspired",
+    "expected_level": "inspired",
+    "candidate_text": "At the edge of the meadow stands\na house remembered by the oldest trees.\nIts roof has fallen into the grass,\nand wild vines cover the garden gate.\nNo voices rise from its rooms now,\nyet evening seems to gather there.\nI walk past slowly, listening\nfor the lives that once filled it."
+  },
+  {
+    "pair_id": "PAIR-045",
+    "source_id": "P05",
+    "source_author": "Robert Frost",
+    "source_title": "Ghost House",
+    "source_text": "    I DWELL in a lonely house I know\n    That vanished many a summer ago,\n    And left no trace but the cellar walls,\n    And a cellar in which the daylight falls,\n    And the purple-stemmed wild raspberries grow.\n    O'er ruined fences the grape-vines shield\n    The woods come back to the mowing field;\n    The orchard tree has grown one copse\n    Of new wood and old where the woodpecker chops;\n    The footpath down to the well is healed.\n    I dwell with a strangely aching heart\n    In that vanished abode there far apart\n    On that disused and forgotten road\n    That has no dust-bath now for the toad.\n    Night comes; the black bats tumble and dart;\n    The whippoorwill is coming to shout\n    And hush and cluck and flutter about:\n    I hear him begin far enough away\n    Full many a time to say his say\n    Before he arrives to say it out.\n    It is under the small, dim, summer star.\n    I know not who these mute folk are\n    Who share the unlit place with me--\n    Those stones out under the low-limbed tree\n    Doubtless bear names that the mosses mar.\n    They are tireless folk, but slow and sad,\n    Though two, close-keeping, are lass and lad,--\n    With none among them that ever sings,\n    And yet, in view of how many things,\n    As sweet companions as might be had.",
+    "category": "paraphrase",
+    "expected_level": "similar",
+    "candidate_text": "I know a house that time has emptied.\nIts walls have fallen and grass covers the floor;\nwild berries grow where the doorway stood.\nThe orchard has become part of the woods,\nand the old path is nearly gone.\nAt night, bats cross the broken roof.\nI feel the presence of forgotten lives\namong the stones beneath the trees."
+  },
+  {
+    "pair_id": "PAIR-026",
+    "source_id": "P06",
+    "source_author": "Robert Frost",
+    "source_title": "My November Guest",
+    "source_text": "    MY Sorrow, when she's here with me,\n    Thinks these dark days of autumn rain\n    Are beautiful as days can be;\n    She loves the bare, the withered tree;\n    She walks the sodden pasture lane.\n    Her pleasure will not let me stay.\n    She talks and I am fain to list:\n    She's glad the birds are gone away,\n    She's glad her simple worsted gray\n    Is silver now with clinging mist.\n    The desolate, deserted trees,\n    The faded earth, the heavy sky,\n    The beauties she so truly sees,\n    She thinks I have no eye for these,\n    And vexes me for reason why.\n    Not yesterday I learned to know\n    The love of bare November days\n    Before the coming of the snow,\n    But it were vain to tell her so,\n    And they are better for her praise.",
+    "category": "inspired",
+    "expected_level": "inspired",
+    "candidate_text": "November lays a silver veil on fields,\nand quiet birds depart before the frost.\nThe empty branches make a gentle pattern\nagainst the pale and lowering sky.\nI used to call this season sorrowful;\ntoday its stillness feels like rest.\nThe world grows simple as it darkens,\nand I begin to understand its beauty."
+  },
+  {
+    "pair_id": "PAIR-046",
+    "source_id": "P06",
+    "source_author": "Robert Frost",
+    "source_title": "My November Guest",
+    "source_text": "    MY Sorrow, when she's here with me,\n    Thinks these dark days of autumn rain\n    Are beautiful as days can be;\n    She loves the bare, the withered tree;\n    She walks the sodden pasture lane.\n    Her pleasure will not let me stay.\n    She talks and I am fain to list:\n    She's glad the birds are gone away,\n    She's glad her simple worsted gray\n    Is silver now with clinging mist.\n    The desolate, deserted trees,\n    The faded earth, the heavy sky,\n    The beauties she so truly sees,\n    She thinks I have no eye for these,\n    And vexes me for reason why.\n    Not yesterday I learned to know\n    The love of bare November days\n    Before the coming of the snow,\n    But it were vain to tell her so,\n    And they are better for her praise.",
+    "category": "paraphrase",
+    "expected_level": "similar",
+    "candidate_text": "She finds loveliness in the late autumn,\nwhen rain darkens the fields and trees stand bare.\nThe birds have left, the ground is faded,\nand mist rests on the branches.\nI once saw only loss in this season,\nbut her patient gaze changed mine.\nNow I understand the quiet beauty\nthat arrives just before winter."
+  },
+  {
+    "pair_id": "PAIR-027",
+    "source_id": "P07",
+    "source_author": "William Blake",
+    "source_title": "THE ECHOING GREEN",
+    "source_text": "   The sun does arise,\n   And make happy the skies;\n   The merry bells ring\n   To welcome the Spring;\n   The skylark and thrush,\n   The birds of the bush,\n   Sing louder around\n   To the bells' cheerful sound;\n   While our sports shall be seen\n   On the echoing Green.\n\n   Old John, with white hair,\n   Does laugh away care,\n   Sitting under the oak,\n   Among the old folk.\n   They laugh at our play,\n   And soon they all say,\n   \"Such, such were the joys\n   When we all--girls and boys--\n   In our youth-time were seen\n   On the echoing Green.\"\n\n   Till the little ones, weary,\n   No more can be merry:\n   The sun does descend,\n   And our sports have an end.\n   Round the laps of their mothers\n   Many sisters and brothers,\n   Like birds in their nest,\n   Are ready for rest,\n   And sport no more seen\n   On the darkening green.",
+    "category": "inspired",
+    "expected_level": "inspired",
+    "candidate_text": "Children race beneath the morning sun,\ntheir laughter scattering across the common.\nOld neighbors watch beside the gate\nand trade stories of their younger days.\nThe afternoon grows soft and golden;\none by one the games fall quiet.\nAt dusk, small hands find their families,\nand the green returns to silence."
+  },
+  {
+    "pair_id": "PAIR-047",
+    "source_id": "P07",
+    "source_author": "William Blake",
+    "source_title": "THE ECHOING GREEN",
+    "source_text": "   The sun does arise,\n   And make happy the skies;\n   The merry bells ring\n   To welcome the Spring;\n   The skylark and thrush,\n   The birds of the bush,\n   Sing louder around\n   To the bells' cheerful sound;\n   While our sports shall be seen\n   On the echoing Green.\n\n   Old John, with white hair,\n   Does laugh away care,\n   Sitting under the oak,\n   Among the old folk.\n   They laugh at our play,\n   And soon they all say,\n   \"Such, such were the joys\n   When we all--girls and boys--\n   In our youth-time were seen\n   On the echoing Green.\"\n\n   Till the little ones, weary,\n   No more can be merry:\n   The sun does descend,\n   And our sports have an end.\n   Round the laps of their mothers\n   Many sisters and brothers,\n   Like birds in their nest,\n   Are ready for rest,\n   And sport no more seen\n   On the darkening green.",
+    "category": "paraphrase",
+    "expected_level": "similar",
+    "candidate_text": "The morning sun wakes the village,\nand children gather on the common.\nBells ring while birds sing from the hedges;\nthe old people smile at the games.\nThey remember their own bright summers\nas the young ones run across the grass.\nWhen evening comes, the children grow tired,\nand the green field settles into dusk."
+  },
+  {
+    "pair_id": "PAIR-028",
+    "source_id": "P08",
+    "source_author": "William Blake",
+    "source_title": "THE LAMB",
+    "source_text": "     Little Lamb, who made thee\n     Dost thou know who made thee,\n   Gave thee life, and bid thee feed\n   By the stream and o'er the mead;\n   Gave thee clothing of delight,\n   Softest clothing, woolly, bright;\n   Gave thee such a tender voice,\n   Making all the vales rejoice?\n     Little Lamb, who made thee?\n     Dost thou know who made thee?\n\n     Little Lamb, I'll tell thee;\n     Little Lamb, I'll tell thee:\n   He is called by thy name,\n   For He calls Himself a Lamb\n   He is meek, and He is mild,\n   He became a little child.\n   I a child, and thou a lamb,\n   We are called by His name.\n     Little Lamb, God bless thee!\n     Little Lamb, God bless thee!",
+    "category": "inspired",
+    "expected_level": "inspired",
+    "candidate_text": "A small creature grazes by the brook,\nits fleece bright in the open light.\nWho taught it to find the tender grass,\nor gave its quiet voice such peace?\nA child kneels near the water's edge\nand watches it without a sound.\nThe world seems gentle for a moment,\nas kindness moves between them."
+  },
+  {
+    "pair_id": "PAIR-048",
+    "source_id": "P08",
+    "source_author": "William Blake",
+    "source_title": "THE LAMB",
+    "source_text": "     Little Lamb, who made thee\n     Dost thou know who made thee,\n   Gave thee life, and bid thee feed\n   By the stream and o'er the mead;\n   Gave thee clothing of delight,\n   Softest clothing, woolly, bright;\n   Gave thee such a tender voice,\n   Making all the vales rejoice?\n     Little Lamb, who made thee?\n     Dost thou know who made thee?\n\n     Little Lamb, I'll tell thee;\n     Little Lamb, I'll tell thee:\n   He is called by thy name,\n   For He calls Himself a Lamb\n   He is meek, and He is mild,\n   He became a little child.\n   I a child, and thou a lamb,\n   We are called by His name.\n     Little Lamb, God bless thee!\n     Little Lamb, God bless thee!",
+    "category": "paraphrase",
+    "expected_level": "similar",
+    "candidate_text": "A lamb rests beside the stream.\nIt feeds among the soft meadow grass,\nand its coat shines in the afternoon.\nA child asks who gave it life,\nwho made its voice so gentle.\nThe answer is found in tenderness:\nthe small and the young are precious,\nand care should surround them."
+  },
+  {
+    "pair_id": "PAIR-029",
+    "source_id": "P09",
+    "source_author": "Edgar Allan Poe",
+    "source_title": "I dwelt alone",
+    "source_text": "              In a world of moan,\n          And my soul was a stagnant tide,\n  Till the fair and gentle Eulalie became my blushing bride—\n  Till the yellow-haired young Eulalie became my smiling bride.\n\n              Ah, less—less bright\n              The stars of the night\n  Than the eyes of the radiant girl!\n              And never a flake\n              That the vapour can make\n  With the moon-tints of purple and pearl,\n  Can vie with the modest Eulalie’s most unregarded curl—\n  Can compare with the bright-eyed Eulalie’s most humble and careless curl.\n\n              Now Doubt—now Pain\n              Come never again,\n          For her soul gives me sigh for sigh,\n              And all day long\n              Shines, bright and strong,\n          Astarte within the sky,\n  While ever to her dear Eulalie upturns her matron eye—\n  While ever to her young Eulalie upturns her violet eye.",
+    "category": "inspired",
+    "expected_level": "inspired",
+    "candidate_text": "Before I met her, every evening\nseemed to settle heavily upon the town.\nNow one familiar face brings warmth,\nand even distant stars appear less cold.\nThe days have found a softer rhythm;\nmy restless thoughts no longer wander.\nLove has made a home in ordinary hours,\nand night no longer feels so vast."
+  },
+  {
+    "pair_id": "PAIR-049",
+    "source_id": "P09",
+    "source_author": "Edgar Allan Poe",
+    "source_title": "I dwelt alone",
+    "source_text": "              In a world of moan,\n          And my soul was a stagnant tide,\n  Till the fair and gentle Eulalie became my blushing bride—\n  Till the yellow-haired young Eulalie became my smiling bride.\n\n              Ah, less—less bright\n              The stars of the night\n  Than the eyes of the radiant girl!\n              And never a flake\n              That the vapour can make\n  With the moon-tints of purple and pearl,\n  Can vie with the modest Eulalie’s most unregarded curl—\n  Can compare with the bright-eyed Eulalie’s most humble and careless curl.\n\n              Now Doubt—now Pain\n              Come never again,\n          For her soul gives me sigh for sigh,\n              And all day long\n              Shines, bright and strong,\n          Astarte within the sky,\n  While ever to her dear Eulalie upturns her matron eye—\n  While ever to her young Eulalie upturns her violet eye.",
+    "category": "paraphrase",
+    "expected_level": "similar",
+    "candidate_text": "My days were heavy before she came;\nthe evening sky seemed distant and cold.\nNow her eyes bring light to the room,\nand old fears no longer rule my thoughts.\nThe stars may shine above the rooftops,\nbut her presence is brighter to me.\nI have found a quiet happiness\nthat makes the world feel whole."
+  },
+  {
+    "pair_id": "PAIR-030",
+    "source_id": "P10",
+    "source_author": "Edna St. Vincent Millay",
+    "source_title": "I will be the gladdest thing",
+    "source_text": "    Under the sun!\n  I will touch a hundred flowers\n    And not pick one.\n\n  I will look at cliffs and clouds\n    With quiet eyes,\n  Watch the wind bow down the grass,\n    And the grass rise.\n\n  And when lights begin to show\n    Up from the town,\n  I will mark which must be mine,\n    And then start down!",
+    "category": "inspired",
+    "expected_level": "inspired",
+    "candidate_text": "I walked outside before the town awoke,\nletting the cool air settle on my face.\nWildflowers leaned beside the footpath;\nI left them growing where they stood.\nCloud shadows crossed the distant ridge,\nand grasses lifted after the breeze.\nWhen evening lamps appeared below,\nI turned home slowly, carrying the calm."
+  },
+  {
+    "pair_id": "PAIR-050",
+    "source_id": "P10",
+    "source_author": "Edna St. Vincent Millay",
+    "source_title": "I will be the gladdest thing",
+    "source_text": "    Under the sun!\n  I will touch a hundred flowers\n    And not pick one.\n\n  I will look at cliffs and clouds\n    With quiet eyes,\n  Watch the wind bow down the grass,\n    And the grass rise.\n\n  And when lights begin to show\n    Up from the town,\n  I will mark which must be mine,\n    And then start down!",
+    "category": "paraphrase",
+    "expected_level": "similar",
+    "candidate_text": "I will spend the day beneath open skies,\ntouching petals only with my gaze.\nI will watch the clouds move over the hills\nand see the grass bend, then rise again.\nWhen evening lights appear in the valley,\nI will choose the road that leads home.\nThere is no need to hurry;\nthe world has given me enough for today."
+  },
+  {
+    "pair_id": "PAIR-031",
+    "source_id": "P11",
+    "source_author": "Christina Rossetti",
+    "source_title": "Live all thy sweet life through",
+    "source_text": "      Sweet Rose, dew-sprent,\n    Drop down thine evening dew\n    To gather it anew\n    When day is bright:\n      I fancy thou wast meant\n    Chiefly to give delight.\n\n    Sing in the silent sky,\n      Glad soaring bird;\n    Sing out thy notes on high\n    To sunbeam straying by\n    Or passing cloud;\n      Heedless if thou art heard\n    Sing thy full song aloud.\n\n    O that it were with me\n      As with the flower;\n    Blooming on its own tree\n    For butterfly and bee\n    Its summer morns:\n      That I might bloom mine hour\n    A rose in spite of thorns.\n\n    O that my work were done\n      As birds' that soar\n    Rejoicing in the sun:\n    That when my time is run\n    And daylight too,\n      I so might rest once more\n    Cool with refreshing dew.",
+    "category": "inspired",
+    "expected_level": "inspired",
+    "candidate_text": "A rose keeps blooming after sunset,\nits petals bright with evening rain.\nA bird continues its song above the roofs,\nthough no one pauses to listen.\nI wish my own days held such freedom:\nto grow, to sing, and not be measured.\nWhen the light has finished its journey,\nmay I find rest as quietly as they."
+  },
+  {
+    "pair_id": "PAIR-051",
+    "source_id": "P11",
+    "source_author": "Christina Rossetti",
+    "source_title": "Live all thy sweet life through",
+    "source_text": "      Sweet Rose, dew-sprent,\n    Drop down thine evening dew\n    To gather it anew\n    When day is bright:\n      I fancy thou wast meant\n    Chiefly to give delight.\n\n    Sing in the silent sky,\n      Glad soaring bird;\n    Sing out thy notes on high\n    To sunbeam straying by\n    Or passing cloud;\n      Heedless if thou art heard\n    Sing thy full song aloud.\n\n    O that it were with me\n      As with the flower;\n    Blooming on its own tree\n    For butterfly and bee\n    Its summer morns:\n      That I might bloom mine hour\n    A rose in spite of thorns.\n\n    O that my work were done\n      As birds' that soar\n    Rejoicing in the sun:\n    That when my time is run\n    And daylight too,\n      I so might rest once more\n    Cool with refreshing dew.",
+    "category": "paraphrase",
+    "expected_level": "similar",
+    "candidate_text": "The rose receives the evening rain\nand holds its freshness through the night.\nA bird sings high above the garden,\nwhether anyone hears or not.\nI long to live with such ease,\nto offer what I can while I am here.\nWhen my season comes to its end,\nlet me rest without regret."
+  },
+  {
+    "pair_id": "PAIR-032",
+    "source_id": "P12",
+    "source_author": "Christina Rossetti",
+    "source_title": "If I might see another Spring",
+    "source_text": "      I'd not plant summer flowers and wait:\n    I'd have my crocuses at once,\n    My leafless pink mezereons,\n      My chill-veined snowdrops, choicer yet\n      My white or azure violet,\n    Leaf-nested primrose; anything\n      To blow at once not late.\n\n    If I might see another Spring\n      I'd listen to the daylight birds\n    That build their nests and pair and sing,\n    Nor wait for mateless nightingale;\n      I'd listen to the lusty herds,\n      The ewes with lambs as white as snow,\n    I'd find out music in the hail\n      And all the winds that blow.\n\n    If I might see another Spring--\n      O stinging comment on my past\n    That all my past results in \"if\"--\n      If I might see another Spring\n    I'd laugh to-day, to-day is brief;\n      I would not wait for anything:\n      I'd use to-day that cannot last,\n      Be glad to-day and sing.",
+    "category": "inspired",
+    "expected_level": "inspired",
+    "candidate_text": "If spring returns, I will not postpone\nthe walks I promised myself last year.\nI will hear the nesting birds at sunrise\nand watch new leaves unfold along the road.\nThe season never waits for certainty;\nits brief green hours ask to be lived.\nSo let today be more than preparation:\nI will meet it while it is here."
+  },
+  {
+    "pair_id": "PAIR-052",
+    "source_id": "P12",
+    "source_author": "Christina Rossetti",
+    "source_title": "If I might see another Spring",
+    "source_text": "      I'd not plant summer flowers and wait:\n    I'd have my crocuses at once,\n    My leafless pink mezereons,\n      My chill-veined snowdrops, choicer yet\n      My white or azure violet,\n    Leaf-nested primrose; anything\n      To blow at once not late.\n\n    If I might see another Spring\n      I'd listen to the daylight birds\n    That build their nests and pair and sing,\n    Nor wait for mateless nightingale;\n      I'd listen to the lusty herds,\n      The ewes with lambs as white as snow,\n    I'd find out music in the hail\n      And all the winds that blow.\n\n    If I might see another Spring--\n      O stinging comment on my past\n    That all my past results in \"if\"--\n      If I might see another Spring\n    I'd laugh to-day, to-day is brief;\n      I would not wait for anything:\n      I'd use to-day that cannot last,\n      Be glad to-day and sing.",
+    "category": "paraphrase",
+    "expected_level": "similar",
+    "candidate_text": "If another spring should come,\nI would welcome its flowers without delay.\nI would listen to the birds at dawn\nand watch the lambs move through the fields.\nI would not save every joy for later;\nthe present hour is already passing.\nLet me laugh while the light remains\nand use the day that I have been given."
+  },
+  {
+    "pair_id": "PAIR-033",
+    "source_id": "P13",
+    "source_author": "Edgar Allan Poe",
+    "source_title": "Helen, thy beauty is to me",
+    "source_text": "    Like those Nicean barks of yore,\n  That gently, o’er a perfumed sea,\n    The weary, wayworn wanderer bore\n    To his own native shore.\n\n  On desperate seas long wont to roam,\n    Thy hyacinth hair, thy classic face,\n  Thy Naiad airs have brought me home\n    To the glory that was Greece,\n  To the grandeur that was Rome.\n\n  Lo! in yon brilliant window niche,\n    How statue-like I see thee stand,\n    The agate lamp within thy hand!\n  Ah, Psyche, from the regions which\n    Are Holy Land!",
+    "category": "inspired",
+    "expected_level": "inspired",
+    "candidate_text": "A distant harbor glimmered in my dream,\nits quiet water drawing travelers home.\nAfter years among unfamiliar shores,\nI recognized a welcome in one face.\nThe city lights became familiar stars,\nand the long voyage loosened its hold.\nSomewhere beyond the evening window,\na gentle presence made the world feel near."
+  },
+  {
+    "pair_id": "PAIR-053",
+    "source_id": "P13",
+    "source_author": "Edgar Allan Poe",
+    "source_title": "Helen, thy beauty is to me",
+    "source_text": "    Like those Nicean barks of yore,\n  That gently, o’er a perfumed sea,\n    The weary, wayworn wanderer bore\n    To his own native shore.\n\n  On desperate seas long wont to roam,\n    Thy hyacinth hair, thy classic face,\n  Thy Naiad airs have brought me home\n    To the glory that was Greece,\n  To the grandeur that was Rome.\n\n  Lo! in yon brilliant window niche,\n    How statue-like I see thee stand,\n    The agate lamp within thy hand!\n  Ah, Psyche, from the regions which\n    Are Holy Land!",
+    "category": "paraphrase",
+    "expected_level": "similar",
+    "candidate_text": "Like a vessel returning after a long voyage,\nI found peace in the sight of your face.\nThe sea had carried me through distant lands,\nbut your presence made the journey end.\nYour quiet beauty recalled old stories\nof home, of art, and ancient cities.\nI stood before you as before a statue,\nfilled with wonder and gratitude."
+  },
+  {
+    "pair_id": "PAIR-034",
+    "source_id": "P14",
+    "source_author": "Edgar Allan Poe",
+    "source_title": "Science! true daughter of Old Time thou art!",
+    "source_text": "    Who alterest all things with thy peering eyes.\n  Why preyest thou thus upon the poet’s heart,\n    Vulture, whose wings are dull realities?\n  How should he love thee? or how deem thee wise,\n    Who wouldst not leave him in his wandering\n  To seek for treasure in the jewelled skies,\n    Albeit he soared with an undaunted wing?\n  Hast thou not dragged Diana from her car?\n    And driven the Hamadryad from the wood\n  To seek a shelter in some happier star?\n    Hast thou not torn the Naiad from her flood,\n  The Elfin from the green grass, and from me\n    The summer dream beneath the tamarind tree?",
+    "category": "inspired",
+    "expected_level": "inspired",
+    "candidate_text": "The scholar measures every falling star\nand names the forces shaping stone.\nYet in the garden, old legends linger:\na river spirit beneath the willow,\na hidden song inside the summer leaves.\nCan numbers hold the whole of wonder,\nor explain why dreams return at night?\nThe mind may chart the heavens,\nbut imagination still gives them wings."
+  },
+  {
+    "pair_id": "PAIR-054",
+    "source_id": "P14",
+    "source_author": "Edgar Allan Poe",
+    "source_title": "Science! true daughter of Old Time thou art!",
+    "source_text": "    Who alterest all things with thy peering eyes.\n  Why preyest thou thus upon the poet’s heart,\n    Vulture, whose wings are dull realities?\n  How should he love thee? or how deem thee wise,\n    Who wouldst not leave him in his wandering\n  To seek for treasure in the jewelled skies,\n    Albeit he soared with an undaunted wing?\n  Hast thou not dragged Diana from her car?\n    And driven the Hamadryad from the wood\n  To seek a shelter in some happier star?\n    Hast thou not torn the Naiad from her flood,\n  The Elfin from the green grass, and from me\n    The summer dream beneath the tamarind tree?",
+    "category": "paraphrase",
+    "expected_level": "similar",
+    "candidate_text": "You look at the world through measured glass\nand strip the mystery from every tale.\nThe poet once found spirits in the river,\nand heard old gods among the trees.\nNow the names of wonder disappear,\nreplaced by facts and careful diagrams.\nStill, a dream survives beyond the numbers;\nnot every truth can be weighed."
+  },
+  {
+    "pair_id": "PAIR-035",
+    "source_id": "P15",
+    "source_author": "Edna St. Vincent Millay",
+    "source_title": "I cannot but remember",
+    "source_text": "  Sonnets\n\n  I\n       Thou art not lovelier than lilacs,--no,\n\n  II\n       Time does not bring relief; you all have lied\n\n  III\n       Mindful of you the sodden earth in spring,\n\n  IV\n       Not in this chamber only at my birth--\n\n  V\n       If I should learn, in some quite casual way,\n\n  VI     Bluebeard\n       This door you might not open, and you did;",
+    "category": "inspired",
+    "expected_level": "inspired",
+    "candidate_text": "Memory returns in fragments:\na lilac scent after spring rain,\na room that held an unfinished goodbye,\na letter folded years ago.\nTime does not erase every question;\nsome moments remain beside us.\nI carry them without a sound,\nlike leaves pressed inside an old book."
+  },
+  {
+    "pair_id": "PAIR-055",
+    "source_id": "P15",
+    "source_author": "Edna St. Vincent Millay",
+    "source_title": "I cannot but remember",
+    "source_text": "  Sonnets\n\n  I\n       Thou art not lovelier than lilacs,--no,\n\n  II\n       Time does not bring relief; you all have lied\n\n  III\n       Mindful of you the sodden earth in spring,\n\n  IV\n       Not in this chamber only at my birth--\n\n  V\n       If I should learn, in some quite casual way,\n\n  VI     Bluebeard\n       This door you might not open, and you did;",
+    "category": "paraphrase",
+    "expected_level": "similar",
+    "candidate_text": "I remember the springtime garden,\nthe lilacs opening after rain,\nand words that arrived too late.\nYears have passed, yet certain scenes remain,\nbright as pictures behind closed eyes.\nI do not ask the past to return;\nI only carry what it taught me.\nSome memories grow quiet, never gone."
+  },
+  {
+    "pair_id": "PAIR-036",
+    "source_id": "P16",
+    "source_author": "H. W. Longfellow",
+    "source_title": "THE SLAVE SINGING AT MIDNIGHT",
+    "source_text": "Loud he sang the psalm of David!\nHe, a Negro and enslaved,\nSang of Israel's victory,\nSang of Zion, bright and free.\n\nIn that hour, when night is calmest,\nSang he from the Hebrew Psalmist,\nIn a voice so sweet and clear\nThat I could not choose but hear,\n\nSongs of triumph, and ascriptions,\nSuch as reached the swart Egyptians,\nWhen upon the Red Sea coast\nPerished Pharaoh and his host.\n\nAnd the voice of his devotion\nFilled my soul with strange emotion;\nFor its tones by turns were glad,\nSweetly solemn, wildly sad.\n\nPaul and Silas, in their prison,\nSang of Christ, the Lord arisen,\nAnd an earthquake's arm of might\nBroke their dungeon-gates at night.\n\nBut, alas! what holy angel\nBrings the Slave this glad evangel?\nAnd what earthquake's arm of might\nBreaks his dungeon-gates at night?",
+    "category": "inspired",
+    "expected_level": "inspired",
+    "candidate_text": "A voice rose from a locked room\nwhile midnight covered the sleeping street.\nThe song carried stories of distant freedom,\nand courage answered from the dark.\nThose who listened stood without speaking;\ntheir hearts were stirred by every note.\nThe singer still faced an iron door,\nbut the melody traveled beyond it."
+  },
+  {
+    "pair_id": "PAIR-056",
+    "source_id": "P16",
+    "source_author": "H. W. Longfellow",
+    "source_title": "THE SLAVE SINGING AT MIDNIGHT",
+    "source_text": "Loud he sang the psalm of David!\nHe, a Negro and enslaved,\nSang of Israel's victory,\nSang of Zion, bright and free.\n\nIn that hour, when night is calmest,\nSang he from the Hebrew Psalmist,\nIn a voice so sweet and clear\nThat I could not choose but hear,\n\nSongs of triumph, and ascriptions,\nSuch as reached the swart Egyptians,\nWhen upon the Red Sea coast\nPerished Pharaoh and his host.\n\nAnd the voice of his devotion\nFilled my soul with strange emotion;\nFor its tones by turns were glad,\nSweetly solemn, wildly sad.\n\nPaul and Silas, in their prison,\nSang of Christ, the Lord arisen,\nAnd an earthquake's arm of might\nBroke their dungeon-gates at night.\n\nBut, alas! what holy angel\nBrings the Slave this glad evangel?\nAnd what earthquake's arm of might\nBreaks his dungeon-gates at night?",
+    "category": "paraphrase",
+    "expected_level": "similar",
+    "candidate_text": "At midnight a prisoner began to sing,\nhis voice rising above the walls.\nHe sang of a people crossing the sea,\nof chains broken and a home regained.\nThe sound reached those who kept watch,\nand sorrow mixed with hope in their hearts.\nYet when the song had ended,\nthe prison door remained locked."
+  },
+  {
+    "pair_id": "PAIR-037",
+    "source_id": "P17",
+    "source_author": "Robert Frost",
+    "source_title": "A Late Walk",
+    "source_text": "    WHEN I go up through the mowing field,\n    The headless aftermath,\n    Smooth-laid like thatch with the heavy dew,\n    Half closes the garden path.\n    And when I come to the garden ground,\n    The whir of sober birds\n    Up from the tangle of withered weeds\n    Is sadder than any words.\n    A tree beside the wall stands bare,\n    But a leaf that lingered brown,\n    Disturbed, I doubt not, by my thought,\n    Comes softly rattling down.\n    I end not far from my going forth\n    By picking the faded blue\n    Of the last remaining aster flower\n    To carry again to you.",
+    "category": "inspired",
+    "expected_level": "inspired",
+    "candidate_text": "I crossed the field after harvest,\nwhere damp grass bent beneath my steps.\nA few birds called from the hedge,\nthen vanished into the fading light.\nOne brown leaf loosened from a branch\nand spun across the garden path.\nI found a small blue flower near the wall\nand carried its color back to you."
+  },
+  {
+    "pair_id": "PAIR-057",
+    "source_id": "P17",
+    "source_author": "Robert Frost",
+    "source_title": "A Late Walk",
+    "source_text": "    WHEN I go up through the mowing field,\n    The headless aftermath,\n    Smooth-laid like thatch with the heavy dew,\n    Half closes the garden path.\n    And when I come to the garden ground,\n    The whir of sober birds\n    Up from the tangle of withered weeds\n    Is sadder than any words.\n    A tree beside the wall stands bare,\n    But a leaf that lingered brown,\n    Disturbed, I doubt not, by my thought,\n    Comes softly rattling down.\n    I end not far from my going forth\n    By picking the faded blue\n    Of the last remaining aster flower\n    To carry again to you.",
+    "category": "paraphrase",
+    "expected_level": "similar",
+    "candidate_text": "I walked through the field after the cutting,\ndew shining on the flattened grass.\nBirds rose suddenly from the weeds,\ntheir calls softer than the evening wind.\nA bare tree stood beside the wall;\none dry leaf fell as I passed.\nNear the path a blue flower remained,\nand I brought it home for you."
+  },
+  {
+    "pair_id": "PAIR-038",
+    "source_id": "P18",
+    "source_author": "Robert Frost",
+    "source_title": "Storm Fear",
+    "source_text": "    WHEN the wind works against us in the dark,\n    And pelts with snow\n    The lowest chamber window on the east,\n    And whispers with a sort of stifled bark,\n    The beast,\n    'Come out! Come out!'--\n    It costs no inward struggle not to go,\n    Ah, no!\n    I count our strength,\n    Two and a child,\n    Those of us not asleep subdued to mark\n    How the cold creeps as the fire dies at length,--\n    How drifts are piled,\n    Dooryard and road ungraded,\n    Till even the comforting barn grows far away\n    And my heart owns a doubt\n    Whether 'tis in us to arise with day\n    And save ourselves unaided.",
+    "category": "inspired",
+    "expected_level": "inspired",
+    "candidate_text": "The storm pressed hard against the windows,\nand snow covered the road before night.\nInside, we counted blankets and candles,\nkeeping close while the fire grew low.\nThe house creaked beneath the weather;\nthe barn seemed farther with every gust.\nWe waited for the dark to loosen,\ntrusting the morning would bring a way."
+  },
+  {
+    "pair_id": "PAIR-058",
+    "source_id": "P18",
+    "source_author": "Robert Frost",
+    "source_title": "Storm Fear",
+    "source_text": "    WHEN the wind works against us in the dark,\n    And pelts with snow\n    The lowest chamber window on the east,\n    And whispers with a sort of stifled bark,\n    The beast,\n    'Come out! Come out!'--\n    It costs no inward struggle not to go,\n    Ah, no!\n    I count our strength,\n    Two and a child,\n    Those of us not asleep subdued to mark\n    How the cold creeps as the fire dies at length,--\n    How drifts are piled,\n    Dooryard and road ungraded,\n    Till even the comforting barn grows far away\n    And my heart owns a doubt\n    Whether 'tis in us to arise with day\n    And save ourselves unaided.",
+    "category": "paraphrase",
+    "expected_level": "similar",
+    "candidate_text": "Wind drove the snow against the eastern window,\nwhile the house grew colder after dark.\nWe stayed together by the dying fire,\ncounting the hours until morning.\nThe road and barn disappeared beneath drifts;\neven familiar places seemed far away.\nI wondered whether we could face the day,\nbut held my family close through the storm."
+  },
+  {
+    "pair_id": "PAIR-039",
+    "source_id": "P19",
+    "source_author": "William Blake",
+    "source_title": "DIVINE IMAGE",
+    "source_text": "   To Mercy, Pity, Peace, and Love,\n     All pray in their distress,\n   And to these virtues of delight\n     Return their thankfulness.\n\n   For Mercy, Pity, Peace, and Love,\n     Is God our Father dear;\n   And Mercy, Pity, Peace, and Love,\n     Is man, his child and care.\n\n   For Mercy has a human heart\n     Pity, a human face;\n   And Love, the human form divine;\n     And Peace, the human dress.\n\n   Then every man, of every clime,\n     That prays in his distress,\n   Prays to the human form divine:\n     Love, Mercy, Pity, Peace.\n\n   And all must love the human form,\n     In heathen, Turk, or Jew.\n   Where Mercy, Love, and Pity dwell,\n     There God is dwelling too.",
+    "category": "inspired",
+    "expected_level": "inspired",
+    "candidate_text": "When people suffer, they seek compassion,\na patient hand and words that soothe.\nKindness gives a face to mercy;\npeace can live in how we treat a stranger.\nAcross the borders people draw,\nthe same need for care remains.\nWhere love is offered without condition,\na little light enters the world."
+  },
+  {
+    "pair_id": "PAIR-059",
+    "source_id": "P19",
+    "source_author": "William Blake",
+    "source_title": "DIVINE IMAGE",
+    "source_text": "   To Mercy, Pity, Peace, and Love,\n     All pray in their distress,\n   And to these virtues of delight\n     Return their thankfulness.\n\n   For Mercy, Pity, Peace, and Love,\n     Is God our Father dear;\n   And Mercy, Pity, Peace, and Love,\n     Is man, his child and care.\n\n   For Mercy has a human heart\n     Pity, a human face;\n   And Love, the human form divine;\n     And Peace, the human dress.\n\n   Then every man, of every clime,\n     That prays in his distress,\n   Prays to the human form divine:\n     Love, Mercy, Pity, Peace.\n\n   And all must love the human form,\n     In heathen, Turk, or Jew.\n   Where Mercy, Love, and Pity dwell,\n     There God is dwelling too.",
+    "category": "paraphrase",
+    "expected_level": "similar",
+    "candidate_text": "In moments of fear, people ask for mercy,\nfor peace when the world feels cruel.\nCompassion lives in a human gesture,\nand love appears in the care we give.\nNo distant boundary makes one heart less worthy;\nevery person deserves kindness.\nWhere patience and tenderness remain,\ngoodness has found a place to dwell."
+  },
+  {
+    "pair_id": "PAIR-040",
+    "source_id": "P20",
+    "source_author": "William Blake",
+    "source_title": "NIGHT",
+    "source_text": "   The sun descending in the west,\n   The evening star does shine;\n   The birds are silent in their nest,\n   And I must seek for mine.\n     The moon, like a flower\n     In heaven's high bower,\n     With silent delight,\n     Sits and smiles on the night.\n\n   Farewell, green fields and happy grove,\n   Where flocks have ta'en delight.\n   Where lambs have nibbled, silent move\n   The feet of angels bright;\n     Unseen they pour blessing,\n     And joy without ceasing,\n     On each bud and blossom,\n     And each sleeping bosom.\n\n   They look in every thoughtless nest\n   Where birds are covered warm;\n   They visit caves of every beast,\n   To keep them all from harm:\n     If they see any weeping\n     That should have been sleeping,\n     They pour sleep on their head,\n     And sit down by their bed.\n\n   When wolves and tigers howl for prey,\n   They pitying stand and weep;\n   Seeking to drive their thirst away,\n   And keep them from the sheep.\n     But, if they rush dreadful,\n     The angels, most heedful,\n     Receive each mild spirit,\n     New worlds to inherit.",
+    "category": "inspired",
+    "expected_level": "inspired",
+    "candidate_text": "The last light slips behind the hills,\nand birds settle among the branches.\nA pale moon rises over the fields,\nwatching the quiet village below.\nSmall creatures rest beneath the leaves;\nnight air moves gently through the grass.\nMay every tired heart find shelter\nuntil the morning opens once again."
+  },
+  {
+    "pair_id": "PAIR-060",
+    "source_id": "P20",
+    "source_author": "William Blake",
+    "source_title": "NIGHT",
+    "source_text": "   The sun descending in the west,\n   The evening star does shine;\n   The birds are silent in their nest,\n   And I must seek for mine.\n     The moon, like a flower\n     In heaven's high bower,\n     With silent delight,\n     Sits and smiles on the night.\n\n   Farewell, green fields and happy grove,\n   Where flocks have ta'en delight.\n   Where lambs have nibbled, silent move\n   The feet of angels bright;\n     Unseen they pour blessing,\n     And joy without ceasing,\n     On each bud and blossom,\n     And each sleeping bosom.\n\n   They look in every thoughtless nest\n   Where birds are covered warm;\n   They visit caves of every beast,\n   To keep them all from harm:\n     If they see any weeping\n     That should have been sleeping,\n     They pour sleep on their head,\n     And sit down by their bed.\n\n   When wolves and tigers howl for prey,\n   They pitying stand and weep;\n   Seeking to drive their thirst away,\n   And keep them from the sheep.\n     But, if they rush dreadful,\n     The angels, most heedful,\n     Receive each mild spirit,\n     New worlds to inherit.",
+    "category": "paraphrase",
+    "expected_level": "similar",
+    "candidate_text": "The evening sun has left the fields,\nand the first star appears above the trees.\nBirds are quiet beneath their leaves,\nwhile the moon watches over the sleeping land.\nA gentle presence moves through the night,\nbringing comfort to every resting creature.\nMay the weary find their shelter,\nand wake beneath a kinder sky."
+  }
+]

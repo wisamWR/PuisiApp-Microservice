@@ -27,7 +27,7 @@ export default function ProfilePage() {
     let aktif = true
     api
       .get('/profiles/me')
-      .then((data) => {
+      .then(({ data }) => {
         if (!aktif) return
         setProfil(data)
         setForm({ display_name: data.display_name, bio: data.bio ?? '' })
@@ -58,7 +58,7 @@ export default function ProfilePage() {
 
     setSedangKirim(true)
     try {
-      const data = await api.put('/profiles/me', v.data)
+      const { data } = await api.put('/profiles/me', v.data)
       setProfil(data)
       setForm({ display_name: data.display_name, bio: data.bio ?? '' })
       setSukses('Profil tersimpan.')

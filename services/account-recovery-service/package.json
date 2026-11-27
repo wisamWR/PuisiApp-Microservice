@@ -1,0 +1,17 @@
+{
+  "name": "account-recovery-service",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Layanan verifikasi email dan pemulihan kata sandi (T1.6)",
+  "scripts": {
+    "start": "node src/main.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@node-rs/argon2": "^2.0.0",
+    "@puisiapp/events": "file:../../libs/node",
+    "pg": "^8.23.1",
+    "redis": "^4.7.0"
+  }
+}

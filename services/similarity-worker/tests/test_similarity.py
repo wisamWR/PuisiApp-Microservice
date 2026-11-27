@@ -48,6 +48,7 @@ def test_batas_kategori_similarity():
     assert tentukan_level(0.50, 20) == "similar"
     assert tentukan_level(0.80, 20) == "suspected_plagiarism"
 
+
 def test_skor_menggunakan_nilai_jaccard_terbesar():
     from app.similarity import hitung_skor
 

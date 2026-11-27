@@ -1,16 +1,19 @@
 {
-  "name": "profile-service",
-  "version": "0.1.0",
-  "description": "T1.5: profil publik (nama tampil, bio). Konsumsi user.registered, terbitkan user.profile.updated lewat outbox.",
-  "private": true,
-  "type": "module",
-  "engines": { "node": ">=22" },
-  "scripts": {
-    "start": "node src/index.js",
-    "test": "node --test test/*.test.js"
-  },
-  "dependencies": {
-    "@puisiapp/events": "file:../../libs/node",
-    "pg": "8.23.1"
-  }
+    "name":  "profile-service",
+    "version":  "0.1.0",
+    "description":  "T1.5: profil publik (nama tampil, bio). Konsumsi user.registered, terbitkan user.profile.updated lewat outbox.",
+    "private":  true,
+    "type":  "module",
+    "engines":  {
+                    "node":  "\u003e=22"
+                },
+    "scripts":  {
+                    "start":  "node src/index.js",
+                    "test":  "node --test test/*.test.js"
+                },
+    "dependencies":  {
+                         "@puisiapp/events":  "file:../../libs/node",
+                         "pg":  "8.23.1",
+                         "prom-client":  "^15.1.3"
+                     }
 }

@@ -1,4 +1,3 @@
-
 import json
 import threading
 import time
@@ -6,6 +5,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import pika
 from event_lib import StoreTanpaDb, buat_konsumen, buat_publisher
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
 from app.config import load_settings
 from app.event import buat_event_fingerprint
@@ -20,6 +20,15 @@ EVENT_INPUT = [
 
 class HealthHandler(BaseHTTPRequestHandler):
     def do_GET(self):
+        if self.path == "/metrics":
+            payload = generate_latest()
+            self.send_response(200)
+            self.send_header("Content-Type", CONTENT_TYPE_LATEST)
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+            return
+
         if self.path != "/health":
             self.send_error(404, "Not Found")
             return

@@ -6,8 +6,13 @@
       "user.registered",
       "user.profile.updated",
       "user.deleted",
-      "user.role.changed"
-    , "user.credentials.created"],
+      "user.role.changed",
+      "user.credentials.created",
+      "user.password.reset"
+    ],
+    "notification.events": [
+      "email.send.requested"
+    ],
     "poem.events": [
       "poem.submitted",
       "poem.revised",
@@ -43,7 +48,7 @@
     ],
     "community.events": [
       "comment.created",
-      "comment.deleted"
-    ]
-  }
+      "comment.deleted",
+      "comment.reported"
+    ]  }
 }

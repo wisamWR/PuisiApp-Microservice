@@ -1,4 +1,3 @@
-
 from psycopg2.extras import Json
 
 

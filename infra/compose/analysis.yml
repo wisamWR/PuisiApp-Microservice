@@ -137,11 +137,50 @@ services:
       THRESHOLD_INSPIRED: "0.20"
       THRESHOLD_SIMILAR: "0.50"
       THRESHOLD_PLAGIARISM: "0.80"
+      MIN_WHOLE_JACCARD_FOR_PLAGIARISM: "0.80"
     networks: [app, data]
     depends_on:
       postgres: { condition: service_healthy }
       rabbitmq-topologi: { condition: service_completed_successfully }
 
+  # T7.4 - Authorship Worker
+  authorship-worker:
+    build:
+      context: ..
+      dockerfile: services/authorship-worker/Dockerfile
+    restart: unless-stopped
+    environment:
+      SERVICE_NAME: authorship-worker
+      HOST: 0.0.0.0
+      PORT: "8080"
+      AMQP_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@${RABBITMQ_HOST}:${RABBITMQ_PORT}/${RABBITMQ_VHOST}
+      DATABASE_URL: postgresql://authorship:${AUTHORSHIP_DB_PASS}@${POSTGRES_HOST}:${POSTGRES_PORT}/authorship_db
+    networks: [app, data]
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+      rabbitmq-topologi: { condition: service_completed_successfully }
+
+  # T7.4 - Authorship Query Service
+  authorship-query-service:
+    build:
+      context: ..
+      dockerfile: services/authorship-query-service/Dockerfile
+    restart: unless-stopped
+    environment:
+      SERVICE_NAME: authorship-query-service
+      PORT: "8080"
+      DATABASE_URL: postgresql://authorship_query:${AUTHORSHIP_QUERY_DB_PASS}@${POSTGRES_HOST}:${POSTGRES_PORT}/authorship_read_db
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+      RABBITMQ_VHOST: ${RABBITMQ_VHOST}
+    networks: [app, data]
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+      rabbitmq-topologi: { condition: service_completed_successfully }
   outbox-relay-similarity:
     extends:
       file: debezium/relay.yml

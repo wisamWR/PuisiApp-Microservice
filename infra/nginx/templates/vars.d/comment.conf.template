@@ -1,0 +1,2 @@
+# Domain comment (kelompok 4 Community).
+set $up_comment "${COMMENT_HOST}";

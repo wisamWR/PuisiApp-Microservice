@@ -14,10 +14,12 @@ import { ubahPeran } from './ubahPeran.js';
 import { hapusAkun } from './hapus.js';
 import { cariAkun } from './cari.js';
 import { validasiPeran } from './peran.js';
+import { buatMetrikHttp } from './metrics.js';
 
 const log = buatLogger();
 const folderIni = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT) || 8080;
+const metrik = buatMetrikHttp('register-service');
 const MAKS_BODY = 16 * 1024;
 
 if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL belum diisi');
@@ -55,15 +57,26 @@ function bacaBody(req) {
 }
 
 const server = http.createServer(async (req, res) => {
+  const mulai = performance.now();
+  let rute = 'tidak_dikenal';
+  res.once('finish', () => metrik.catatRequest(req.method, rute, res.statusCode, mulai));
   const url = new URL(req.url, 'http://local');
 
+
   if (req.method === 'GET' && url.pathname === '/health') {
+    rute = '/health';
     return kirimJson(res, 200, { status: 'ok' });
+  }
+
+  if (req.method === 'GET' && url.pathname === '/metrics') {
+    rute = '/metrics';
+    return metrik.layaniMetrics(res);
   }
 
   // Ubah peran (T1.7): hanya admin. Gateway sudah menolak non-admin; layanan memeriksa lagi.
   const cocokPeran = url.pathname.match(/^\/api\/admin\/users\/([^/]+)\/role$/);
   if (cocokPeran && req.method === 'PUT') {
+    rute = '/api/admin/users/:id/role';
     if (req.headers['x-user-role'] !== 'admin') {
       // Catat peran yang diterima untuk diagnosis (tanpa token atau kata sandi).
       log.warn('ubah peran ditolak', { peran_diterima: req.headers['x-user-role'] ?? null, id_pemanggil: req.headers['x-user-id'] ?? null });
@@ -85,6 +98,7 @@ const server = http.createServer(async (req, res) => {
 
   // Hapus akun (T1.7): pemilik saja, konfirmasi kata sandi wajib.
   if (req.method === 'DELETE' && url.pathname === '/api/me') {
+    rute = '/api/me';
     const id = req.headers['x-user-id'];
     if (!id) return kirimJson(res, 401, { error: 'unauthorized' });
     let body;
@@ -110,6 +124,7 @@ const server = http.createServer(async (req, res) => {
 
   // Cari pengguna untuk admin (T1.7). Gateway sudah memeriksa peran admin; layanan memeriksa lagi.
   if (req.method === 'GET' && url.pathname === '/api/admin/users') {
+    rute = '/api/admin/users';
     if (req.headers['x-user-role'] !== 'admin') return kirimJson(res, 403, { error: 'forbidden' });
     const q = (url.searchParams.get('q') ?? '').trim();
     if (q.length < 1 || q.length > 50) return kirimJson(res, 400, { error: 'parameter q wajib diisi (1 sampai 50 karakter)' });
@@ -117,6 +132,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.method !== 'POST' || url.pathname !== '/api/auth/register') {
+    if (url.pathname === '/api/auth/register') rute = '/api/auth/register'; else rute = url.pathname;
     return kirimJson(res, 404, { error: 'tidak ditemukan' });
   }
 
@@ -128,6 +144,7 @@ const server = http.createServer(async (req, res) => {
     return kirimJson(res, 400, { error: 'JSON tidak valid' });
   }
 
+  rute = '/api/auth/register';
   const v = validasiRegistrasi(body);
   if (!v.ok) return kirimJson(res, 400, { error: 'input tidak valid', details: v.errors });
 

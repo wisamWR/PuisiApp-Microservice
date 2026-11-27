@@ -66,9 +66,7 @@ def tanda_tangan(seed: int) -> list[int]:
     return [rng.getrandbits(32) for _ in range(128)]
 
 
-def event_fingerprint(
-    poem_id: str, versi: int, signature: list[int], shingle: int = 40
-) -> dict:
+def event_fingerprint(poem_id: str, versi: int, signature: list[int], shingle: int = 40) -> dict:
     return {
         "event_id": str(uuid.uuid4()),
         "event_type": "poem.fingerprint.created",
@@ -84,9 +82,7 @@ def event_fingerprint(
             "version": versi,
             "shingle_count": shingle,
             "signature": signature,
-            "stanza_signatures": [
-                {"stanza": 1, "shingle_count": shingle, "signature": signature}
-            ],
+            "stanza_signatures": [{"stanza": 1, "shingle_count": shingle, "signature": signature}],
         },
     }
 
