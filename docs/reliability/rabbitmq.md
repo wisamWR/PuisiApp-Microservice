@@ -1,6 +1,6 @@
 # Reliability Message Broker (RabbitMQ) dan Consumer
 
-Dokumen ini membahas titik risiko message broker dan consumer worker dalam PuisiApp. Bagian pertama menjelaskan rancangan perbaikan. Bagian kedua mencatat temuan dari pengujian yang sudah dilakukan, termasuk batas kondisi tempat pengujian itu berjalan. Bagian ketiga mencatat koreksi terhadap contoh kode dari draf perbaikan sebelumnya.
+Dokumen ini membahas titik risiko message broker dan consumer worker dalam PuisiApp. Bagian 1 dan 2 menjelaskan risiko dan rancangan perbaikan. Bagian 3 mencatat koreksi terhadap contoh kode dari draf perbaikan sebelumnya, dicocokkan dengan implementasi di `libs/node` dan `libs/python`. Bagian 4 mencatat temuan dari pengujian beserta batas kondisinya. Bagian 5 berisi keterbatasan dan langkah lanjut.
 
 ## 1. Risiko
 
@@ -10,63 +10,90 @@ Akibatnya, analisis puisi tertahan dan hasilnya tidak sampai ke layanan lain. Pa
 
 ## 2. Rancangan Perbaikan
 
-Queue dideklarasikan sebagai durable dan pesan dikirim dengan status persisten, sehingga pesan tetap ada ketika broker restart. Producer memakai publisher confirms, sehingga pengirim tahu pesan sudah diterima broker. Consumer memakai manual acknowledgement dan hanya mengirim ack setelah data tersimpan. Prefetch dibatasi, misalnya 10, agar satu worker tidak menimbun banyak pesan.
+### 2.1 Pesan dan consumer
 
-Pesan yang gagal dicoba ulang sampai batas tertentu, misalnya tiga kali, dengan header penghitung. Setelah batas itu, pesan dibuang ke Dead Letter Queue untuk diperiksa. Setiap pesan membawa identitas unik, dan consumer mencatat identitas yang sudah diproses agar pesan yang sama tidak diproses dua kali.
+Semua antrean layanan dideklarasikan sebagai quorum queue (`x-queue-type: quorum`), yang selalu durable, dan pesan dikirim persisten. Producer memakai publisher confirms, sehingga pengirim tahu pesan sudah diterima broker. Consumer memakai manual acknowledgement dan hanya mengirim ack setelah transaksi basis data di-commit. Prefetch dibatasi 10 (bisa diubah lewat env `PREFETCH`) agar satu worker tidak menimbun banyak pesan.
 
-Implementasi di repo mengikuti pola yang sudah ada: queue per layanan dengan nama `q.<layanan>`, DLQ `q.<layanan>.dlq`, antrean retry melalui exchange `retry.delayed` dengan plugin delayed message, dan tabel `processed_event` yang dikelola pustaka `libs/node` (`@puisiapp/events`). Rancangan ini tidak membuat nama queue atau tabel baru.
+Galat sementara dicoba ulang paling banyak tiga kali dengan header penghitung `x-percobaan`. Pesan dijadwalkan ulang melalui exchange `retry.delayed` (plugin delayed message) dengan jeda acak full jitter: paling lama 2, 8, lalu 32 detik. Galat permanen, pesan yang tidak valid, dan pesan yang percobaannya habis langsung di-nack tanpa requeue sehingga masuk ke Dead Letter Queue. Sebagai jaring pengaman, setiap queue juga memakai `x-delivery-limit: 5`, sehingga pesan yang membuat worker crash berulang sebelum sempat di-ack tetap berakhir di DLQ.
+
+Setiap pesan membawa `event_id`. Consumer mencatat `event_id` di tabel `processed_event` dalam transaksi yang sama dengan penyimpanan data, sehingga pesan yang sama tidak diproses dua kali.
+
+Implementasi di repo mengikuti pola yang sudah ada: queue per layanan dengan nama `q.<layanan>`, DLQ `q.<layanan>.dlq`, exchange `retry.delayed`, dan tabel `processed_event`. Semuanya dikelola pustaka `libs/node` (`@puisiapp/events`) untuk layanan Node dan `libs/python` (`event_lib`) untuk worker Python, termasuk similarity-worker. Rancangan ini tidak membuat nama queue atau tabel baru.
+
+### 2.2 Broker satu node
+
+Quorum queue baru memberi ketersediaan tinggi jika broker berjalan sebagai cluster minimal tiga node. Dengan satu node seperti sekarang, quorum queue hanya menjamin pesan tidak hilang saat broker restart. Selama broker mati, tidak ada pesan yang bisa diterbitkan atau dikonsumsi.
+
+Untuk lingkup proyek ini, broker satu node diterima sebagai batasan. Mitigasinya adalah sebagai berikut:
+
+- Container broker memakai `restart: unless-stopped` dan healthcheck, dan data broker disimpan di volume `rabbitmq-data`.
+- Pola outbox menahan event di basis data produser selama broker mati. Relay menerbitkannya setelah broker kembali, sehingga event tidak hilang di sisi produser.
+- Consumer harus menyambung ulang otomatis setelah koneksi putus. Worker Python sudah melakukannya dengan loop coba ulang 5 detik.
+
+Jika ketersediaan broker menjadi kebutuhan, langkah berikutnya adalah cluster tiga node RabbitMQ. Quorum queue yang sudah dipakai tidak perlu diubah untuk itu.
 
 ## 3. Koreksi Contoh Kode
 
-Contoh consumer di draf perbaikan sebelumnya memiliki beberapa masalah dan tidak boleh dijadikan rujukan langsung. Contoh berikut sudah dikoreksi dan bersifat konseptual. Implementasi nyata ada di `libs/node`, dan belum kami verifikasi ulang terhadap kode tersebut.
+Contoh consumer di draf perbaikan sebelumnya memiliki beberapa masalah dan tidak boleh dijadikan rujukan langsung. Rujukan yang benar adalah implementasi di repo, yaitu `tanganiPesan()` di `libs/node/src/konsumen.js` dan `tangani_pesan()` di `libs/python/event_lib/konsumen.py`. Ringkasan alurnya sebagai berikut.
 
 ```js
-// Header pesan bisa kosong. Akses langsung akan error.
-const retry = msg.properties.headers?.['x-retry'] ?? 0;
+// Disederhanakan dari libs/node/src/konsumen.js
+const percobaan = Number(pesan.properties?.headers?.['x-percobaan'] ?? 0) || 0;
 
 try {
-  // Pengecekan dan penyimpanan dilakukan dalam satu transaksi.
-  // Dua worker tidak bisa sama-sama lolos pengecekan karena kunci utama di basis data.
-  await db.transaction(async (tx) => {
-    const { rowCount } = await tx.query(
-      'INSERT INTO processed_event (event_id) VALUES ($1) ON CONFLICT DO NOTHING',
-      [messageId],
-    );
-    if (rowCount === 0) return; // sudah pernah diproses
-    await savePuisi(tx, payload);
-  });
-  channel.ack(msg);
+  // store.proses(): INSERT INTO processed_event ... ON CONFLICT (event_id) DO NOTHING
+  // lalu handler, semuanya dalam SATU transaksi. Duplikat dilewati.
+  await store.proses(event, (ctx) => handler(event, ctx));
+  ack();
 } catch (err) {
-  if (retry >= 3) return channel.nack(msg, false, false); // masuk DLQ
-  // Publish ulang harus dikonfirmasi broker sebelum pesan asli di-ack.
-  await confirmChannel.publish('', queue, msg.content, {
-    persistent: true,
-    headers: { 'x-retry': retry + 1 },
-  });
-  await confirmChannel.waitForConfirms();
-  channel.ack(msg);
+  if (apakahPermanen(err) || percobaan >= 3) return keDlq(); // nack tanpa requeue
+  const jedaMs = Math.floor(Math.random() * 2000 * 4 ** percobaan); // full jitter
+  try {
+    // Publish ke exchange retry.delayed dengan header x-percobaan dan x-delay,
+    // menunggu publisher confirm sebelum pesan asli di-ack.
+    await jadwalkanUlang(percobaan + 1, jedaMs);
+    ack();
+  } catch {
+    kembalikan(); // nack dengan requeue bila retry gagal diterbitkan
+  }
 }
 ```
 
-Perbedaan utama dari draf sebelumnya: pengecekan idempotensi dipindah ke dalam transaksi, header dibaca dengan aman, dan publish ulang memakai confirm channel sehingga pesan tidak hilang jika publish gagal.
+Perbedaan dari draf sebelumnya:
+
+- **Idempotensi.** Pengecekan dipindah ke dalam transaksi melalui `INSERT ... ON CONFLICT DO NOTHING`, sehingga dua worker tidak bisa sama-sama lolos pengecekan.
+- **Header.** Header dibaca dengan aman, karena `headers` bisa kosong. Namanya `x-percobaan`, bukan `x-retry`.
+- **Jalur retry.** Retry tidak diterbitkan ulang ke default exchange `''` tanpa jeda. Pesan dikirim ke `retry.delayed` dengan `x-delay`, dan publish-nya dikonfirmasi broker sebelum pesan asli di-ack.
+- **Gagal publish retry.** Jika publish retry gagal, pesan di-nack dengan requeue, bukan hilang.
+- **Pembedaan galat.** Galat permanen (`GalatPermanen`) langsung ke DLQ tanpa menghabiskan percobaan.
 
 ## 4. Pengujian dan Temuan
 
-Pengujian dilakukan di WSL dengan Docker Compose pada branch `k3-search`. Kondisi ini perlu diingat, karena `main` sudah berubah setelah pengujian dilakukan. Temuan berikut terbukti pada kondisi tersebut.
+Pengujian dilakukan di WSL dengan Docker Compose pada branch `k3-search`. Kondisi ini perlu diingat, karena `main` sudah berubah setelah pengujian dilakukan, dan `q.search-service` belum ada di `contracts/routing.json` pada `main`. Temuan berikut terbukti pada kondisi tersebut, kecuali bagian yang ditandai sebagai pemeriksaan kode.
 
 Binding antrean sudah sesuai. Antrean `q.search-service` terikat ke routing key `poem.submitted`, `poem.revised`, `poem.published`, `poem.hidden`, `poem.deleted`, dan `poem.keywords.extracted`, serta ke `retry.delayed`. Pemeriksaan dilakukan lewat API management RabbitMQ, karena `rabbitmqctl list_bindings` tidak menampilkan hasil apa pun pada lingkungan ini.
 
-Antrean `q.similarity-worker.dlq` berisi tujuh pesan dan tidak memiliki konsumen. Pesan-pesan ini menunjukkan bahwa similarity-worker gagal memproses beberapa event dan memindahkannya ke DLQ. Pada saat pengecekan, worker tidak memiliki konsumen aktif.
+Antrean `q.similarity-worker.dlq` berisi tujuh pesan dan tidak memiliki konsumen. Ini wajar, karena DLQ memang tidak dikonsumsi otomatis. Pesan-pesan ini menunjukkan bahwa similarity-worker gagal memproses beberapa event `poem.fingerprint.created`. Pada saat pengecekan, antrean utama `q.similarity-worker` juga tidak memiliki konsumen aktif.
 
-Basis data `poem_read_db` berisi sembilan puisi, semuanya berstatus PROCESSING dan tidak ada yang PUBLISHED. Di `search_db`, hanya satu puisi yang masuk, dan tabel `processed_event` di sana hanya berisi satu entri. Delapan puisi yang dikirim pada 24 sampai 26 November tidak pernah diterima oleh konsumen pencarian. Dugaan kami adalah antrean pencarian baru dideklarasikan pada 27 November, sehingga event lama tidak tersimpan. Dugaan ini belum dibuktikan.
+Basis data `poem_read_db` berisi sembilan puisi, semuanya berstatus PROCESSING dan tidak ada yang PUBLISHED. Di `search_db`, hanya satu puisi yang masuk, dan tabel `processed_event` di sana hanya berisi satu entri. Delapan puisi yang dikirim pada 24 sampai 26 November tidak pernah diterima oleh konsumen pencarian. Dugaan kami adalah antrean pencarian baru dideklarasikan pada 27 November. Event yang diterbitkan sebelum ada queue yang terikat tidak disimpan oleh broker. Dugaan ini belum dibuktikan, tetapi bisa diperiksa dengan dua cara:
 
-Log similarity-worker hanya berisi pesan "galat sementara" tanpa exception atau stack trace. Ini menghambat diagnosis, dan menjadi alasan utama mengapa penyebab kegagalan belum diketahui.
+- Periksa tabel outbox di basis data produser. Jika event 24 sampai 26 November tercatat sudah dikirim, berarti event keluar dari produser tetapi tidak ada queue yang menampungnya.
+- Periksa `q.outbox.unrouted`. Antrean ini hanya menampung event yang `event_type`-nya tidak punya binding di `outbox.relay`, sehingga kemungkinan besar kosong untuk kasus ini.
 
-Relay outbox pernah mati setelah restart stack. Pemulihan dilakukan dengan `docker compose up -d --force-recreate`. Saat ini belum ada healthcheck yang memulai ulang relay secara otomatis.
+Log similarity-worker hanya berisi pesan "galat sementara" tanpa exception atau stack trace. Pemeriksaan kode menunjukkan penyebabnya ada di pustaka bersama, bukan di similarity-worker. Di `libs/python/event_lib/konsumen.py`, exception ditangkap dengan `except Exception as exc`, tetapi `exc` tidak pernah dikirim ke logger. Ini terjadi pada tiga jalur: galat sementara, galat permanen, dan percobaan habis. Formatter di `libs/python/event_lib/log.py` hanya menulis field `err` jika record membawa `exc_info`. Akibatnya, semua worker Python (similarity, emotion, fingerprint) kehilangan detail galat. Versi Node sudah menyertakan `err` di log.
+
+Pemeriksaan kode `services/similarity-worker/src/app/main.py` juga menemukan dua hal lain:
+
+- Endpoint `/health` selalu membalas `ok` walaupun thread konsumen mati atau terus gagal, sehingga healthcheck tidak bisa mendeteksi worker yang berhenti mengonsumsi.
+- Galat koneksi atau migrasi hanya dicetak dengan `print` tanpa stack trace, lalu dicoba ulang setiap 5 detik.
+
+Relay outbox pernah mati setelah restart stack. Pemulihan dilakukan dengan `docker compose up -d --force-recreate`. Di `infra/compose/*.yml` pada `main` belum ada healthcheck untuk relay, sehingga relay tidak dimulai ulang otomatis.
 
 ## 5. Keterbatasan dan Langkah Lanjut
 
-Penyebab kegagalan similarity-worker belum diketahui. Pemilik layanan (Kelompok 6) perlu memeriksa exception yang sebenarnya, misalnya dengan menambahkan stack trace ke log dan membaca isi pesan di DLQ tanpa menghapusnya.
+Penyebab kegagalan similarity-worker belum diketahui. Langkah pertama adalah memperbaiki log di `libs/python/event_lib/konsumen.py` dengan menambahkan `exc_info=exc` pada tiga pemanggilan logger di blok `except`. Perubahan ini ada di pustaka bersama, jadi perlu disepakati dengan pemilik `libs/python`. Setelah itu, pemilik layanan (Kelompok 6) dapat membaca exception yang sebenarnya, ditambah isi pesan di DLQ yang dibaca tanpa dihapus.
+
+Healthcheck similarity-worker sebaiknya ikut memeriksa status thread konsumen, bukan hanya proses HTTP. Relay outbox juga perlu healthcheck agar dimulai ulang otomatis.
 
 Setelah `main` berisi perubahan terbaru similarity-worker, pengujian perlu diulang dengan membangun ulang image dari `main`. Hasil di atas tidak otomatis berlaku untuk kode terbaru.
 
@@ -82,4 +109,4 @@ Pada uji pertama, satu pesan dipublikasikan ke `test.rel` dan dibaca dengan mode
 
 Pada uji kedua, satu pesan persisten dipublikasikan ke antrean durable, lalu RabbitMQ di-restart dan status healthy-nya diperiksa sebelum membaca ulang. Pesan tetap tersedia setelah restart.
 
-Uji ini hanya memverifikasi perilaku broker. Publisher confirms dan manual ack pada consumer belum diuji dan belum masuk ke pembuktian dokumen ini.
+Uji ini hanya memverifikasi perilaku broker. Tipe antrean `test.rel` tidak dicatat saat pengujian, sedangkan antrean layanan di repo bertipe quorum. Uji perlu diulang dengan `x-queue-type: quorum` dan `x-delivery-limit` agar sama dengan konfigurasi sebenarnya. Publisher confirms dan manual ack pada consumer belum diuji dan belum masuk ke pembuktian dokumen ini.
