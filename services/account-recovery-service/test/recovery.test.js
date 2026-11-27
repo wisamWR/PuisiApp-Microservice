@@ -9,6 +9,7 @@ import {
   verifikasiEmail,
   mintaResetPassword,
   resetPassword,
+  statusEmail,
 } from '../src/service.js';
 
 function buatFakePool(initialTokens = [], initialAccounts = []) {
@@ -81,6 +82,12 @@ function buatFakePool(initialTokens = [], initialAccounts = []) {
       const [normalizedEmail] = params;
       const acc = accounts.find((a) => String(a.email).toLowerCase() === normalizedEmail);
       return { rows: acc ? [acc] : [] };
+    }
+
+    if (q.includes('SELECT email_verified FROM recovery_accounts')) {
+      const [userId] = params;
+      const acc = accounts.find((a) => a.user_id === userId);
+      return { rows: acc ? [{ email_verified: acc.email_verified }] : [] };
     }
 
     if (q.includes('UPDATE recovery_accounts SET updated_at = now()')) {
@@ -231,4 +238,14 @@ test('reset-password memperbarui token sekali pakai & mencabut semua refresh tok
     () => resetPassword(pool, { token: resetToken, password: 'PasswordBaru456!' }, { redis: fakeRedis }),
     /sudah dipakai|tidak valid/i,
   );
+});
+
+test('email-status: false sebelum verifikasi, true sesudah, 401 tanpa user', async () => {
+  const userId = '33333333-3333-4333-8333-333333333333';
+  const pool = buatFakePool([], [{ user_id: userId, email: 'x@example.com', username: 'x', email_verified: false }]);
+  assert.deepEqual(await statusEmail(pool, userId), { user_id: userId, email_verified: false });
+  pool.accounts[0].email_verified = true;
+  assert.deepEqual(await statusEmail(pool, userId), { user_id: userId, email_verified: true });
+  assert.deepEqual(await statusEmail(pool, 'tidak-ada'), { user_id: 'tidak-ada', email_verified: false });
+  await assert.rejects(() => statusEmail(pool, undefined), (err) => err.status === 401);
 });

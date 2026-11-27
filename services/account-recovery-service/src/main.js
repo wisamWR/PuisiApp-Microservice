@@ -14,6 +14,7 @@ import {
   verifikasiEmail,
   mintaResetPassword,
   resetPassword,
+  statusEmail,
   RecoveryError,
 } from './service.js';
 
@@ -56,6 +57,17 @@ export function createApp(pool, deps = {}) {
 
     if (req.method === 'GET' && url.pathname === '/health') {
       return kirimJson(res, 200, { status: 'ok', service: 'account-recovery-service' });
+    }
+
+    if (req.method === 'GET' && url.pathname === '/api/auth/email-status') {
+      try {
+        const hasil = await statusEmail(pool, req.headers['x-user-id']);
+        return kirimJson(res, 200, hasil);
+      } catch (err) {
+        if (err instanceof RecoveryError) return kirimJson(res, err.status, { error: err.message });
+        log.error('galat email-status', { galat: err.name, pesan: err.message });
+        return kirimJson(res, 500, { error: 'galat internal' });
+      }
     }
 
     if (req.method !== 'POST') {

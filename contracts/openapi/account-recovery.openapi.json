@@ -28,6 +28,29 @@
         }
       }
     },
+    "/api/auth/email-status": {
+      "get": {
+        "summary": "Status verifikasi email pengguna yang sedang login (wajib login, X-User-Id dari gateway)",
+        "responses": {
+          "200": {
+            "description": "Status verifikasi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["user_id", "email_verified"],
+                  "properties": {
+                    "user_id": { "type": "string" },
+                    "email_verified": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Belum login" }
+        }
+      }
+    },
     "/api/auth/forgot-password": {
       "post": {
         "summary": "Minta tautan reset kata sandi (selalu mengembalikan 202)",

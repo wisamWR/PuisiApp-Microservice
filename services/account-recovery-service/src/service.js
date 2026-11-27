@@ -122,6 +122,19 @@ export async function verifikasiEmail(pool, token) {
   }
 }
 
+/**
+ * Status verifikasi email pengguna yang sedang login (untuk banner frontend).
+ * Bila proyeksi akun belum ada (event user.registered belum diproses), dianggap belum terverifikasi.
+ */
+export async function statusEmail(pool, userId) {
+  if (!userId) throw new RecoveryError('tidak terautentikasi', 401);
+  const { rows } = await pool.query(
+    `SELECT email_verified FROM recovery_accounts WHERE user_id = $1`,
+    [userId],
+  );
+  return { user_id: userId, email_verified: rows.length > 0 && rows[0].email_verified === true };
+}
+
 export async function mintaResetPassword(pool, email, ctx = {}, appBaseUrl = '') {
   if (!email || typeof email !== 'string') {
     return { accepted: true };

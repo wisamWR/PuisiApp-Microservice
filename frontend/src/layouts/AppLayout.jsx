@@ -35,6 +35,26 @@ export default function AppLayout() {
     }
   }, [location.pathname, navigate])
 
+  // Banner "email belum terverifikasi" (T1.6): ambil status sekali setelah login.
+  const perluCekEmail = Boolean(user) && user.emailVerified === undefined
+  useEffect(() => {
+    if (!perluCekEmail) return
+    let batal = false
+    api
+      .get('/auth/email-status')
+      .then((data) => {
+        if (!batal && data && typeof data.email_verified === 'boolean') {
+          setUser((lama) => (lama ? { ...lama, emailVerified: data.email_verified } : lama))
+        }
+      })
+      .catch(() => {
+        // Layanan pemulihan belum siap: banner tidak ditampilkan, coba lagi saat login berikutnya.
+      })
+    return () => {
+      batal = true
+    }
+  }, [perluCekEmail, setUser])
+
   const infoEmosi = EMOSI_LIST.find((e) => e.key === pref.mood) || EMOSI_LIST[0]
 
   async function keluar() {
