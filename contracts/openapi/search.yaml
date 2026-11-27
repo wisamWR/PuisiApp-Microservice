@@ -1,33 +1,54 @@
 openapi: 3.0.3
 info:
   title: search-service (T3.2, Kelompok 3)
-  version: 0.1.0
+  version: 0.2.0
   description: |
-    Pencarian puisi PUBLISHED berdasarkan judul, nama penulis, atau kata kunci.
-    Membaca dari read model poem-query (poem_read_db), tanpa event baru.
-    Respons memakai bentuk HalamanPuisi dari poem-query.yaml agar frontend
-    tidak perlu bentuk data baru.
-    Hanya pengguna yang sudah login yang bisa mencari (sama dengan GET /api/poems).
+    Pencarian puisi PUBLISHED dan penulis. Hanya pengguna yang sudah login yang bisa mencari.
+
+    Basis data: search-service memiliki basis data sendiri (search_db) dan tidak membaca poem_read_db
+    milik poem-query-service. Kolom tsvector diisi dari event berikut:
+    poem.published, poem.hidden, poem.deleted, poem.revised, poem.keywords.extracted, user.profile.updated.
+
+    Urutan hasil: berdasarkan relevansi (ts_rank_cd). Jika skor sama, puisi diurutkan dari tanggal terbit
+    terbaru, dan penulis diurutkan dari jumlah puisi terbanyak.
+
+    Catatan kata_kunci: kolom kata kunci baru terisi setelah keyword-worker (T6.1, Kelompok 6) mulai
+    menerbitkan poem.keywords.extracted. Sebelum itu, pencarian dengan kata kunci tidak menghasilkan hasil.
+    Pencarian judul, isi, dan nama penulis tidak terpengaruh.
+
+    Perubahan dari v0.1: parameter by digantikan type. Alasan: pencarian puisi selalu mencocokkan judul,
+    isi, dan kata kunci sekaligus, dan pencarian penulis berbeda bentuk hasilnya (kartu penulis),
+    sehingga type lebih jelas daripada by. Belum ada pemakai parameter by di frontend.
+
 servers:
   - url: /api
+
+x-konsumsi-event:
+  - poem.published
+  - poem.hidden
+  - poem.deleted
+  - poem.revised
+  - poem.keywords.extracted
+  - user.profile.updated
+
 paths:
   /search:
     get:
-      operationId: cariPuisi
-      summary: Cari puisi PUBLISHED
+      operationId: cariPuisiDanPenulis
+      summary: Cari puisi PUBLISHED atau penulis
       security:
         - cookieAuth: []
       parameters:
         - name: q
           in: query
           required: true
-          description: Kata yang dicari (judul, nama penulis, atau kata kunci)
+          description: Kata yang dicari. Untuk type=poem dicocokkan ke judul, isi, dan kata kunci. Untuk type=author dicocokkan ke nama tampil.
           schema: { type: string, minLength: 1, maxLength: 100 }
-        - name: by
+        - name: type
           in: query
           required: false
-          description: Ruang pencarian. Kosong berarti semua.
-          schema: { type: string, enum: [judul, penulis, kata_kunci] }
+          description: poem mencari puisi, author mencari penulis (menghasilkan kartu penulis).
+          schema: { type: string, enum: [poem, author], default: poem }
         - name: page
           in: query
           required: false
@@ -38,31 +59,73 @@ paths:
           schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
       responses:
         '200':
-          description: Satu halaman hasil pencarian
+          description: Satu halaman hasil, bentuk sesuai type
           content:
             application/json:
               schema:
-                type: object
-                required: [items, page, size, total]
-                properties:
-                  items:
-                    type: array
-                    items:
-                      $ref: 'poem-query.yaml#/components/schemas/RingkasanPuisi'
-                  page: { type: integer, minimum: 1 }
-                  size: { type: integer, minimum: 1 }
-                  total: { type: integer, minimum: 0 }
+                oneOf:
+                  - $ref: '#/components/schemas/HasilPuisi'
+                  - $ref: '#/components/schemas/HasilPenulis'
+                discriminator:
+                  propertyName: type
+                  mapping:
+                    poem: '#/components/schemas/HasilPuisi'
+                    author: '#/components/schemas/HasilPenulis'
         '400':
-          description: Parameter tidak valid (q kosong, by tidak dikenal)
+          description: Parameter tidak valid (q kosong, type tidak dikenal)
           content:
             application/json:
               schema:
                 $ref: 'poem-query.yaml#/components/schemas/Galat'
         '401':
           description: Belum login
+
 components:
   securitySchemes:
     cookieAuth:
       type: apiKey
       in: cookie
       name: access_token
+
+  schemas:
+    HasilPuisi:
+      type: object
+      required: [type, items, page, size, total]
+      properties:
+        type: { type: string, enum: [poem] }
+        items:
+          type: array
+          items:
+            $ref: 'poem-query.yaml#/components/schemas/RingkasanPuisi'
+        page: { type: integer, minimum: 1 }
+        size: { type: integer, minimum: 1 }
+        total: { type: integer, minimum: 0 }
+
+    HasilPenulis:
+      type: object
+      required: [type, items, page, size, total]
+      properties:
+        type: { type: string, enum: [author] }
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/KartuPenulis'
+        page: { type: integer, minimum: 1 }
+        size: { type: integer, minimum: 1 }
+        total: { type: integer, minimum: 0 }
+
+    KartuPenulis:
+      type: object
+      description: Ringkasan penulis untuk hasil pencarian. Hanya data publik.
+      required: [user_id, display_name, jumlah_puisi]
+      properties:
+        user_id: { type: string, format: uuid }
+        display_name:
+          type: string
+          minLength: 1
+          maxLength: 50
+          description: Nama tampil dari user.profile.updated. Sebelum profil diubah, berisi username dari user.registered.
+        jumlah_puisi:
+          type: integer
+          minimum: 0
+          description: Jumlah puisi PUBLISHED milik penulis, dihitung dari poem.published.
