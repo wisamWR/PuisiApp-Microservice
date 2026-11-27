@@ -536,3 +536,13 @@
 .vote-buttons-ringkas .vote-button { width: 24px; height: 24px; border-radius: 7px; }
 .vote-buttons-ringkas .vote-skor { min-width: 26px; font-size: 11px; }
 .poem-detail-vote { display: flex; align-items: center; justify-content: flex-end; margin: 4px 0 14px; }
+
+.search-form { display: flex; gap: 8px; margin: 16px 0; }
+.search-form input { flex: 1; padding: 8px 12px; }
+.search-jenis { display: flex; gap: 8px; margin-bottom: 16px; }
+.search-jenis button[aria-pressed="true"] { font-weight: 700; text-decoration: underline; }
+
+/* T3.4: tombol simpan dan bagikan */
+.simpan-bagikan { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.simpan-bagikan .button { font-size: 12px; padding: 6px 12px; }
+.simpan-tombol.aktif { background: #f6efe6; border-color: #c9a27a; }
