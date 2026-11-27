@@ -69,7 +69,7 @@ Perbedaan dari draf sebelumnya:
 
 ## 4. Pengujian dan Temuan
 
-Pengujian dilakukan di WSL dengan Docker Compose pada branch `k3-search`. Kondisi ini perlu diingat, karena `main` sudah berubah setelah pengujian dilakukan, dan `q.search-service` belum ada di `contracts/routing.json` pada `main`. Temuan berikut terbukti pada kondisi tersebut, kecuali bagian yang ditandai sebagai pemeriksaan kode.
+Pengujian dilakukan di WSL dengan Docker Compose pada branch `k3-search`. Kondisi ini perlu diingat, karena `main` sudah berubah setelah pengujian dilakukan, termasuk merge k3-search (PR #28). Temuan berikut terbukti pada kondisi tersebut, kecuali bagian yang ditandai sebagai pemeriksaan kode.
 
 Binding antrean sudah sesuai. Antrean `q.search-service` terikat ke routing key `poem.submitted`, `poem.revised`, `poem.published`, `poem.hidden`, `poem.deleted`, dan `poem.keywords.extracted`, serta ke `retry.delayed`. Pemeriksaan dilakukan lewat API management RabbitMQ, karena `rabbitmqctl list_bindings` tidak menampilkan hasil apa pun pada lingkungan ini.
 
@@ -109,7 +109,7 @@ Pada uji pertama, satu pesan dipublikasikan ke `test.rel` dan dibaca dengan mode
 
 Pada uji kedua, satu pesan persisten dipublikasikan ke antrean durable, lalu RabbitMQ di-restart dan status healthy-nya diperiksa sebelum membaca ulang. Pesan tetap tersedia setelah restart.
 
-Uji ini hanya memverifikasi perilaku broker. Antrean `test.rel` yang dipakai di lampiran ini adalah antrean klasik, bukan quorum, sehingga durability quorum belum diuji dengan cara ini. Tipe antrean `test.rel` tidak dicatat saat pengujian, sedangkan antrean layanan di repo bertipe quorum. Uji perlu diulang dengan `x-queue-type: quorum` dan `x-delivery-limit` agar sama dengan konfigurasi sebenarnya. Publisher confirms dan manual ack pada consumer belum diuji dan belum masuk ke pembuktian dokumen ini.
+Uji ini hanya memverifikasi perilaku broker. Antrean `test.rel` yang dipakai di lampiran ini adalah antrean klasik, bukan quorum, sehingga durability quorum belum diuji dengan cara ini. Uji batas pengiriman quorum ada di Lampiran B. Publisher confirms dan manual ack pada consumer belum diuji dan belum masuk ke pembuktian dokumen ini.
 
 ## Lampiran B: Uji batas pengiriman (x-delivery-limit)
 
