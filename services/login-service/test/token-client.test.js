@@ -1,4 +1,4 @@
-﻿import test from 'node:test';
+import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   buatKlienToken,
@@ -99,4 +99,34 @@ test('hitungBackoffJitter menghasilkan nilai positif yang meningkat secara ekspo
   const d2 = hitungBackoffJitter(2, { baseDelayMs: 100, maxDelayMs: 2000, random: () => 0.25 });
   const d3 = hitungBackoffJitter(3, { baseDelayMs: 100, maxDelayMs: 2000, random: () => 0.25 });
   assert.ok(d1 > 0 && d2 > d1 && d3 > d2);
+});
+
+test('token-service membalas 400 sebanyak N kali tidak membuka circuit breaker dan tidak membalas 503', async () => {
+  const failureThreshold = 3;
+  let panggilan = 0;
+
+  const klien = buatKlienToken({
+    baseUrl: 'http://token-service:8080',
+    maxRetries: 2,
+    failureThreshold,
+    sleepFn: async () => {},
+    fetchFn: async () => {
+      panggilan += 1;
+      return {
+        ok: false,
+        status: 400,
+        json: async () => ({ error: 'bad request' }),
+      };
+    },
+  });
+
+  for (let i = 0; i < failureThreshold + 2; i += 1) {
+    await assert.rejects(
+      () => klien.mintaToken(akunUji),
+      (err) => !(err instanceof TokenServiceUnavailableError) && err?.status === 400
+    );
+  }
+
+  assert.equal(panggilan, failureThreshold + 2);
+  assert.equal(klien.getState(), 'CLOSED');
 });

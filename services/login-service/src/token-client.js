@@ -1,4 +1,4 @@
-﻿export class TokenServiceUnavailableError extends Error {
+export class TokenServiceUnavailableError extends Error {
   constructor(message, { cause, reason = 'unavailable', retryAfterSec = 5 } = {}) {
     super(message, cause ? { cause } : undefined);
     this.name = 'TokenServiceUnavailableError';
@@ -137,7 +137,13 @@ export function buatKlienToken({
           catatSukses();
           return hasil;
         } catch (err) {
-          if (!adalahGalatSementara(err) || percobaan >= maxRetries) {
+          if (!adalahGalatSementara(err)) {
+            if (kondisiSaatIni === 'HALF_OPEN' || state === 'HALF_OPEN') {
+              catatSukses();
+            }
+            throw err;
+          }
+          if (percobaan >= maxRetries) {
             catatGagalSementara(err, nowFn());
             throw new TokenServiceUnavailableError('gagal menghubungi token-service', {
               cause: err,
