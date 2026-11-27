@@ -29,6 +29,7 @@ except ModuleNotFoundError:
         producer: str = "unknown",
         correlation_id: str | None = None,
         causation_id: str | None = None,
+        **kwargs,
     ) -> dict:
         return {
             "event_id": str(uuid4()),
@@ -41,6 +42,25 @@ except ModuleNotFoundError:
             "causation_id": causation_id,
             "payload": payload,
         }
+
+    def event_turunan(
+        parent_event: dict,
+        event_type: str,
+        payload: dict,
+        producer: str = "unknown",
+        aggregate_id: str | None = None,
+        aggregate_version: int | None = None,
+        **kwargs,
+    ) -> dict:
+        return buat_event(
+            event_type=event_type,
+            aggregate_id=aggregate_id or parent_event["aggregate_id"],
+            aggregate_version=aggregate_version or parent_event["aggregate_version"],
+            payload=payload,
+            producer=producer,
+            correlation_id=parent_event.get("correlation_id"),
+            causation_id=parent_event.get("event_id"),
+        )
 
     def validasi_event(event: dict) -> dict:
         for field in (
@@ -69,6 +89,7 @@ except ModuleNotFoundError:
     stub_event_lib.GalatPermanen = GalatPermanen
     stub_event_lib.GalatSementara = GalatSementara
     stub_event_lib.buat_event = buat_event
+    stub_event_lib.event_turunan = event_turunan
     stub_event_lib.validasi_event = validasi_event
     stub_event_lib.exchange_untuk = exchange_untuk
     sys.modules["event_lib"] = stub_event_lib
