@@ -5,12 +5,18 @@ ENV NODE_ENV=production \
 
 WORKDIR /app
 
-COPY libs/node /app/libs/node
-COPY services/theme-feed-service/package.json /app/services/theme-feed-service/package.json
-WORKDIR /app/services/theme-feed-service
-RUN npm install --omit=dev
+COPY contracts /app/contracts
+COPY libs/node/package*.json /app/libs/node/
+RUN cd /app/libs/node && npm install --omit=dev --no-audit --no-fund
+COPY libs/node/src /app/libs/node/src
+COPY libs/node/sql /app/libs/node/sql
+
+COPY services/theme-feed-service/package*.json /app/services/theme-feed-service/
+RUN cd /app/services/theme-feed-service && npm install --omit=dev --no-audit --no-fund
 
 COPY services/theme-feed-service/src /app/services/theme-feed-service/src
+
+WORKDIR /app/services/theme-feed-service
 
 EXPOSE 8080
 

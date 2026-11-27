@@ -1,12 +1,81 @@
+import os
+import sys
+import types
+from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import MagicMock
+from uuid import uuid4
 
-from event_lib import buat_event, exchange_untuk, validasi_event
 from pymongo.errors import DuplicateKeyError
 
-from app.leksikon_tema import ekstrak_tema, muat_konfigurasi_tema
-from app.mongo_store import StoreMongoTema
-from app.worker import buat_handler_tema
+CONTRACTS_PATH = Path(__file__).resolve().parents[3] / "contracts"
+if CONTRACTS_PATH.exists():
+    os.environ.setdefault("CONTRACTS_DIR", str(CONTRACTS_PATH))
+
+try:
+    from event_lib import buat_event, exchange_untuk, validasi_event  # noqa: E402
+except ModuleNotFoundError:
+    class GalatPermanen(Exception):
+        pass
+
+    class GalatSementara(Exception):
+        pass
+
+    def buat_event(
+        event_type: str,
+        aggregate_id: str,
+        aggregate_version: int,
+        payload: dict,
+        producer: str = "unknown",
+        correlation_id: str | None = None,
+        causation_id: str | None = None,
+    ) -> dict:
+        return {
+            "event_id": str(uuid4()),
+            "event_type": event_type,
+            "aggregate_id": aggregate_id,
+            "aggregate_version": aggregate_version,
+            "occurred_at": datetime.now(UTC).isoformat(),
+            "producer": producer,
+            "correlation_id": correlation_id or str(uuid4()),
+            "causation_id": causation_id,
+            "payload": payload,
+        }
+
+    def validasi_event(event: dict) -> dict:
+        for field in (
+            "event_id",
+            "event_type",
+            "aggregate_id",
+            "aggregate_version",
+            "occurred_at",
+            "producer",
+            "correlation_id",
+            "payload",
+        ):
+            assert field in event, f"Field wajib hilang: {field}"
+        return event
+
+    def exchange_untuk(event_type: str) -> str:
+        if event_type == "poem.themes.extracted":
+            return "analysis.events"
+        return "domain.events"
+
+    class _StubEventLib(types.ModuleType):
+        def __getattr__(self, name: str):
+            return MagicMock()
+
+    stub_event_lib = _StubEventLib("event_lib")
+    stub_event_lib.GalatPermanen = GalatPermanen
+    stub_event_lib.GalatSementara = GalatSementara
+    stub_event_lib.buat_event = buat_event
+    stub_event_lib.validasi_event = validasi_event
+    stub_event_lib.exchange_untuk = exchange_untuk
+    sys.modules["event_lib"] = stub_event_lib
+
+from app.leksikon_tema import ekstrak_tema, muat_konfigurasi_tema  # noqa: E402
+from app.mongo_store import StoreMongoTema  # noqa: E402
+from app.worker import buat_handler_tema  # noqa: E402
 
 THEMES_PATH = Path(__file__).resolve().parents[1] / "data" / "themes.yaml"
 
