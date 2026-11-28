@@ -18,3 +18,4 @@ export {
 export { jalankanMigrasi } from './migrasi.js';
 export { tulisOutbox, simpanDenganOutbox } from './outbox.js';
 export { jalankanRelayPolling, relaySatuPutaran, bersihkanOutbox } from './relay-polling.js';
+export { buatPoolBaca, galatKetersediaan } from './pool-baca.js';

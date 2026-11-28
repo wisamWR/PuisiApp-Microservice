@@ -134,6 +134,70 @@ docker compose pull
 docker compose up -d
 ```
 
+## Failover PostgreSQL
+
+Primary `postgres` punya standby `postgres-replica` (streaming replication).
+Saat primary mati, GET poem-query dan mood-feed tetap dilayani replika, tetapi
+semua tulis gagal sampai failover.
+
+**Cek kondisi replikasi** (primary hidup):
+
+```bash
+docker compose exec postgres sh -c 'psql -U "$POSTGRES_USER" -d postgres -c "select application_name, state, replay_lag from pg_stat_replication"'
+```
+
+**Failover** (primary mati dan tidak bisa segera dihidupkan). Dari root repositori, Git Bash:
+
+```bash
+bash infra/postgres/failover.sh
+```
+
+Bila stack dinyalakan dengan argumen compose lain, teruskan lewat `COMPOSE`, mis.
+`COMPOSE="docker compose -p puisidb --env-file .env -f infra/docker-compose.yml" bash infra/postgres/failover.sh`.
+
+Skrip menghapus container primary lama (volume `pg-data` tetap ada), mempromosikan
+replika, memindahkan alias jaringan `postgres` ke replika (layanan tidak perlu
+diubah atau di-restart), mereset offset Debezium, lalu menguras outbox sejak
+10 menit sebelum transaksi terakhir yang diterima replika (`MARGIN_MENIT`).
+Hasil uji: 23 detik (`docs/reliability/hasil-uji-database.md`).
+
+Yang perlu diketahui:
+
+- Replikasi asinkron: transaksi yang belum sampai ke replika saat primary mati hilang (biasanya < 1 detik terakhir).
+- Setelah failover **jangan** menjalankan `docker compose up` untuk service `postgres`: container baru akan memakai nama `postgres` juga (split brain). Lakukan failback di bawah.
+- Image `puisiapp/node-tools:dev` dipakai untuk menguras outbox. Bila tag ini juga dipakai worktree atau stack lain, jalankan `docker compose build rabbitmq-topologi` dulu agar berisi kode cabang yang sama.
+- Health check `postgres-replica` sengaja `unhealthy` setelah promote (bukan standby lagi).
+
+**Failback** (jendela perawatan, belum diotomatisasi):
+
+1. Hentikan layanan tulis dan semua `outbox-relay-*`.
+2. Hapus volume `pg-data` lama (isinya sudah tertinggal dari primary baru).
+3. Bangun ulang `postgres` sebagai standby dari `postgres-replica` (pola `replika-entrypoint.sh` dengan `PRIMARY_HOST=postgres-replica`), tunggu sampai `streaming`.
+4. Promote `postgres`, kembalikan alias jaringan, lalu bangun ulang `postgres-replica` dari volume kosong.
+5. Jalankan langkah 5 dan 6 `failover.sh` (reset offset relay, kuras outbox).
+
+**Replika tertinggal terlalu jauh** (alert `PostgresReplicationSlotNearInvalidation` untuk `replika_1`, atau slot sudah `lost`): bangun ulang replika.
+
+```bash
+docker compose rm -sf postgres-replica
+```
+
+```bash
+docker volume rm <proyek>_pg-replica-data
+```
+
+```bash
+docker compose up -d postgres-replica
+```
+
+**Slot outbox tidak aktif** (alert `PostgresReplicationSlotInactive` untuk `outbox_*`): nyalakan relay-nya. Bila Debezium tidak bisa dijalankan, kuras sementara dengan relay polling:
+
+```bash
+docker compose run --rm --no-deps -e DATABASE_URL=postgres://<user>:<pass>@postgres:5432/<db> -e RELAY_SEJAK=<waktu relay mati, ISO UTC> -e RELAY_SEKALI=1 rabbitmq-topologi node bin/relay-polling.js
+```
+
+Isi `RELAY_SEJAK`: Debezium tidak menghapus baris outbox, jadi tanpa batas waktu seluruh riwayat outbox diterbitkan ulang (aman karena idempoten, tetapi membanjiri queue).
+
 ## Image privat
 
 Bila paket GHCR tidak dibuat publik, sebelum `docker compose pull`:

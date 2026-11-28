@@ -192,6 +192,8 @@ services:
       PORT: "8080"
       LOG_LEVEL: ${LOG_LEVEL:-info}
       DATABASE_URL: postgres://poem_query:${POEM_QUERY_DB_PASS}@${POSTGRES_HOST}:${POSTGRES_PORT}/poem_read_db
+      # GET dibaca dari standby postgres-replica; bila replika mati, otomatis kembali ke primary.
+      DATABASE_REPLICA_URL: postgres://poem_query:${POEM_QUERY_DB_PASS}@${POSTGRES_REPLICA_HOST:-postgres-replica}:${POSTGRES_PORT}/poem_read_db
       REDIS_HOST: ${REDIS_HOST}
       REDIS_PORT: ${REDIS_PORT}
       REDIS_PASSWORD: ${REDIS_PASSWORD}

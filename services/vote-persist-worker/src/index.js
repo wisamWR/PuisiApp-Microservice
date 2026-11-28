@@ -32,6 +32,8 @@ const pool = new pg.Pool({
   max: 4,
   connectionTimeoutMillis: 2000,
   statement_timeout: 10_000,
+  // Batas di sisi klien: statement_timeout tidak berlaku bila server beku/tak menjawab.
+  query_timeout: 11_000,
 });
 pool.on('error', (err) => log.error('galat koneksi idle PostgreSQL', { err }));
 await jalankanMigrasi(pool, { folder: path.join(folderIni, '../migrations'), standar: false, log });

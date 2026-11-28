@@ -8,7 +8,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import pg from 'pg';
-import { buatKonsumen, buatLogger, buatStorePg, hubungkan, jalankanMigrasi } from '@puisiapp/events';
+import { buatKonsumen, buatLogger, buatPoolBaca, buatStorePg, hubungkan, jalankanMigrasi } from '@puisiapp/events';
 import { buatMetrik } from '@puisiapp/poem-common';
 import { buatApp } from './app.js';
 import { buatCache, denganInvalidasi } from './cache.js';
@@ -25,8 +25,24 @@ const pool = new pg.Pool({
   max: Number(process.env.DB_POOL_MAX) || 10,
   connectionTimeoutMillis: 2000,
   statement_timeout: 5000,
+  // Batas di sisi klien: statement_timeout tidak berlaku bila server beku/tak menjawab.
+  query_timeout: 6_000,
 });
 pool.on('error', (err) => log.error('galat koneksi idle PostgreSQL', { err }));
+
+// Baca (GET) ke replika hot standby bila DATABASE_REPLICA_URL diisi; cadangan ke primary.
+// Proyeksi konsumen dan migrasi tetap menulis ke primary lewat `pool`.
+const poolReplika = process.env.DATABASE_REPLICA_URL
+  ? new pg.Pool({
+      connectionString: process.env.DATABASE_REPLICA_URL,
+      max: Number(process.env.DB_POOL_MAX) || 10,
+      connectionTimeoutMillis: 2000,
+      statement_timeout: 5000,
+      query_timeout: 6_000,
+    })
+  : null;
+poolReplika?.on('error', (err) => log.error('galat koneksi idle PostgreSQL replika', { err }));
+const poolBaca = buatPoolBaca({ primary: pool, replika: poolReplika, log });
 await jalankanMigrasi(pool, { folder: path.join(folderIni, '../migrations'), log });
 
 const cache = await buatCache({ log });
@@ -51,12 +67,13 @@ const konsumen = await buatKonsumen({
 });
 
 const app = buatApp({
-  ambilBundel: (id) => ambilBundel(pool, id),
-  daftarPenulis: (q) => daftarPenulis(pool, q),
-  daftarMilik: (q) => daftarMilik(pool, q),
+  ambilBundel: (id) => ambilBundel(poolBaca, id),
+  daftarPenulis: (q) => daftarPenulis(poolBaca, q),
+  daftarMilik: (q) => daftarMilik(poolBaca, q),
   cache,
+  // Siap selama jalur baca bisa dilayani (replika atau primary).
   cekSiap: async () => {
-    await pool.query('SELECT 1');
+    await poolBaca.query('SELECT 1');
   },
   log,
   metrik: buatMetrik(namaLayanan, {
@@ -79,6 +96,7 @@ for (const sinyal of ['SIGTERM', 'SIGINT']) {
     await koneksi.close().catch(() => {});
     await cache.tutup();
     await pool.end().catch(() => {});
+    await poolReplika?.end().catch(() => {});
     process.exit(0);
   });
 }
