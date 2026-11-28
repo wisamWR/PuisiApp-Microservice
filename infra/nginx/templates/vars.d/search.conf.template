@@ -1,0 +1,2 @@
+# Domain search (kelompok 3 Jelajah dan baca).
+set $up_search "${SEARCH_HOST}";

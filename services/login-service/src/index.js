@@ -13,6 +13,7 @@ import { loginDenganKredensial } from './login.js';
 import { simpanKredensial, ubahPeranKredensial, hapusKredensial, perbaruiKataSandi } from './kredensial.js';
 import { cookieAkses, cookieRefresh } from './cookie.js';
 import { buatMetrikHttp } from './metrics.js';
+import { buatKlienToken, TokenServiceUnavailableError } from './token-client.js';
 
 const log = buatLogger();
 const folderIni = path.dirname(fileURLToPath(import.meta.url));
@@ -74,16 +75,13 @@ if (process.env.RABBITMQ_HOST) {
   log.info('konsumen user.credentials.created aktif');
 }
 
+const klienToken = buatKlienToken({
+  baseUrl: process.env.TOKEN_SERVICE_URL,
+  log,
+});
+
 async function mintaToken(akun) {
-  const res = await fetch(`${process.env.TOKEN_SERVICE_URL}/internal/tokens`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ sub: akun.id, username: akun.username, role: akun.role }),
-    signal: AbortSignal.timeout(3000),
-  });
-  if (!res.ok) throw new Error(`token-service membalas ${res.status}`);
-  const { access_token, refresh_token } = await res.json();
-  return { access_token, refresh_token };
+  return klienToken.mintaToken(akun);
 }
 
 function kirimJson(res, status, body, header = {}) {
@@ -175,6 +173,15 @@ const server = http.createServer(async (req, res) => {
       'Set-Cookie': [cookieAkses(access_token), cookieRefresh(refresh_token)],
     });
   } catch (err) {
+    if (err instanceof TokenServiceUnavailableError) {
+      log.warn('token-service gagal / fail-closed 503', { alasan: err.reason, pesan: err.message });
+      return kirimJson(
+        res,
+        503,
+        { error: 'layanan autentikasi sedang tidak tersedia', alasan: err.reason },
+        { 'Retry-After': String(err.retryAfterSec || 5) }
+      );
+    }
     log.error('login gagal diproses', { galat: err.name, pesan: err.message });
     return kirimJson(res, 500, { error: 'galat internal' });
   }
