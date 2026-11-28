@@ -47,5 +47,68 @@ services:
       rabbitmq-topologi: { condition: service_completed_successfully }
       comment-service: { condition: service_healthy }   # yang membuat tabel outbox
 
+  search-service:
+    build:
+      context: ..
+      dockerfile: services/search-service/Dockerfile
+    restart: unless-stopped
+    environment:
+      SERVICE_NAME: search-service
+      PORT: "8080"
+      DATABASE_URL: postgres://search:${SEARCH_DB_PASS}@${POSTGRES_HOST}:${POSTGRES_PORT}/search_db
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      AMQP_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@${RABBITMQ_HOST}:${RABBITMQ_PORT}/${RABBITMQ_VHOST}
+    networks: [app, data]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:8080/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
+
+  bookmark-service:
+    build:
+      context: ..
+      dockerfile: services/bookmark-service/Dockerfile
+    restart: unless-stopped
+    environment:
+      SERVICE_NAME: bookmark-service
+      PORT: "8080"
+      DATABASE_URL: postgres://bookmark:${BOOKMARK_DB_PASS}@${POSTGRES_HOST}:${POSTGRES_PORT}/bookmark_db
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      AMQP_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@${RABBITMQ_HOST}:${RABBITMQ_PORT}/${RABBITMQ_VHOST}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      POEM_QUERY_HOST: ${POEM_QUERY_HOST}
+      APP_BASE_URL: ${APP_BASE_URL}
+    networks: [app, data]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:8080/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
+
 volumes:
   relay-comment-data: {}

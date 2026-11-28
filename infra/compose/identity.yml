@@ -151,19 +151,8 @@ services:
       retries: 3
       start_period: 15s
 
-  # Mailpit: server SMTP lokal dan web UI untuk pengujian pengiriman email (T1.6).
-  mailpit:
-    image: axllent/mailpit:latest
-    restart: unless-stopped
-    ports:
-      - "${MAILPIT_UI_PORT:-8025}:8025"
-    networks: [app]
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8025/api/v1/info"]
-      interval: 10s
-      timeout: 3s
-      retries: 3
-      start_period: 10s
+  # Mailpit (SMTP lokal untuk T1.6) didefinisikan di infra/docker-compose.yml;
+  # port UI/SMTP ke host hanya dibuka di docker-compose.dev.yml.
 
   # Relay outbox account_db (T0.3). Dibuat dari templat yang sama dengan relay lain.
   outbox-relay-account:

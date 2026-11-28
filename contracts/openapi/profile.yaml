@@ -1,0 +1,55 @@
+openapi: 3.0.3
+info:
+  title: profile-service, rute profil publik (T3.3, Kelompok 1 dan 3)
+  version: 0.2.0
+  description: |
+    GET /api/profiles/:id menampilkan profil publik penulis: id, username, nama tampil, dan bio.
+    Rute ini publik: tidak membutuhkan login, dan gateway hanya mengizinkan metode GET.
+    Email, data login, dan data sensitif lain tidak dikembalikan.
+
+    Perubahan dari v0.1.0: rute tidak lagi membutuhkan cookie login, field pengenal bernama id
+    (bukan user_id), dan username ikut dikembalikan.
+
+    Pemilik rute: profile-service (Kelompok 1). Konsumen: halaman profil penulis (Kelompok 3).
+servers:
+  - url: /api
+paths:
+  /profiles/{id}:
+    get:
+      operationId: profilPublik
+      summary: Profil publik satu pengguna
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID pengguna, sama dengan author_id di poem-query dan search-service
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Profil publik
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfilPublik'
+        '404':
+          description: Pengguna tidak ditemukan atau id tidak valid
+          content:
+            application/json:
+              schema:
+                $ref: 'poem-query.yaml#/components/schemas/Galat'
+components:
+  schemas:
+    ProfilPublik:
+      type: object
+      required: [id, username, display_name, bio]
+      properties:
+        id: { type: string, format: uuid }
+        username: { type: string, minLength: 1, maxLength: 50 }
+        display_name:
+          type: string
+          nullable: true
+          maxLength: 100
+        bio:
+          type: string
+          nullable: true
+          maxLength: 500

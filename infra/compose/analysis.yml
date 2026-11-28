@@ -1,4 +1,3 @@
-
 # Domain analysis
 # Kelompok: 5 Mood, 6 Tema (Sabila); 7 Keaslian (Raffa)
 
@@ -19,6 +18,30 @@ services:
       RABBITMQ_VHOST: ${RABBITMQ_VHOST}
       MONGO_URL: mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASS}@${MONGO_HOST}:${MONGO_PORT}/?authSource=admin
       MONGO_DB: emotion-db
+    networks: [app, data]
+    depends_on:
+      mongodb: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+      rabbitmq-topologi: { condition: service_completed_successfully }
+
+  # T6.1: kata kunci TF-IDF + stemming Sastrawi, terbitkan poem.keywords.extracted
+  keyword-worker:
+    build:
+      context: ..
+      dockerfile: services/keyword-worker/Dockerfile
+    restart: unless-stopped
+    environment:
+      SERVICE_NAME: keyword-worker
+      PORT: "8080"
+      PREFETCH: "10"
+      MAX_KEYWORDS: "5"
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+      RABBITMQ_VHOST: ${RABBITMQ_VHOST}
+      MONGO_URL: mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASS}@${MONGO_HOST}:${MONGO_PORT}/?authSource=admin
+      MONGO_DB: keyword-db
     networks: [app, data]
     depends_on:
       mongodb: { condition: service_healthy }
@@ -47,6 +70,56 @@ services:
     networks: [app, data]
     depends_on:
       postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+      rabbitmq-topologi: { condition: service_completed_successfully }
+
+  theme-worker:
+    build:
+      context: ..
+      dockerfile: services/theme-worker/Dockerfile
+    restart: unless-stopped
+    environment:
+      SERVICE_NAME: theme-worker
+      PORT: "8080"
+      PREFETCH: "10"
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+      RABBITMQ_VHOST: ${RABBITMQ_VHOST}
+      MONGO_URL: mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASS}@${MONGO_HOST}:${MONGO_PORT}/?authSource=admin
+      MONGO_DB: theme-db
+      THEMES_PATH: /app/services/theme-worker/data/themes.yaml
+    networks: [app, data]
+    depends_on:
+      mongodb: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+      rabbitmq-topologi: { condition: service_completed_successfully }
+
+  theme-feed:
+    build:
+      context: ..
+      dockerfile: services/theme-feed-service/Dockerfile
+    restart: unless-stopped
+    environment:
+      SERVICE_NAME: theme-feed
+      PORT: "8080"
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      PREFETCH: "10"
+      MONGO_URL: mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASS}@${MONGO_HOST}:${MONGO_PORT}/?authSource=admin
+      MONGO_DB: theme-db
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+      RABBITMQ_VHOST: ${RABBITMQ_VHOST}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    networks: [app, data]
+    depends_on:
+      mongodb: { condition: service_healthy }
       redis: { condition: service_healthy }
       rabbitmq: { condition: service_healthy }
       rabbitmq-topologi: { condition: service_completed_successfully }

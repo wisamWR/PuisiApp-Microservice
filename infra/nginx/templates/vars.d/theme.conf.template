@@ -1,0 +1,2 @@
+# Domain theme (kelompok 6 Tema, routes/theme.conf).
+set $up_theme_feed "${THEME_FEED_HOST}";
