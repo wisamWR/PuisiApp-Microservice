@@ -1,3 +1,5 @@
+
+import { uuidValid, bolehHapusKomentar } from './aturan.js';
 import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -47,7 +49,6 @@ redisClient.on('error', (err) => {
 await redisClient.connect();
 
 log.info('Redis rate limiter berhasil terhubung');
-
 
 // 1. Migrasi database dan tabel outbox standar.
 await jalankanMigrasi(pool, {
@@ -201,7 +202,6 @@ server.listen(port, () => {
 // 5. Graceful shutdown.
 let berhenti = false;
 
-
 async function matikan(sinyal) {
   if (berhenti) return;
   berhenti = true;
@@ -302,7 +302,6 @@ function bacaBody(req) {
   });
 }
 
-
 server.removeAllListeners('request');
 
 server.on('request', async (req, res) => {
@@ -312,7 +311,7 @@ server.on('request', async (req, res) => {
   const correlationId = req.headers['x-request-id'];
 
   try {
-    // Rate limit maksimal 10 kiriman komentar per menit per pengguna (hanya POST /api/poems/{id}/comments).
+    // Rate limit hanya untuk POST komentar.
     const endpointKirimKomentar =
       req.method === 'POST' &&
       /^\/api\/poems\/[^/]+\/comments$/.test(url.pathname);
@@ -340,8 +339,7 @@ server.on('request', async (req, res) => {
       });
     }
 
-    // POST: membuat komentar.
-        // Identifikasi endpoint daftar komentar.
+    // Identifikasi endpoint daftar komentar.
     const daftar = url.pathname.match(
       /^\/api\/poems\/([^/]+)\/comments$/,
     );
@@ -389,6 +387,8 @@ server.on('request', async (req, res) => {
         comments: hasil.rows,
       });
     }
+
+    // POST: membuat komentar.
     if (daftar && req.method === 'POST') {
       if (!userId) {
         return kirimJson(res, 401, {
@@ -465,7 +465,7 @@ server.on('request', async (req, res) => {
       return kirimJson(res, 201, hasil);
     }
 
-    // DELETE: menghapus komentar milik sendiri atau oleh moderator.
+    // DELETE: menghapus komentar milik sendiri, moderator, atau admin.
     const hapus = url.pathname.match(/^\/api\/comments\/([^/]+)$/);
 
     if (hapus && req.method === 'DELETE') {
@@ -476,6 +476,13 @@ server.on('request', async (req, res) => {
       }
 
       const commentId = decodeURIComponent(hapus[1]);
+
+      if (!uuidValid(commentId)) {
+        return kirimJson(res, 404, {
+          error: 'Komentar tidak ditemukan',
+        });
+      }
+
       const deletedAt = new Date().toISOString();
 
       const hasil = await simpanDenganOutbox(pool, async (tx) => {
@@ -495,7 +502,7 @@ server.on('request', async (req, res) => {
 
         const data = komentar.rows[0];
 
-        if (data.user_id !== userId && userRole !== 'moderator') {
+        if (!bolehHapusKomentar(userId, data.user_id, userRole)) {
           const error = new Error('FORBIDDEN');
           error.statusCode = 403;
           throw error;
@@ -531,13 +538,13 @@ server.on('request', async (req, res) => {
           event,
         };
       });
+
       return kirimJson(res, 200, hasil);
     }
 
-
     // POST: melaporkan komentar untuk ditinjau moderator.
     const laporkan = url.pathname.match(
-      /^\/api\/comments\/([^/]+)\/report$/
+      /^\/api\/comments\/([^/]+)\/report$/,
     );
 
     if (laporkan && req.method === 'POST') {
@@ -610,7 +617,6 @@ server.on('request', async (req, res) => {
     return kirimJson(res, 404, {
       error: 'Endpoint tidak ditemukan',
     });
-
   } catch (error) {
     log.error('gagal memproses request komentar', {
       message: error.message,
