@@ -1,3 +1,4 @@
+import { uuidValid, bolehHapusKomentar } from './aturan.js';
 import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -48,7 +49,6 @@ await redisClient.connect();
 
 log.info('Redis rate limiter berhasil terhubung');
 
-
 // 1. Migrasi database dan tabel outbox standar.
 await jalankanMigrasi(pool, {
   folder: path.join(folderIni, '../migrations'),
@@ -59,23 +59,33 @@ await jalankanMigrasi(pool, {
 // 2. Hubungkan ke RabbitMQ.
 const koneksi = await hubungkan({ log });
 
-// 3. Konsumsi event publikasi puisi.
+// 3. Konsumsi event publikasi puisi dan proyeksi profil pengguna.
 const statusEvent = {
   'poem.published': 'PUBLISHED',
   'poem.hidden': 'HIDDEN',
   'poem.deleted': 'DELETED',
 };
 
+const eventDiikat = [
+  ...Object.keys(statusEvent),
+  'user.registered',
+  'user.profile.updated',
+];
+
 const konsumen = await buatKonsumen({
   koneksi,
   log,
   antrean: 'q.comment-service',
-  ikatan: Object.keys(statusEvent),
+  ikatan: eventDiikat,
   store: buatStorePg(pool),
   prefetch: Number(process.env.PREFETCH) || 10,
 
   // Ambil versi status puisi yang sudah tersimpan.
   versiTersimpan: async (event, { tx }) => {
+    if (!statusEvent[event.event_type]) {
+      return undefined;
+    }
+
     const { rows } = await tx.query(
       `SELECT aggregate_version
        FROM poem_publication_status
@@ -87,8 +97,49 @@ const konsumen = await buatKonsumen({
     return rows[0]?.aggregate_version;
   },
 
-  // Simpan perubahan status publikasi puisi.
+  // Simpan perubahan status publikasi puisi atau proyeksi nama pengguna.
   handler: async (event, { tx, log: logEvent }) => {
+    if (event.event_type === 'user.registered') {
+      const userIdEvent = event.payload?.id || event.aggregate_id;
+      const username = event.payload?.username || null;
+      const displayName = event.payload?.display_name || username || null;
+
+      if (userIdEvent) {
+        await tx.query(
+          `INSERT INTO user_profiles (user_id, username, display_name, updated_at)
+           VALUES ($1, $2, $3, now())
+           ON CONFLICT (user_id) DO UPDATE
+           SET username = COALESCE(EXCLUDED.username, user_profiles.username),
+               display_name = COALESCE(NULLIF(EXCLUDED.display_name, ''), user_profiles.display_name),
+               updated_at = now()`,
+          [userIdEvent, username, displayName],
+        );
+      }
+
+      return;
+    }
+
+    if (event.event_type === 'user.profile.updated') {
+      const userIdEvent = event.aggregate_id || event.payload?.id;
+      const displayName =
+        typeof event.payload?.display_name === 'string' && event.payload.display_name.trim()
+          ? event.payload.display_name.trim()
+          : null;
+
+      if (userIdEvent && displayName) {
+        await tx.query(
+          `INSERT INTO user_profiles (user_id, display_name, updated_at)
+           VALUES ($1, $2, now())
+           ON CONFLICT (user_id) DO UPDATE
+           SET display_name = EXCLUDED.display_name,
+               updated_at = now()`,
+          [userIdEvent, displayName],
+        );
+      }
+
+      return;
+    }
+
     const status = statusEvent[event.event_type];
 
     if (!status) {
@@ -103,9 +154,10 @@ const konsumen = await buatKonsumen({
        VALUES ($1, $2, $3)
        ON CONFLICT (poem_id) DO UPDATE
        SET status = EXCLUDED.status,
-           aggregate_version = EXCLUDED.aggregate_version,
+           aggregate_version = GREATEST(poem_publication_status.aggregate_version, EXCLUDED.aggregate_version),
            updated_at = now()
-       WHERE poem_publication_status.aggregate_version
+       WHERE poem_publication_status.status <> 'DELETED'
+         AND poem_publication_status.aggregate_version
              <= EXCLUDED.aggregate_version`,
       [
         event.aggregate_id,
@@ -148,7 +200,6 @@ server.listen(port, () => {
 
 // 5. Graceful shutdown.
 let berhenti = false;
-
 
 async function matikan(sinyal) {
   if (berhenti) return;
@@ -212,6 +263,12 @@ async function batasiRequest(userId) {
   return Number(jumlah) <= 10;
 }
 
+function buatErrorKlien(pesan, statusCode = 400) {
+  const err = new Error(pesan);
+  err.statusCode = statusCode;
+  return err;
+}
+
 function bacaBody(req) {
   return new Promise((resolve, reject) => {
     let body = '';
@@ -224,7 +281,7 @@ function bacaBody(req) {
 
       if (Buffer.byteLength(body, 'utf8') > 16384) {
         terlaluBesar = true;
-        reject(new Error('BODY_TOO_LARGE'));
+        reject(buatErrorKlien('BODY_TOO_LARGE', 400));
       }
     });
 
@@ -234,7 +291,7 @@ function bacaBody(req) {
       try {
         resolve(JSON.parse(body || '{}'));
       } catch {
-        reject(new Error('INVALID_JSON'));
+        reject(buatErrorKlien('INVALID_JSON', 400));
       }
     });
 
@@ -243,7 +300,6 @@ function bacaBody(req) {
     });
   });
 }
-
 
 server.removeAllListeners('request');
 
@@ -254,16 +310,12 @@ server.on('request', async (req, res) => {
   const correlationId = req.headers['x-request-id'];
 
   try {
-    // Rate limit maksimal 10 request per menit per pengguna.
-    const endpointKomentar =
-      /^\/api\/poems\/[^/]+\/comments$/.test(url.pathname) ||
-      /^\/api\/comments\/[^/]+$/.test(url.pathname) ||
-      /^\/api\/comments\/[^/]+\/report$/.test(url.pathname);
+    // Rate limit hanya untuk POST komentar.
+    const endpointKirimKomentar =
+      req.method === 'POST' &&
+      /^\/api\/poems\/[^/]+\/comments$/.test(url.pathname);
 
-    if (
-      endpointKomentar &&
-      ['GET', 'POST', 'DELETE'].includes(req.method)
-    ) {
+    if (endpointKirimKomentar) {
       if (!userId) {
         return kirimJson(res, 401, {
           error: 'Autentikasi diperlukan',
@@ -286,8 +338,7 @@ server.on('request', async (req, res) => {
       });
     }
 
-    // POST: membuat komentar.
-        // Identifikasi endpoint daftar komentar.
+    // Identifikasi endpoint daftar komentar.
     const daftar = url.pathname.match(
       /^\/api\/poems\/([^/]+)\/comments$/,
     );
@@ -315,10 +366,16 @@ server.on('request', async (req, res) => {
       }
 
       const hasil = await pool.query(
-        `SELECT id, poem_id, user_id, content, created_at
-         FROM comments
-         WHERE poem_id = $1 AND deleted_at IS NULL
-         ORDER BY created_at DESC
+        `SELECT c.id,
+                c.poem_id,
+                c.user_id,
+                COALESCE(NULLIF(u.display_name, ''), NULLIF(u.username, ''), c.user_id) AS author_name,
+                c.content,
+                c.created_at
+         FROM comments c
+         LEFT JOIN user_profiles u ON u.user_id = c.user_id
+         WHERE c.poem_id = $1 AND c.deleted_at IS NULL
+         ORDER BY c.created_at DESC
          LIMIT $2 OFFSET $3`,
         [poemId, limit, offset],
       );
@@ -329,6 +386,8 @@ server.on('request', async (req, res) => {
         comments: hasil.rows,
       });
     }
+
+    // POST: membuat komentar.
     if (daftar && req.method === 'POST') {
       if (!userId) {
         return kirimJson(res, 401, {
@@ -405,7 +464,7 @@ server.on('request', async (req, res) => {
       return kirimJson(res, 201, hasil);
     }
 
-    // DELETE: menghapus komentar milik sendiri atau oleh moderator.
+    // DELETE: menghapus komentar milik sendiri, moderator, atau admin.
     const hapus = url.pathname.match(/^\/api\/comments\/([^/]+)$/);
 
     if (hapus && req.method === 'DELETE') {
@@ -416,6 +475,13 @@ server.on('request', async (req, res) => {
       }
 
       const commentId = decodeURIComponent(hapus[1]);
+
+      if (!uuidValid(commentId)) {
+        return kirimJson(res, 404, {
+          error: 'Komentar tidak ditemukan',
+        });
+      }
+
       const deletedAt = new Date().toISOString();
 
       const hasil = await simpanDenganOutbox(pool, async (tx) => {
@@ -435,7 +501,7 @@ server.on('request', async (req, res) => {
 
         const data = komentar.rows[0];
 
-        if (data.user_id !== userId && userRole !== 'moderator') {
+        if (!bolehHapusKomentar(userId, data.user_id, userRole)) {
           const error = new Error('FORBIDDEN');
           error.statusCode = 403;
           throw error;
@@ -471,13 +537,13 @@ server.on('request', async (req, res) => {
           event,
         };
       });
+
       return kirimJson(res, 200, hasil);
     }
 
-
     // POST: melaporkan komentar untuk ditinjau moderator.
     const laporkan = url.pathname.match(
-      /^\/api\/comments\/([^/]+)\/report$/
+      /^\/api\/comments\/([^/]+)\/report$/,
     );
 
     if (laporkan && req.method === 'POST') {
@@ -488,6 +554,13 @@ server.on('request', async (req, res) => {
       }
 
       const commentId = decodeURIComponent(laporkan[1]);
+
+      if (!uuidValid(commentId)) {
+        return kirimJson(res, 404, {
+          error: 'Komentar tidak ditemukan',
+        });
+      }
+
       const body = await bacaBody(req);
       const reason =
         typeof body.reason === 'string' ? body.reason.trim() : '';
@@ -550,7 +623,6 @@ server.on('request', async (req, res) => {
     return kirimJson(res, 404, {
       error: 'Endpoint tidak ditemukan',
     });
-
   } catch (error) {
     log.error('gagal memproses request komentar', {
       message: error.message,

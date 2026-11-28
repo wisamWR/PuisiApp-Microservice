@@ -157,6 +157,9 @@ components:
           type: string
         user_id:
           type: string
+        author_name:
+          type: string
+          description: Nama tampilan penulis dari user.registered / user.profile.updated; berisi user_id bila profil belum diterima.
         content:
           type: string
         created_at:

@@ -169,7 +169,7 @@ const server = http.createServer(async (req, res) => {
     }
     const { access_token, refresh_token } = await mintaToken(hasil.akun);
     log.info('login berhasil', { akun_id: hasil.akun.id });
-    return kirimJson(res, 200, { username: hasil.akun.username, role: hasil.akun.role }, {
+    return kirimJson(res, 200, { id: hasil.akun.id, username: hasil.akun.username, role: hasil.akun.role }, {
       'Set-Cookie': [cookieAkses(access_token), cookieRefresh(refresh_token)],
     });
   } catch (err) {

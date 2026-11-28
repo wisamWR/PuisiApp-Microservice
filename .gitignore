@@ -38,3 +38,5 @@ tmp/
 # Catatan puisi hasil seed (T0.10), khusus mesin lokal
 tools/seed-data/state.json
 tools/seed-data/state.json.tmp
+
+cookies.txt
