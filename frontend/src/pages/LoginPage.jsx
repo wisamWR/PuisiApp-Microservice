@@ -32,7 +32,7 @@ export default function LoginPage() {
     setSedangKirim(true)
     try {
       const { data } = await api.post('/auth/login', v.data)
-      setUser({ username: data.username, role: data.role })
+      setUser({ id: data.id ?? null, username: data.username, role: data.role })
       navigate(tujuanSetelahMasuk(next), { replace: true })
     } catch (err) {
       setPesan(pesanGalat(err))

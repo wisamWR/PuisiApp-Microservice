@@ -1,4 +1,3 @@
-
 import { uuidValid, bolehHapusKomentar } from './aturan.js';
 import http from 'node:http';
 import path from 'node:path';
@@ -555,6 +554,13 @@ server.on('request', async (req, res) => {
       }
 
       const commentId = decodeURIComponent(laporkan[1]);
+
+      if (!uuidValid(commentId)) {
+        return kirimJson(res, 404, {
+          error: 'Komentar tidak ditemukan',
+        });
+      }
+
       const body = await bacaBody(req);
       const reason =
         typeof body.reason === 'string' ? body.reason.trim() : '';
