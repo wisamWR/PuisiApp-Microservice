@@ -264,6 +264,12 @@ async function batasiRequest(userId) {
   return Number(jumlah) <= 10;
 }
 
+function buatErrorKlien(pesan, statusCode = 400) {
+  const err = new Error(pesan);
+  err.statusCode = statusCode;
+  return err;
+}
+
 function bacaBody(req) {
   return new Promise((resolve, reject) => {
     let body = '';
@@ -276,7 +282,7 @@ function bacaBody(req) {
 
       if (Buffer.byteLength(body, 'utf8') > 16384) {
         terlaluBesar = true;
-        reject(new Error('BODY_TOO_LARGE'));
+        reject(buatErrorKlien('BODY_TOO_LARGE', 400));
       }
     });
 
@@ -286,7 +292,7 @@ function bacaBody(req) {
       try {
         resolve(JSON.parse(body || '{}'));
       } catch {
-        reject(new Error('INVALID_JSON'));
+        reject(buatErrorKlien('INVALID_JSON', 400));
       }
     });
 
