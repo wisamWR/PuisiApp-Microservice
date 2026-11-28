@@ -115,3 +115,37 @@ groups:
         annotations:
           summary: "Queue RabbitMQ tanpa konsumen"
           description: "Queue {{ $labels.queue }} tidak memiliki konsumen aktif (0 consumers)."
+
+  # Replikasi PostgreSQL (reliability poin Database, D6). Metrik dari postgres-exporter
+  # (collector replication_slot): slot logis outbox_* milik Debezium dan slot fisik replika_1.
+  - name: postgres_replication
+    rules:
+      - alert: PostgresReplicationSlotInactive
+        expr: |
+          pg_replication_slot_slot_is_active == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Replication slot {{ $labels.slot_name }} tidak aktif"
+          description: "Tidak ada yang membaca slot {{ $labels.slot_name }} selama 5 menit (outbox-relay atau postgres-replica mati). WAL mulai tertahan di primary."
+
+      - alert: PostgresReplicationSlotNearInvalidation
+        expr: |
+          pg_replication_slot_safe_wal_size_bytes < 256 * 1024 * 1024
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Slot {{ $labels.slot_name }} hampir di-invalidate"
+          description: "Sisa WAL sebelum slot {{ $labels.slot_name }} melewati max_slot_wal_keep_size kurang dari 256 MB. Bila habis, event outbox dalam rentang itu hilang (slot outbox_*) atau replika harus dibangun ulang (replika_1). Pulihkan konsumen slot, atau jalankan relay polling (docs/runbook.md)."
+
+      - alert: PostgresReplicaNotStreaming
+        expr: |
+          absent(pg_replication_slot_slot_is_active{slot_name="replika_1"} == 1)
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "postgres-replica tidak streaming"
+          description: "Slot replika_1 tidak aktif. Baca poem-query/mood-feed jatuh ke primary dan tidak ada standby siap failover."

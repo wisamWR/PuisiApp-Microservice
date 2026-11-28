@@ -13,6 +13,7 @@ import { loginDenganKredensial } from './login.js';
 import { simpanKredensial, ubahPeranKredensial, hapusKredensial, perbaruiKataSandi } from './kredensial.js';
 import { cookieAkses, cookieRefresh } from './cookie.js';
 import { buatMetrikHttp } from './metrics.js';
+import { buatKlienToken, TokenServiceUnavailableError } from './token-client.js';
 
 const log = buatLogger();
 const folderIni = path.dirname(fileURLToPath(import.meta.url));
@@ -23,7 +24,15 @@ const MAKS_BODY = 4 * 1024;
 for (const nama of ['DATABASE_URL', 'TOKEN_SERVICE_URL']) {
   if (!process.env[nama]) throw new Error(`${nama} belum diisi`);
 }
-const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 10 });
+const pool = new pg.Pool({
+  connectionString: process.env.DATABASE_URL,
+  max: Number(process.env.DB_POOL_MAX) || 10,
+  connectionTimeoutMillis: 2000,
+  statement_timeout: 5000,
+  // Batas di sisi klien: statement_timeout tidak berlaku bila server beku/tak menjawab.
+  query_timeout: 6_000,
+});
+pool.on('error', (err) => log.error('galat koneksi idle PostgreSQL', { err }));
 
 await jalankanMigrasi(pool, { folder: path.join(folderIni, '../migrations'), outbox: false, log });
 
@@ -66,16 +75,13 @@ if (process.env.RABBITMQ_HOST) {
   log.info('konsumen user.credentials.created aktif');
 }
 
+const klienToken = buatKlienToken({
+  baseUrl: process.env.TOKEN_SERVICE_URL,
+  log,
+});
+
 async function mintaToken(akun) {
-  const res = await fetch(`${process.env.TOKEN_SERVICE_URL}/internal/tokens`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ sub: akun.id, username: akun.username, role: akun.role }),
-    signal: AbortSignal.timeout(3000),
-  });
-  if (!res.ok) throw new Error(`token-service membalas ${res.status}`);
-  const { access_token, refresh_token } = await res.json();
-  return { access_token, refresh_token };
+  return klienToken.mintaToken(akun);
 }
 
 function kirimJson(res, status, body, header = {}) {
@@ -119,6 +125,17 @@ const server = http.createServer(async (req, res) => {
     rute = '/health';
     return kirimJson(res, 200, { status: 'ok' });
   }
+  // Readiness: ikut memeriksa PostgreSQL. Dipakai healthcheck Docker (dan nanti load balancer),
+  // sehingga layanan yang kehilangan DB ditandai unhealthy tanpa harus restart.
+  if (req.method === 'GET' && url.pathname === '/health/ready') {
+    rute = '/health/ready';
+    try {
+      await pool.query('SELECT 1');
+      return kirimJson(res, 200, { status: 'ok' });
+    } catch {
+      return kirimJson(res, 503, { status: 'db_tidak_siap' });
+    }
+  }
 
   if (req.method === 'GET' && url.pathname === '/metrics') {
     rute = '/metrics';
@@ -156,6 +173,15 @@ const server = http.createServer(async (req, res) => {
       'Set-Cookie': [cookieAkses(access_token), cookieRefresh(refresh_token)],
     });
   } catch (err) {
+    if (err instanceof TokenServiceUnavailableError) {
+      log.warn('token-service gagal / fail-closed 503', { alasan: err.reason, pesan: err.message });
+      return kirimJson(
+        res,
+        503,
+        { error: 'layanan autentikasi sedang tidak tersedia', alasan: err.reason },
+        { 'Retry-After': String(err.retryAfterSec || 5) }
+      );
+    }
     log.error('login gagal diproses', { galat: err.name, pesan: err.message });
     return kirimJson(res, 500, { error: 'galat internal' });
   }

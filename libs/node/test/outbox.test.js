@@ -203,3 +203,23 @@ test('relay polling: publish gagal -> baris tetap di outbox (tidak hilang)', asy
 
   assert.equal(pool.outbox.length, 1);
 });
+
+test('relay polling: parameter sejak diteruskan ke query (mode kuras failover)', async () => {
+  const params = [];
+  const pool = {
+    async connect() {
+      return {
+        async query(sql, p) {
+          if (sql.startsWith('SELECT event_id')) params.push(p);
+          return { rows: [], rowCount: 0 };
+        },
+        release() {},
+      };
+    },
+  };
+  const ch = { publish: (_e, _r, _b, _o, cb) => cb(null) };
+
+  assert.equal(await relaySatuPutaran(pool, ch, 50, '2026-11-27T06:00:00Z'), 0);
+  assert.equal(await relaySatuPutaran(pool, ch, 50), 0);
+  assert.deepEqual(params, [[50, '2026-11-27T06:00:00Z'], [50, null]]);
+});

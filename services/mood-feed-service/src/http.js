@@ -32,7 +32,13 @@ export function buatRepoPg(pool) {
   };
 }
 
-export function buatAppHttp({ repo, indeks, serviceName = 'mood-feed-service', metrik = buatMetrikHttp(serviceName) }) {
+export function buatAppHttp({
+  repo,
+  indeks,
+  serviceName = 'mood-feed-service',
+  metrik = buatMetrikHttp(serviceName),
+  cekDb = async () => {},
+}) {
   return http.createServer(async (req, res) => {
     const mulai = performance.now();
     let rute = 'tidak_dikenal';
@@ -43,6 +49,17 @@ export function buatAppHttp({ repo, indeks, serviceName = 'mood-feed-service', m
       if (req.method === 'GET' && path === '/health') {
         rute = '/health';
         return kirimJson(res, 200, { status: 'ok', service: serviceName });
+      }
+      // Readiness: ikut memeriksa PostgreSQL. Dipakai healthcheck Docker (dan nanti load balancer),
+      // sehingga layanan yang kehilangan DB ditandai unhealthy tanpa harus restart.
+      if (req.method === 'GET' && url.pathname === '/health/ready') {
+        rute = '/health/ready';
+        try {
+          await cekDb();
+          return kirimJson(res, 200, { status: 'ok' });
+        } catch {
+          return kirimJson(res, 503, { status: 'db_tidak_siap' });
+        }
       }
       if (req.method === 'GET' && path === '/metrics') {
         rute = '/metrics';
